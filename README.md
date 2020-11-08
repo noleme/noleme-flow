@@ -55,6 +55,7 @@ _TODO_
 Here is a very basic example of pipeline we could create:
 
 ```java
+/* We initialize a flow */
 var flow = Flow
     .from(() -> 1)
     .into(i -> i + 1)
@@ -62,6 +63,7 @@ var flow = Flow
     .into((Loader<Integer>) System.out::println)
 ;
 
+/* We run it as a Pipeline */
 Flow.runAsPipeline(flow);
 ```
 
