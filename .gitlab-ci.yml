@@ -1,0 +1,25 @@
+variables:
+  MAVEN_OPTS: "-Dhttps.protocols=TLSv1.2 -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN -Dorg.slf4j.simpleLogger.showDateTime=true -Djava.awt.headless=true"
+  MAVEN_CLI_OPTS: "--batch-mode --errors --fail-at-end --show-version -DinstallAtEnd=true -DdeployAtEnd=true"
+
+image: maven:3.6.3-jdk-13
+
+cache:
+  paths:
+    - .m2/repository
+
+# For merge requests do not `deploy` but only run `verify`.
+# See https://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html
+.test: &test
+  stage: test
+  script:
+    - 'mvn $MAVEN_CLI_OPTS test'
+#  except:
+#    - master
+  artifacts:
+    reports:
+      junit: target/surefire-reports/TEST-*.xml
+
+# Verify merge requests using JDK13
+verify:jdk13:
+  <<: *test
