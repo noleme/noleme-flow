@@ -13,6 +13,20 @@
     <description>A library providing an opinionated way of structuring data processing programs such as ETLs</description>
     <url>https://github.com/lumio-medical/lumio-flow</url>
 
+    <organization>
+        <name>Lumio Medical</name>
+        <url>https://lumiomedical.com</url>
+    </organization>
+
+    <developers>
+        <developer>
+            <name>Pierre Lecerf</name>
+            <email>plecerf@lumiomedical.com</email>
+            <organization>Lumio Medical</organization>
+            <organizationUrl>https://lumiomedical.com</organizationUrl>
+        </developer>
+    </developers>
+
     <properties>
         <slf4j.version>1.7.30</slf4j.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
