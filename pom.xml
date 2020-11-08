@@ -6,7 +6,7 @@
 
     <groupId>com.lumiomedical</groupId>
     <artifactId>lumio-flow</artifactId>
-    <version>0.7</version>
+    <version>0.7.1</version>
     <packaging>jar</packaging>
 
     <name>Lumio Flow</name>
