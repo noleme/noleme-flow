@@ -1,6 +1,6 @@
 # Lumio Flow
 
-![GitHub Workflow Status](https://img.shields.io/github/workflow/status/lumio-medical/lumio-flow/Java%20CI%20with%20Maven)
+[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/lumio-medical/lumio-flow/Java%20CI%20with%20Maven)](https://github.com/lumio-medical/lumio-flow/actions?query=workflow%3A%22Java+CI+with+Maven%22)
 [![Maven Central Repository](https://maven-badges.herokuapp.com/maven-central/com.lumiomedical/lumio-flow/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.lumiomedical/lumio-flow)
 ![GitHub](https://img.shields.io/github/license/lumio-medical/lumio-flow)
 
