@@ -23,12 +23,6 @@ Add the following in your `pom.xml`:
 </dependency>
 ```
 
-and run the following command in your shell:
-
-```bash
-mvn install
-```
-
 ## II. Notes on Structure and Design
 
 The core idea behind this library is to structure the program as a DAG of "actions" to perform, then compile that graph into concrete runnable instance which properties will depend on the implementation.
