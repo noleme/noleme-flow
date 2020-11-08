@@ -24,7 +24,7 @@ public class ParallelPipelineCompiler implements FlowCompiler<ParallelPipelineRu
      */
     public ParallelPipelineCompiler()
     {
-        this(Runtime.getRuntime().availableProcessors(), false);
+        this(Runtime.getRuntime().availableProcessors(), true);
     }
 
     /**
