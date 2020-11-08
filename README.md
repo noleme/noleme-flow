@@ -1,5 +1,10 @@
 # Lumio Flow
 
+![GitHub Workflow Status](https://img.shields.io/github/workflow/status/lumio-medical/lumio-flow/Java%20CI%20with%20Maven)
+[![Maven Central Repository](https://maven-badges.herokuapp.com/maven-central/com.lumiomedical/lumio-flow/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.lumiomedical/lumio-flow)
+![GitHub](https://img.shields.io/github/license/lumio-medical/lumio-flow)
+
+
 This library provides an opinionated way of structuring data processing programs such as ETLs.
 
 Implementations found in this package will shouldn't be tied to any specific Lumio project.
