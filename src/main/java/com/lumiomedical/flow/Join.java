@@ -7,6 +7,9 @@ import com.lumiomedical.flow.etl.transformer.Transformer;
 import com.lumiomedical.flow.recipient.Recipient;
 
 /**
+ * Joins are a point of passage joining two upstream branchs of a DAG.
+ * They accept two inputs from upstream, produce a joined output using a provided BiTransformer implementation, then pass it downstream.
+ *
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
  * Created on 2020/03/01
  */

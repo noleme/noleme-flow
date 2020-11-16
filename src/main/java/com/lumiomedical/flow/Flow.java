@@ -19,19 +19,21 @@ import java.util.Queue;
 import java.util.Set;
 
 /**
+ * A helper class for initiating flows, it also provides a handful of shorthand methods for building and launching flow DAGs.
+ *
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
  * Created on 2020/02/28
  */
 public final class Flow
 {
-    private Flow()
-    {
-    }
+    private Flow() {}
 
     /**
+     * Compiles and runs the provided DAG using the provided FlowCompiler implementation.
      *
-     * @param compiler
-     * @param inputNodes
+     * @param compiler a FlowCompiler instance
+     * @param inputNodes one or several nodes from the DAG
+     * @return the resulting FlowRuntime instance
      * @throws CompilationException
      * @throws RunException
      */
@@ -43,8 +45,10 @@ public final class Flow
     }
 
     /**
+     * Compiles and runs the provided DAG as a pipeline using the PipelineCompiler implementation.
      *
-     * @param inputNodes
+     * @param inputNodes one or several nodes from the DAG
+     * @return the resulting PipelineRuntime instance
      * @throws CompilationException
      * @throws RunException
      */
@@ -54,9 +58,13 @@ public final class Flow
     }
 
     /**
+     * Compiles and runs the provided DAG as a pipeline using the ParallelPipelineCompiler implementation.
+     * This implementation uses a ThrowingThreadPoolExecutor implementation as an ExecutorService.
+     * Property autoRefresh is set to true, so the ExecutorService will be shutdown/relaunched between each run.
      *
-     * @param threadCount
-     * @param inputNodes
+     * @param threadCount the number of threads used for parallelization
+     * @param inputNodes one or several nodes from the DAG
+     * @return the resulting ParallelPipelineRuntime instance
      * @throws CompilationException
      * @throws RunException
      */
@@ -66,10 +74,12 @@ public final class Flow
     }
 
     /**
+     * Compiles and runs the provided DAG as a pipeline using the ParallelPipelineCompiler implementation.
      *
-     * @param provider
-     * @param autoRefresh
-     * @param inputNodes
+     * @param provider an ExecutorServiceProvider for setting up the ExecutorService used for parallelization
+     * @param autoRefresh whether to automatically shutdown the ExecutorService upon running, or preserve it for subsequent runs
+     * @param inputNodes one or several nodes from the DAG
+     * @return the resulting ParallelPipelineRuntime instance
      * @throws CompilationException
      * @throws RunException
      */
@@ -79,8 +89,13 @@ public final class Flow
     }
 
     /**
+     * Compiles and runs the provided DAG as a pipeline using the ParallelPipelineCompiler implementation.
+     * This implementation uses a ThrowingThreadPoolExecutor implementation as an ExecutorService.
+     * The number of threads used for parallelization is equal to Runtime.getRuntime().availableProcessors().
+     * Property autoRefresh is set to true, so the ExecutorService will be shutdown/relaunched between each run.
      *
-     * @param inputNodes
+     * @param inputNodes one or several nodes from the DAG
+     * @return the resulting ParallelPipelineRuntime instance
      * @throws CompilationException
      * @throws RunException
      */
@@ -90,12 +105,12 @@ public final class Flow
     }
 
     /**
-     * Returns a source node from a given Extractor instance.
+     * Returns a Source node from a given Extractor instance.
      * The source node can be used to initiate a flow.
      *
-     * @param extractor
-     * @param <O>
-     * @return
+     * @param extractor an Extractor instance from which to initiate a flow Source
+     * @param <O> the type of the Source
+     * @return the resulting Source node
      */
     public static <O> Source<O> from(Extractor<O> extractor)
     {
@@ -103,14 +118,15 @@ public final class Flow
     }
 
     /**
+     * Returns a Join node resulting from the joining of two flows using a provided BiTransformer.
      *
-     * @param input1
-     * @param input2
-     * @param transformer
-     * @param <I1>
-     * @param <I2>
-     * @param <O>
-     * @return
+     * @param input1 a FlowOut node of an incoming flow A
+     * @param input2 a FlowOut node of an incoming flow B
+     * @param transformer a BiTransformer describing how to perform the join
+     * @param <I1> the type of incoming flow A
+     * @param <I2> the type of incoming flow B
+     * @param <O> the type resulting from the merging of flow A and B
+     * @return the resulting Join node
      */
     public static <I1, I2, O> Join<I1, I2, O> join(FlowOut<I1> input1, FlowOut<I2> input2, BiTransformer<I1, I2, O> transformer)
     {
@@ -123,8 +139,8 @@ public final class Flow
      *
      * This can be useful if you want to chain pipeline sections for which you only have references to the lowest nodes (which should be common given the builder pattern used by the Pipe API).
      *
-     * @param node
-     * @return
+     * @param node a node from which to perform the Source lookup
+     * @return a set containing any Source node that was found to be a upstream of the provided node
      */
     public static Set<Node> sources(Node node)
     {

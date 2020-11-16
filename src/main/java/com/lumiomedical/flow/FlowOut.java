@@ -9,6 +9,11 @@ import com.lumiomedical.flow.recipient.Recipient;
 import java.util.UUID;
 
 /**
+ * Concept representing a Node with a potential downstream.
+ * It features an "output" of type O which can be processed by a Pipe, Join or Sink.
+ *
+ * FlowOut nodes include Sources, Pipes and Joins.
+ *
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
  * Created on 2020/03/01
  */

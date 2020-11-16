@@ -12,6 +12,9 @@ import java.util.Collections;
 import java.util.List;
 
 /**
+ * Sources represent an entrypoint node in a DAG.
+ * They have no upstream but can propagate their output downstream.
+ *
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
  * Created on 2020/02/28
  */

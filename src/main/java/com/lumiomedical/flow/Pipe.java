@@ -7,6 +7,9 @@ import com.lumiomedical.flow.etl.transformer.Transformer;
 import com.lumiomedical.flow.recipient.Recipient;
 
 /**
+ * Pipes are a point of passage in a DAG.
+ * They accept an input from upstream which they can alter and pass downstream.
+ *
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
  * Created on 2020/02/28
  */

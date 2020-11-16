@@ -4,6 +4,9 @@ import com.lumiomedical.flow.etl.loader.Loader;
 import com.lumiomedical.flow.node.SimpleNode;
 
 /**
+ * Sinks represent a final endpoint node in a DAG.
+ * They accept an input from upstream but have no downstream.
+ *
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
  * Created on 2020/03/01
  */
