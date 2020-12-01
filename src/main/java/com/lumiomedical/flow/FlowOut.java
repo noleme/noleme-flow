@@ -20,17 +20,19 @@ import java.util.UUID;
 public interface FlowOut<O> extends Node
 {
     /**
+     * Binds the current node into a Transformer, resulting in a new Pipe node.
      *
-     * @param transformer
-     * @param <NO>
-     * @return
+     * @param transformer a Transformer actor
+     * @param <NO> Output type of the pipe node
+     * @return the resulting Pipe node
      */
     <NO> Pipe<O, NO> into(Transformer<O, NO> transformer);
 
     /**
+     * Binds the current node into a Loader, resulting in a new Sink node.
      *
-     * @param loader
-     * @return
+     * @param loader a Loader actor
+     * @return the resulting Sink node
      */
     Sink<O> into(Loader<O> loader);
 

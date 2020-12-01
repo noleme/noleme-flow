@@ -10,7 +10,9 @@ import com.lumiomedical.flow.compiler.pipeline.PipelineCompiler;
 import com.lumiomedical.flow.compiler.pipeline.PipelineRuntime;
 import com.lumiomedical.flow.compiler.pipeline.parallel.ExecutorServiceProvider;
 import com.lumiomedical.flow.etl.extractor.Extractor;
+import com.lumiomedical.flow.etl.loader.Loader;
 import com.lumiomedical.flow.etl.transformer.BiTransformer;
+import com.lumiomedical.flow.etl.transformer.Transformer;
 import com.lumiomedical.flow.node.Node;
 
 import java.util.HashSet;
@@ -115,6 +117,45 @@ public final class Flow
     public static <O> Source<O> from(Extractor<O> extractor)
     {
         return new Source<>(extractor);
+    }
+
+    /** @see #pipe(FlowOut, Transformer) */
+    public static <I, O> Pipe<I, O> into(FlowOut<I> flow, Transformer<I, O> transformer)
+    {
+        return flow.into(transformer);
+    }
+
+    /** @see #sink(FlowOut, Loader) */
+    public static <I> Sink<I> into(FlowOut<I> flow, Loader<I> loader)
+    {
+        return flow.into(loader);
+    }
+
+    /**
+     * Returns the Pipe node resulting from the binding of a provided flow to a Transformer.
+     *
+     * @param flow a flow to which the Transformer will be bound
+     * @param transformer the Transformer to bind
+     * @param <I> the type of the upstream flow
+     * @param <O> the type of the downstream flow
+     * @return the resulting Pipe node
+     */
+    public static <I, O> Pipe<I, O> pipe(FlowOut<I> flow, Transformer<I, O> transformer)
+    {
+        return flow.into(transformer);
+    }
+
+    /**
+     * Returns the Sink node resulting from the binding of a provided flow to a Loader.
+     *
+     * @param flow a flow to which the Loader will be bound
+     * @param loader the Loader to bind
+     * @param <I> the type of the upstream flow
+     * @return the resulting Sink node
+     */
+    public static <I> Sink<I> sink(FlowOut<I> flow, Loader<I> loader)
+    {
+        return flow.into(loader);
     }
 
     /**
