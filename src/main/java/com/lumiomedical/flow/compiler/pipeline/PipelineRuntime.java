@@ -1,10 +1,16 @@
 package com.lumiomedical.flow.compiler.pipeline;
 
+import com.lumiomedical.flow.actor.generator.GenerationException;
+import com.lumiomedical.flow.actor.generator.Generator;
 import com.lumiomedical.flow.compiler.FlowRuntime;
 import com.lumiomedical.flow.compiler.RunException;
 import com.lumiomedical.flow.compiler.pipeline.execution.Execution;
 import com.lumiomedical.flow.compiler.pipeline.heap.HashHeap;
 import com.lumiomedical.flow.compiler.pipeline.heap.Heap;
+import com.lumiomedical.flow.compiler.pipeline.stream.StreamHashHeap;
+import com.lumiomedical.flow.compiler.pipeline.stream.StreamHeap;
+import com.lumiomedical.flow.compiler.pipeline.stream.StreamPipelineNode;
+import com.lumiomedical.flow.logger.Logging;
 import com.lumiomedical.flow.node.Node;
 import com.lumiomedical.flow.recipient.Recipient;
 
@@ -57,9 +63,10 @@ public class PipelineRuntime implements FlowRuntime
      */
     protected Heap run(List<Node> compiledNodes) throws PipelineRunException
     {
-        Queue<Node> runQueue = new LinkedList<>(compiledNodes);
+        LinkedList<Node> runQueue = new LinkedList<>(compiledNodes);
         Set<Node> blocked = new HashSet<>();
         Heap heap = new HashHeap();
+        StreamHeap streamHeap = new StreamHashHeap(heap);
 
         /*
          * Fires the whole running queue and discards dead branches resulting from failed executions.
@@ -72,7 +79,17 @@ public class PipelineRuntime implements FlowRuntime
             if (blocked.contains(n))
                 continue;
 
-            if (!this.execution.launch(n, heap))
+            /* If the node is a StreamPipelineNode we need to register a stream round */
+            if (n instanceof StreamPipelineNode)
+                registerStream((StreamPipelineNode) n, runQueue, heap, streamHeap);
+            /* If the node is part of a stream round, we handle it separately due to offset computations */
+            else if (streamHeap.hasOffset(n))
+            {
+                if (!this.execution.launch(n, streamHeap))
+                    blockBranch(n, blocked);
+            }
+            /* Otherwise we handle it as a standard node */
+            else if (!this.execution.launch(n, heap))
                 blockBranch(n, blocked);
         }
 
@@ -84,7 +101,7 @@ public class PipelineRuntime implements FlowRuntime
      * @param n
      * @param blocked
      */
-    protected static void blockBranch(Node n, Set<Node> blocked)
+    private static void blockBranch(Node n, Set<Node> blocked)
     {
         Queue<Node> q = new LinkedList<>();
         q.add(n);
@@ -94,6 +111,58 @@ public class PipelineRuntime implements FlowRuntime
             blocked.add(blockedNode);
             q.addAll(blockedNode.getDownstream());
         }
+    }
+
+    /**
+     *
+     * @param node
+     * @param runQueue
+     * @param heap
+     * @param streamHeap
+     * @throws PipelineRunException
+     */
+    private static void registerStream(StreamPipelineNode node, LinkedList<Node> runQueue, Heap heap, StreamHeap streamHeap) throws PipelineRunException
+    {
+        try {
+            Generator generator = streamHeap.getGenerator(node, heap);
+
+            if (generator.hasNext())
+            {
+                Node generatorNode = node.getGeneratorNode();
+                int offset = streamHeap.incrementOffset(generatorNode);
+
+                Logging.logger.debug("Launching flow stream generator #"+generatorNode.getUid()+" at offset "+offset+" with generator "+generator.getClass().getName());
+                streamHeap.push(generatorNode.getUid(), generator.generate(), generatorNode.getDownstream().size());
+
+                /* If the generator can still produce inputs, we register the pipeline node for another round */
+                /* TODO: This could be done without checking, since there is already a generator check  */
+                if (generator.hasNext())
+                    runQueue.push(node);
+
+                /* Add stream nodes to the top of the queue, note that we need to do in reverse order as we push to the top */
+                var reverseIterator = node.getNodes().listIterator(node.getNodes().size());
+                while (reverseIterator.hasPrevious())
+                {
+                    Node streamNode = reverseIterator.previous();
+                    runQueue.push(streamNode);
+                }
+                /* Register current offset for each registered node */
+                streamHeap.registerOffset(node.getNodes(), offset);
+            }
+        }
+        catch (GenerationException e) {
+            throw new PipelineRunException("An error occurred while attempting to generate a stream input from node.", e, heap);
+        }
+
+        //  get generator for stream from stream heap
+        //  if generator hasNext
+        //    get stream offset from stream heap
+        //    register output from generator in stream Heap at offset
+        //
+        //    if generator hasNext
+        //      add node to top of runQueue
+        //    add stream nodes to top of runQueue
+        //    register offset for each stream node uid
     }
 
     /**

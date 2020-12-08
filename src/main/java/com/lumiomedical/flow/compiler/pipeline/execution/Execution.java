@@ -1,9 +1,9 @@
 package com.lumiomedical.flow.compiler.pipeline.execution;
 
-import com.lumiomedical.flow.etl.extractor.ExtractionException;
-import com.lumiomedical.flow.etl.extractor.Extractor;
-import com.lumiomedical.flow.etl.loader.Loader;
-import com.lumiomedical.flow.etl.loader.LoadingException;
+import com.lumiomedical.flow.actor.extractor.ExtractionException;
+import com.lumiomedical.flow.actor.extractor.Extractor;
+import com.lumiomedical.flow.actor.loader.Loader;
+import com.lumiomedical.flow.actor.loader.LoadingException;
 import com.lumiomedical.flow.Join;
 import com.lumiomedical.flow.Pipe;
 import com.lumiomedical.flow.Sink;
@@ -12,9 +12,12 @@ import com.lumiomedical.flow.compiler.pipeline.PipelineRunException;
 import com.lumiomedical.flow.compiler.pipeline.heap.Heap;
 import com.lumiomedical.flow.logger.Logging;
 import com.lumiomedical.flow.node.Node;
-import com.lumiomedical.flow.etl.transformer.BiTransformer;
-import com.lumiomedical.flow.etl.transformer.TransformationException;
-import com.lumiomedical.flow.etl.transformer.Transformer;
+import com.lumiomedical.flow.actor.transformer.BiTransformer;
+import com.lumiomedical.flow.actor.transformer.TransformationException;
+import com.lumiomedical.flow.actor.transformer.Transformer;
+import com.lumiomedical.flow.stream.StreamJoin;
+import com.lumiomedical.flow.stream.StreamPipe;
+import com.lumiomedical.flow.stream.StreamSink;
 
 /**
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
@@ -53,6 +56,12 @@ public class Execution
                 return this.launchJoin((Join) node, heap);
             else if (node instanceof Sink)
                 return this.launchSink((Sink<?>) node, heap);
+            else if (node instanceof StreamPipe)
+                return this.launchStreamPipe((StreamPipe<?, ?>) node, heap);
+            else if (node instanceof StreamJoin)
+                return this.launchStreamJoin((StreamJoin) node, heap);
+            else if (node instanceof StreamSink)
+                return this.launchStreamSink((StreamSink<?>) node, heap);
 
             /*
              * Returning false is a "silent" failure mode, which can be used to signify a no-go for downstream node without stopping the rest of the graph execution.
@@ -137,6 +146,63 @@ public class Execution
         Loader loader = sink.getActor();
 
         Logging.logger.debug("Launching flow sink #"+sink.getUid()+" of loader "+loader.getClass().getName());
+
+        Object input = heap.consume(sink.getSimpleUpstream().getUid());
+        loader.load(input);
+        return true;
+    }
+
+    /**
+     *
+     * @param pipe
+     * @param heap
+     * @return
+     * @throws TransformationException
+     */
+    @SuppressWarnings("unchecked")
+    private boolean launchStreamPipe(StreamPipe<?, ?> pipe, Heap heap) throws TransformationException
+    {
+        Transformer transformer = pipe.getActor();
+
+        Logging.logger.debug("Launching flow stream pipe #"+pipe.getUid()+" of transformer "+transformer.getClass().getName());
+
+        Object input = heap.consume(pipe.getSimpleUpstream().getUid());
+        heap.push(pipe.getUid(), transformer.transform(input), pipe.getDownstream().size());
+        return true;
+    }
+
+    /**
+     *
+     * @param join
+     * @param heap
+     * @return
+     * @throws TransformationException
+     */
+    @SuppressWarnings("unchecked")
+    private boolean launchStreamJoin(StreamJoin join, Heap heap) throws TransformationException
+    {
+        BiTransformer transformer = join.getActor();
+
+        Logging.logger.debug("Launching flow stream join #"+join.getUid()+" of upstream flows #"+join.getUpstream1().getUid()+" and #"+join.getUpstream2().getUid());
+
+        Object input1 = heap.consume(join.getUpstream1().getUid());
+        Object input2 = heap.consume(join.getUpstream2().getUid());
+        heap.push(join.getUid(), transformer.transform(input1, input2), join.getDownstream().size());
+        return true;
+    }
+
+    /**
+     *
+     * @param sink
+     * @param heap
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private boolean launchStreamSink(StreamSink<?> sink, Heap heap) throws LoadingException
+    {
+        Loader loader = sink.getActor();
+
+        Logging.logger.debug("Launching flow stream sink #"+sink.getUid()+" of loader "+loader.getClass().getName());
 
         Object input = heap.consume(sink.getSimpleUpstream().getUid());
         loader.load(input);

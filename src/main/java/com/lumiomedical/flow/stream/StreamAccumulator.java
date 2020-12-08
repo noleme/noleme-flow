@@ -1,35 +1,35 @@
-package com.lumiomedical.flow;
+package com.lumiomedical.flow.stream;
 
+import com.lumiomedical.flow.FlowOut;
+import com.lumiomedical.flow.Join;
+import com.lumiomedical.flow.Pipe;
+import com.lumiomedical.flow.Sink;
+import com.lumiomedical.flow.actor.accumulator.Accumulator;
 import com.lumiomedical.flow.actor.generator.Generator;
 import com.lumiomedical.flow.actor.loader.Loader;
 import com.lumiomedical.flow.actor.transformer.BiTransformer;
 import com.lumiomedical.flow.actor.transformer.Transformer;
 import com.lumiomedical.flow.node.SimpleNode;
 import com.lumiomedical.flow.recipient.Recipient;
-import com.lumiomedical.flow.stream.StreamGenerator;
 
 import java.util.function.Function;
 
 /**
- * Pipes are a point of passage in a DAG.
- * They accept an input from upstream which they can alter and pass downstream.
- *
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
- * Created on 2020/02/28
+ * Created on 2020/12/03
  */
-public class Pipe<I, O> extends SimpleNode<Transformer<I, O>> implements FlowIn<I>, FlowOut<O>
+public class StreamAccumulator <I, O> extends SimpleNode<Accumulator<I, O>> implements StreamIn<I>, FlowOut<O>
 {
     /**
-     *
      * @param actor
      */
-    public Pipe(Transformer<I, O> actor)
+    public StreamAccumulator(Accumulator<I, O> actor)
     {
         super(actor);
     }
 
     @Override
-    public <N> Pipe<O, N> into(Transformer<O, N> transformer)
+    public <NO> Pipe<O, NO> into(Transformer<O, NO> transformer)
     {
         var pipe = new Pipe<>(transformer);
         this.bind(pipe);
@@ -63,7 +63,7 @@ public class Pipe<I, O> extends SimpleNode<Transformer<I, O>> implements FlowIn<
      * @param loader
      * @return
      */
-    public Pipe<I, O> drift(Loader<O> loader)
+    public StreamAccumulator<I, O> drift(Loader<O> loader)
     {
         this.into(loader);
         return this;
@@ -82,7 +82,7 @@ public class Pipe<I, O> extends SimpleNode<Transformer<I, O>> implements FlowIn<
      * @param name
      * @return
      */
-    public Pipe<I, O> sample(String name)
+    public StreamAccumulator<I, O> sample(String name)
     {
         this.collect(name);
         return this;

@@ -1,9 +1,10 @@
-package com.lumiomedical.flow.compiler.pipeline;
+package com.lumiomedical.flow.compiler.pipeline.parallel;
 
 import com.lumiomedical.flow.compiler.CompilationException;
 import com.lumiomedical.flow.compiler.FlowCompiler;
-import com.lumiomedical.flow.compiler.pipeline.parallel.ExecutorServiceProvider;
-import com.lumiomedical.flow.compiler.pipeline.parallel.Executors;
+import com.lumiomedical.flow.compiler.pipeline.PipelineCompiler;
+import com.lumiomedical.flow.compiler.pipeline.parallel.executor.ExecutorServiceProvider;
+import com.lumiomedical.flow.compiler.pipeline.parallel.executor.Executors;
 import com.lumiomedical.flow.node.Node;
 
 import java.util.Collection;
@@ -14,7 +15,7 @@ import java.util.stream.Collectors;
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
  * Created on 2020/03/03
  */
-public class ParallelPipelineCompiler implements FlowCompiler<ParallelPipelineRuntime>
+public class ParallelCompiler implements FlowCompiler<ParallelRuntime>
 {
     private final ExecutorServiceProvider provider;
     private boolean autoRefresh;
@@ -22,7 +23,7 @@ public class ParallelPipelineCompiler implements FlowCompiler<ParallelPipelineRu
     /**
      *
      */
-    public ParallelPipelineCompiler()
+    public ParallelCompiler()
     {
         this(Runtime.getRuntime().availableProcessors(), true);
     }
@@ -30,7 +31,7 @@ public class ParallelPipelineCompiler implements FlowCompiler<ParallelPipelineRu
     /**
      *
      */
-    public ParallelPipelineCompiler(int threadCount, boolean autoRefresh)
+    public ParallelCompiler(int threadCount, boolean autoRefresh)
     {
         this(() -> Executors.newFixedThreadPool(threadCount), autoRefresh);
     }
@@ -40,14 +41,14 @@ public class ParallelPipelineCompiler implements FlowCompiler<ParallelPipelineRu
      * @param provider
      * @param autoRefresh
      */
-    public ParallelPipelineCompiler(ExecutorServiceProvider provider, boolean autoRefresh)
+    public ParallelCompiler(ExecutorServiceProvider provider, boolean autoRefresh)
     {
         this.provider = provider;
         this.autoRefresh = autoRefresh;
     }
 
     @Override
-    public ParallelPipelineRuntime compile(Collection<Node> inputNodes) throws CompilationException
+    public ParallelRuntime compile(Collection<Node> inputNodes) throws CompilationException
     {
         List<Node> startNodes = new PipelineCompiler().compileNodes(inputNodes)
             .stream()
@@ -55,7 +56,7 @@ public class ParallelPipelineCompiler implements FlowCompiler<ParallelPipelineRu
             .collect(Collectors.toList())
         ;
 
-        return new ParallelPipelineRuntime(
+        return new ParallelRuntime(
             startNodes,
             this.provider,
             this.autoRefresh

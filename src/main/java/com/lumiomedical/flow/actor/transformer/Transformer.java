@@ -1,4 +1,4 @@
-package com.lumiomedical.flow.etl.transformer;
+package com.lumiomedical.flow.actor.transformer;
 
 /**
  * @author Pierre Lecerf (plecerf@lumiomedical.com)

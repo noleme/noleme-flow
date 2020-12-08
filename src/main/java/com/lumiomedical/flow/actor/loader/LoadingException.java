@@ -1,4 +1,4 @@
-package com.lumiomedical.flow.etl.loader;
+package com.lumiomedical.flow.actor.loader;
 
 /**
  * @author Pierre Lecerf (plecerf@lumiomedical.com)

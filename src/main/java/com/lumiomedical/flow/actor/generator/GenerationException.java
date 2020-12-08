@@ -1,16 +1,16 @@
-package com.lumiomedical.flow.etl.transformer;
+package com.lumiomedical.flow.actor.generator;
 
 /**
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
- * Created on 2020/02/26
+ * Created on 2020/12/03
  */
-public class TransformationException extends Exception
+public class GenerationException extends Exception
 {
     /**
      *
      * @param message
      */
-    public TransformationException(String message)
+    public GenerationException(String message)
     {
         super(message);
     }
@@ -20,7 +20,7 @@ public class TransformationException extends Exception
      * @param message
      * @param cause
      */
-    public TransformationException(String message, Throwable cause)
+    public GenerationException(String message, Throwable cause)
     {
         super(message, cause);
     }

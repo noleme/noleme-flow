@@ -4,7 +4,7 @@ package com.lumiomedical.flow.compiler.pipeline.heap;
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
  * Created on 2020/03/03
  */
-class Counter
+public class Counter
 {
     private final Object value;
     private int count;

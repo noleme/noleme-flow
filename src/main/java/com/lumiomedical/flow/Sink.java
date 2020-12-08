@@ -1,6 +1,6 @@
 package com.lumiomedical.flow;
 
-import com.lumiomedical.flow.etl.loader.Loader;
+import com.lumiomedical.flow.actor.loader.Loader;
 import com.lumiomedical.flow.node.SimpleNode;
 
 /**

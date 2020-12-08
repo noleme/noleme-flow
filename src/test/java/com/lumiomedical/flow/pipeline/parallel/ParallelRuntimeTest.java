@@ -1,4 +1,4 @@
-package com.lumiomedical.flow.pipeline;
+package com.lumiomedical.flow.pipeline.parallel;
 
 import com.lumiomedical.flow.Flow;
 import com.lumiomedical.flow.FlowAssertion;
@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
  * Created on 2020/03/10
  */
-public class ParallelPipelineRuntimeTest
+public class ParallelRuntimeTest
 {
     @Test
     void testSimpleStringEdit() throws RunException, CompilationException
@@ -29,7 +29,7 @@ public class ParallelPipelineRuntimeTest
                 pipeAssertion.setActivated(true);
             });
 
-        Flow.runAsParallelPipeline(pipe);
+        Flow.runAsParallel(pipe);
         Assertions.assertTrue(pipeAssertion.isActivated());
     }
 
@@ -43,7 +43,7 @@ public class ParallelPipelineRuntimeTest
             pipeAssertion.setActivated(true);
         });
 
-        Flow.runAsParallelPipeline(pipe);
+        Flow.runAsParallel(pipe);
         Assertions.assertTrue(pipeAssertion.isActivated());
     }
 
@@ -57,7 +57,7 @@ public class ParallelPipelineRuntimeTest
             pipeAssertion.setActivated(true);
         });
 
-        Flow.runAsParallelPipeline(pipe);
+        Flow.runAsParallel(pipe);
         Assertions.assertTrue(pipeAssertion.isActivated());
     }
 
@@ -71,7 +71,7 @@ public class ParallelPipelineRuntimeTest
             pipeAssertion.setActivated(true);
         });
 
-        Flow.runAsParallelPipeline(pipe);
+        Flow.runAsParallel(pipe);
         Assertions.assertTrue(pipeAssertion.isActivated());
     }
 
@@ -94,7 +94,7 @@ public class ParallelPipelineRuntimeTest
                 pipeAssertion2.setActivated(true);
             });
 
-        Flow.runAsParallelPipeline(sink1, sink2);
+        Flow.runAsParallel(sink1, sink2);
         Assertions.assertTrue(pipeAssertion1.isActivated());
         Assertions.assertTrue(pipeAssertion2.isActivated());
     }
@@ -121,7 +121,7 @@ public class ParallelPipelineRuntimeTest
 
         sink1.after(sink2);
 
-        Flow.runAsParallelPipeline(sink1, sink2);
+        Flow.runAsParallel(sink1, sink2);
         Assertions.assertTrue(pipeAssertion2.isActivated());
     }
 
@@ -138,7 +138,7 @@ public class ParallelPipelineRuntimeTest
             pipeAssertion.setActivated(true);
         });
 
-        Flow.runAsParallelPipeline(pipe);
+        Flow.runAsParallel(pipe);
         Assertions.assertTrue(pipeAssertion.isActivated());
     }
 
@@ -158,7 +158,7 @@ public class ParallelPipelineRuntimeTest
             pipeAssertion.setActivated(true);
         });
 
-        Flow.runAsParallelPipeline(pipe);
+        Flow.runAsParallel(pipe);
         Assertions.assertTrue(pipeAssertion.isActivated());
     }
 
@@ -178,75 +178,10 @@ public class ParallelPipelineRuntimeTest
             .into(stateC::setValue)
         ;
 
-        Flow.runAsParallelPipeline(flow);
+        Flow.runAsParallel(flow);
 
         Assertions.assertEquals(20, stateA.getValue());
         Assertions.assertEquals(5, stateB.getValue());
         Assertions.assertEquals(10, stateC.getValue());
-    }
-
-    @Test
-    void testCollect1() throws RunException, CompilationException
-    {
-        var recipient = FlowDealer.joinSub(
-            FlowDealer.joinMult(
-                FlowDealer.sourceReturns8(),
-                FlowDealer.sourceReturns9()
-            ),
-            FlowDealer.sourceReturns6()
-        ).collect();
-
-        Flow.runAsParallelPipeline(recipient);
-
-        Assertions.assertEquals(66, recipient.getContent());
-    }
-
-    @Test
-    void testCollect2() throws RunException, CompilationException
-    {
-        var recipient = FlowDealer.sourceReturns8()
-            .into(i -> i * 3)
-            .join(FlowDealer.sourceReturns9(), (a, b) -> a - b)
-            .join(FlowDealer.sourceReturns6(), (a, b) -> a ^ b)
-            .join(FlowDealer.sourceReturns8(), (a, b) -> ((float)a / (float)b))
-            .collect()
-        ;
-
-        Flow.runAsParallelPipeline(recipient);
-
-        Assertions.assertEquals(1.125F, recipient.getContent());
-    }
-
-    @Test
-    void testSample1() throws RunException, CompilationException
-    {
-        var flow = FlowDealer.sourceReturns8()
-            .into(i -> i * 3)
-            .join(FlowDealer.sourceReturns9(), (a, b) -> a - b)
-            .sample("a")
-            .join(FlowDealer.sourceReturns6(), (a, b) -> a ^ b)
-            .sample("b")
-            .join(FlowDealer.sourceReturns8(), (a, b) -> ((float)a / (float)b))
-        ;
-
-        var runtime = Flow.runAsParallelPipeline(flow);
-
-        Assertions.assertEquals(15, runtime.getSample("a", Integer.class));
-        Assertions.assertEquals(9, runtime.getSample("b", Integer.class));
-    }
-
-    @Test
-    void testSampleError1() throws RunException, CompilationException
-    {
-        var flow = FlowDealer.sourceReturns8()
-            .into(i -> i * 3)
-            .join(FlowDealer.sourceReturns9(), (a, b) -> a - b)
-            .sample("a")
-            .join(FlowDealer.sourceReturns6(), (a, b) -> a ^ b)
-        ;
-
-        var runtime = Flow.runAsParallelPipeline(flow);
-
-        Assertions.assertThrows(RunException.class, () -> runtime.getSample("a", Double.class));
     }
 }

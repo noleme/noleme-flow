@@ -1,9 +1,11 @@
-package com.lumiomedical.flow.compiler.pipeline;
+package com.lumiomedical.flow.compiler.pipeline.parallel;
 
+import com.lumiomedical.flow.compiler.pipeline.PipelineRunException;
+import com.lumiomedical.flow.compiler.pipeline.PipelineRuntime;
 import com.lumiomedical.flow.compiler.pipeline.execution.NodeCallable;
 import com.lumiomedical.flow.compiler.pipeline.heap.ConcurrentHashHeap;
 import com.lumiomedical.flow.compiler.pipeline.heap.Heap;
-import com.lumiomedical.flow.compiler.pipeline.parallel.ExecutorServiceProvider;
+import com.lumiomedical.flow.compiler.pipeline.parallel.executor.ExecutorServiceProvider;
 import com.lumiomedical.flow.logger.Logging;
 import com.lumiomedical.flow.node.Node;
 import com.lumiomedical.flow.recipient.Recipient;
@@ -15,7 +17,7 @@ import java.util.concurrent.*;
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
  * Created on 2020/03/03
  */
-public class ParallelPipelineRuntime extends PipelineRuntime
+public class ParallelRuntime extends PipelineRuntime
 {
     private final ExecutorServiceProvider poolProvider;
     private final boolean autoRefresh;
@@ -27,7 +29,7 @@ public class ParallelPipelineRuntime extends PipelineRuntime
      * @param compiledNodes
      * @param executorServiceProvider
      */
-    public ParallelPipelineRuntime(List<Node> compiledNodes, ExecutorServiceProvider executorServiceProvider, boolean autoRefresh)
+    public ParallelRuntime(List<Node> compiledNodes, ExecutorServiceProvider executorServiceProvider, boolean autoRefresh)
     {
         super(compiledNodes);
         this.poolProvider = executorServiceProvider;

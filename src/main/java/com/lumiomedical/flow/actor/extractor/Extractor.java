@@ -1,4 +1,4 @@
-package com.lumiomedical.flow.etl.extractor;
+package com.lumiomedical.flow.actor.extractor;
 
 /**
  * @author Pierre Lecerf (plecerf@lumiomedical.com)

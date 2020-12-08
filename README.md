@@ -54,7 +54,7 @@ var flow = Flow
     .from(() -> 1)
     .into(i -> i + 1)
     .into(i -> i * 2)
-    .into((Loader<Integer>) System.out::println)
+    .sink(System.out::println)
 ;
 
 /* We run it as a Pipeline */
