@@ -13,6 +13,7 @@ import com.lumiomedical.flow.compiler.pipeline.stream.StreamPipelineNode;
 import com.lumiomedical.flow.logger.Logging;
 import com.lumiomedical.flow.node.Node;
 import com.lumiomedical.flow.recipient.Recipient;
+import com.lumiomedical.flow.stream.StreamAccumulator;
 
 import java.util.*;
 
@@ -75,6 +76,7 @@ public class PipelineRuntime implements FlowRuntime
         while (!runQueue.isEmpty())
         {
             Node n = runQueue.poll();
+            Heap dynHeap = heap;
 
             if (blocked.contains(n))
                 continue;
@@ -82,15 +84,15 @@ public class PipelineRuntime implements FlowRuntime
             /* If the node is a StreamPipelineNode we need to register a stream round */
             if (n instanceof StreamPipelineNode)
                 registerStream((StreamPipelineNode) n, runQueue, heap, streamHeap);
-            /* If the node is part of a stream round, we handle it separately due to offset computations */
-            else if (streamHeap.hasOffset(n))
-            {
-                if (!this.execution.launch(n, streamHeap))
+            /* Otherwise we handle it as a standard node */
+            else {
+                /* If the node is part of a stream round or is an accumulator, we use the stream heap instead of the standard heap */
+                if (streamHeap.hasOffset(n) || n instanceof StreamAccumulator)
+                    dynHeap = streamHeap;
+
+                if (!this.execution.launch(n, dynHeap))
                     blockBranch(n, blocked);
             }
-            /* Otherwise we handle it as a standard node */
-            else if (!this.execution.launch(n, heap))
-                blockBranch(n, blocked);
         }
 
         return heap;

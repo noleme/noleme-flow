@@ -1,23 +1,29 @@
 package com.lumiomedical.flow.compiler.pipeline.execution;
 
-import com.lumiomedical.flow.actor.extractor.ExtractionException;
-import com.lumiomedical.flow.actor.extractor.Extractor;
-import com.lumiomedical.flow.actor.loader.Loader;
-import com.lumiomedical.flow.actor.loader.LoadingException;
 import com.lumiomedical.flow.Join;
 import com.lumiomedical.flow.Pipe;
 import com.lumiomedical.flow.Sink;
 import com.lumiomedical.flow.Source;
-import com.lumiomedical.flow.compiler.pipeline.PipelineRunException;
-import com.lumiomedical.flow.compiler.pipeline.heap.Heap;
-import com.lumiomedical.flow.logger.Logging;
-import com.lumiomedical.flow.node.Node;
+import com.lumiomedical.flow.actor.accumulator.AccumulationException;
+import com.lumiomedical.flow.actor.accumulator.Accumulator;
+import com.lumiomedical.flow.actor.extractor.ExtractionException;
+import com.lumiomedical.flow.actor.extractor.Extractor;
+import com.lumiomedical.flow.actor.loader.Loader;
+import com.lumiomedical.flow.actor.loader.LoadingException;
 import com.lumiomedical.flow.actor.transformer.BiTransformer;
 import com.lumiomedical.flow.actor.transformer.TransformationException;
 import com.lumiomedical.flow.actor.transformer.Transformer;
+import com.lumiomedical.flow.compiler.pipeline.PipelineRunException;
+import com.lumiomedical.flow.compiler.pipeline.heap.Heap;
+import com.lumiomedical.flow.compiler.pipeline.stream.StreamHeap;
+import com.lumiomedical.flow.logger.Logging;
+import com.lumiomedical.flow.node.Node;
+import com.lumiomedical.flow.stream.StreamAccumulator;
 import com.lumiomedical.flow.stream.StreamJoin;
 import com.lumiomedical.flow.stream.StreamPipe;
 import com.lumiomedical.flow.stream.StreamSink;
+
+import java.util.Collection;
 
 /**
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
@@ -62,6 +68,8 @@ public class Execution
                 return this.launchStreamJoin((StreamJoin) node, heap);
             else if (node instanceof StreamSink)
                 return this.launchStreamSink((StreamSink<?>) node, heap);
+            else if (node instanceof StreamAccumulator)
+                return this.launchStreamAccumulator((StreamAccumulator<?, ?>) node, (StreamHeap) heap);
 
             /*
              * Returning false is a "silent" failure mode, which can be used to signify a no-go for downstream node without stopping the rest of the graph execution.
@@ -71,7 +79,9 @@ public class Execution
 
             throw new PipelineRunException("Unknown node type " + node.getClass().getName(), heap);
         }
-        catch (ExtractionException | TransformationException | LoadingException e) {
+        catch (ExtractionException | TransformationException | LoadingException | AccumulationException e) {
+            Logging.logger.error("Flow node #"+node.getUid()+" has thrown an error: "+e.getMessage(), e);
+
             throw new PipelineRunException(
                 "Node " + node.getClass().getName() + "#" + node.getUid() + " has thrown an exception. (" + e.getClass() + ")", e, heap
             );
@@ -196,6 +206,7 @@ public class Execution
      * @param sink
      * @param heap
      * @return
+     * @throws LoadingException
      */
     @SuppressWarnings("unchecked")
     private boolean launchStreamSink(StreamSink<?> sink, Heap heap) throws LoadingException
@@ -206,6 +217,27 @@ public class Execution
 
         Object input = heap.consume(sink.getSimpleUpstream().getUid());
         loader.load(input);
+        return true;
+    }
+
+    /**
+     *
+     * @param node
+     * @param heap
+     * @return
+     * @throws AccumulationException
+     */
+    @SuppressWarnings("unchecked")
+    private boolean launchStreamAccumulator(StreamAccumulator<?, ?> node, StreamHeap heap) throws AccumulationException
+    {
+        Accumulator accumulator = node.getActor();
+
+        Logging.logger.debug("Launching flow stream accumulator #"+node.getUid()+" of accumulator "+node.getClass().getName());
+
+        Collection<Object> input = heap.consumeAll(node.getSimpleUpstream().getUid());
+
+        heap.push(node.getUid(), accumulator.accumulate(input), node.getDownstream().size());
+
         return true;
     }
 }

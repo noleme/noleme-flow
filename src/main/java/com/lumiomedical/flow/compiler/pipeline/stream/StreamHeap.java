@@ -41,4 +41,11 @@ public interface StreamHeap extends Heap
      * @return
      */
     StreamHeap registerOffset(Collection<Node> nodes, int offset);
+
+    /**
+     *
+     * @param id
+     * @return
+     */
+    Collection<Object> consumeAll(String id);
 }

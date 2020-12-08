@@ -6,6 +6,7 @@ import com.lumiomedical.flow.compiler.pipeline.heap.Heap;
 import com.lumiomedical.flow.node.Node;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
@@ -63,6 +64,9 @@ public class StreamHashHeap implements StreamHeap
     @Override
     public Heap push(String id, Object returnValue, int counter)
     {
+        if (!this.offsets.containsKey(id))
+            return this.backend.push(id, returnValue, counter);
+        
         if (!this.contents.containsKey(id))
             this.contents.put(id, new ArrayList<>());
 
@@ -104,6 +108,30 @@ public class StreamHashHeap implements StreamHeap
         }
         else if (this.backend.has(id))
             return this.backend.peek(id);
+
+        return null;
+    }
+
+    @Override
+    public Collection<Object> consumeAll(String id)
+    {
+        if (this.hasContent(id))
+        {
+            List<Counter> counters = this.contents.get(id);
+
+            Collection<Object> values = counters.stream()
+                .map(c -> c.decrement().getValue())
+                .collect(Collectors.toList())
+            ;
+
+            for (int offset = 0 ; offset < counters.size() ; ++offset)
+            {
+                if (counters.get(offset).getCount() == 0)
+                    counters.set(offset, null);
+            }
+
+            return values;
+        }
 
         return null;
     }

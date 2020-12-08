@@ -5,6 +5,7 @@ import com.lumiomedical.flow.actor.accumulator.AccumulationException;
 import com.lumiomedical.flow.compiler.CompilationException;
 import com.lumiomedical.flow.compiler.RunException;
 import com.lumiomedical.flow.pipeline.stream.IterableGenerator;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -22,10 +23,15 @@ public class PipelineStreamTest
             .from(() -> List.of(1, 2, 3, 4, 5))
             .stream(IterableGenerator::new)
             .into(i -> i + 1)
-            .sink(System.out::println)
+            .accumulate(ls -> ls.stream()
+                .reduce(Integer::sum)
+                .orElseThrow(() -> new AccumulationException("Could not sum stream data."))
+            )
+            .collect()
         ;
 
         Flow.runAsPipeline(flow);
+        Assertions.assertEquals(20, flow.getContent());
     }
 
     @Test
@@ -36,45 +42,50 @@ public class PipelineStreamTest
             .into(i -> i + 2)
         ;
 
-        var flowB = Flow
+        var flow = Flow
             .from(() -> List.of(1, 2, 3, 4, 5))
             .stream(IterableGenerator::new)
             .into(i -> i + 1)
             .join(flowA, (b, a) -> a * b)
-            .sink(System.out::println)
+            .accumulate(ls -> ls.stream()
+                .reduce(Integer::sum)
+                .orElseThrow(() -> new AccumulationException("Could not sum stream data."))
+            )
+            .collect()
         ;
 
-        Flow.runAsPipeline(flowB);
+        Flow.runAsPipeline(flow);
+        Assertions.assertEquals(100, flow.getContent());
     }
 
     @Test
     void test3() throws RunException, CompilationException
     {
-        var flowB = Flow
+        var flowA = Flow
             .from(() -> 3)
             .into(i -> i + 2)
         ;
 
-        var flowC = Flow
+        var flowB = Flow
             .from(() -> 2)
             .into(i -> i * 3)
         ;
 
-        var flowA = Flow
+        var flow = Flow
             .from(() -> List.of(1, 2, 3, 4, 5))
             .stream(IterableGenerator::new)
             .into(i -> i + 1)
-            .join(flowB, (a, b) -> a * b)
+            .join(flowA, (a, b) -> a * b)
             .into(i -> i - 1)
-            .drift(System.out::println)
             .accumulate(ls -> ls.stream()
                 .reduce(Integer::sum)
                 .orElseThrow(() -> new AccumulationException("Could not sum stream data."))
             )
-            .join(flowC, (a, c) -> a * c)
-            .sink(System.out::println)
+            .join(flowB, (a, c) -> a * c)
+            .collect()
         ;
 
-        Flow.runAsPipeline(flowA);
+        Flow.runAsPipeline(flow);
+        Assertions.assertEquals(570, flow.getContent());
     }
 }
