@@ -1,15 +1,18 @@
 package com.lumiomedical.flow;
 
-import com.lumiomedical.flow.etl.extractor.Extractor;
-import com.lumiomedical.flow.etl.loader.Loader;
-import com.lumiomedical.flow.etl.transformer.BiTransformer;
+import com.lumiomedical.flow.actor.extractor.Extractor;
+import com.lumiomedical.flow.actor.generator.Generator;
+import com.lumiomedical.flow.actor.loader.Loader;
+import com.lumiomedical.flow.actor.transformer.BiTransformer;
+import com.lumiomedical.flow.actor.transformer.Transformer;
 import com.lumiomedical.flow.node.Node;
 import com.lumiomedical.flow.node.SimpleNode;
-import com.lumiomedical.flow.etl.transformer.Transformer;
 import com.lumiomedical.flow.recipient.Recipient;
+import com.lumiomedical.flow.stream.StreamGenerator;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * Sources represent an entrypoint node in a DAG.
@@ -48,7 +51,15 @@ public class Source<O> extends SimpleNode<Extractor<O>> implements FlowOut<O>
     @Override
     public <JI, JO> Join<O, JI, JO> join(FlowOut<JI> input, BiTransformer<O, JI, JO> transformer)
     {
-        return Flow.join(this, input, transformer);
+        return new Join<>(this, input, transformer);
+    }
+
+    @Override
+    public <N> StreamGenerator<O, N> stream(Function<O, Generator<N>> generatorSupplier)
+    {
+        var pipe = new StreamGenerator<>(generatorSupplier);
+        this.bind(pipe);
+        return pipe;
     }
 
     /**
@@ -58,8 +69,7 @@ public class Source<O> extends SimpleNode<Extractor<O>> implements FlowOut<O>
      */
     public Source<O> drift(Loader<O> loader)
     {
-        var sink = new Sink<>(loader);
-        this.bind(sink);
+        this.into(loader);
         return this;
     }
 

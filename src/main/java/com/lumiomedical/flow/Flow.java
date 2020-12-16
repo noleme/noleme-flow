@@ -1,24 +1,28 @@
 package com.lumiomedical.flow;
 
+import com.lumiomedical.flow.actor.extractor.Extractor;
+import com.lumiomedical.flow.actor.generator.Generator;
+import com.lumiomedical.flow.actor.loader.Loader;
+import com.lumiomedical.flow.actor.transformer.BiTransformer;
+import com.lumiomedical.flow.actor.transformer.Transformer;
 import com.lumiomedical.flow.compiler.CompilationException;
 import com.lumiomedical.flow.compiler.FlowCompiler;
 import com.lumiomedical.flow.compiler.FlowRuntime;
 import com.lumiomedical.flow.compiler.RunException;
-import com.lumiomedical.flow.compiler.pipeline.ParallelPipelineCompiler;
-import com.lumiomedical.flow.compiler.pipeline.ParallelPipelineRuntime;
-import com.lumiomedical.flow.compiler.pipeline.PipelineCompiler;
-import com.lumiomedical.flow.compiler.pipeline.PipelineRuntime;
-import com.lumiomedical.flow.compiler.pipeline.parallel.ExecutorServiceProvider;
-import com.lumiomedical.flow.etl.extractor.Extractor;
-import com.lumiomedical.flow.etl.loader.Loader;
-import com.lumiomedical.flow.etl.transformer.BiTransformer;
-import com.lumiomedical.flow.etl.transformer.Transformer;
+import com.lumiomedical.flow.impl.pipeline.PipelineCompiler;
+import com.lumiomedical.flow.impl.pipeline.PipelineRuntime;
+import com.lumiomedical.flow.impl.parallel.ParallelCompiler;
+import com.lumiomedical.flow.impl.parallel.ParallelRuntime;
+import com.lumiomedical.flow.impl.parallel.runtime.executor.ExecutorServiceProvider;
 import com.lumiomedical.flow.node.Node;
+import com.lumiomedical.flow.stream.*;
 
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * A helper class for initiating flows, it also provides a handful of shorthand methods for building and launching flow DAGs.
@@ -70,9 +74,9 @@ public final class Flow
      * @throws CompilationException
      * @throws RunException
      */
-    public static ParallelPipelineRuntime runAsParallelPipeline(int threadCount, Node... inputNodes) throws CompilationException, RunException
+    public static ParallelRuntime runAsParallel(int threadCount, Node... inputNodes) throws CompilationException, RunException
     {
-        return runAs(new ParallelPipelineCompiler(threadCount, true), inputNodes);
+        return runAs(new ParallelCompiler(threadCount, true), inputNodes);
     }
 
     /**
@@ -85,9 +89,9 @@ public final class Flow
      * @throws CompilationException
      * @throws RunException
      */
-    public static ParallelPipelineRuntime runAsParallelPipeline(ExecutorServiceProvider provider, boolean autoRefresh, Node... inputNodes) throws CompilationException, RunException
+    public static ParallelRuntime runAsParallel(ExecutorServiceProvider provider, boolean autoRefresh, Node... inputNodes) throws CompilationException, RunException
     {
-        return runAs(new ParallelPipelineCompiler(provider, autoRefresh), inputNodes);
+        return runAs(new ParallelCompiler(provider, autoRefresh), inputNodes);
     }
 
     /**
@@ -101,9 +105,9 @@ public final class Flow
      * @throws CompilationException
      * @throws RunException
      */
-    public static ParallelPipelineRuntime runAsParallelPipeline(Node... inputNodes) throws CompilationException, RunException
+    public static ParallelRuntime runAsParallel(Node... inputNodes) throws CompilationException, RunException
     {
-        return runAs(new ParallelPipelineCompiler(), inputNodes);
+        return runAs(new ParallelCompiler(), inputNodes);
     }
 
     /**
@@ -119,6 +123,17 @@ public final class Flow
         return new Source<>(extractor);
     }
 
+    /**
+     *
+     * @param generatorSupplier
+     * @param <O>
+     * @return
+     */
+    public static <O> StreamGenerator<Void, O> stream(Supplier<Generator<O>> generatorSupplier)
+    {
+        return new StreamGenerator<>(i -> generatorSupplier.get());
+    }
+
     /** @see #pipe(FlowOut, Transformer) */
     public static <I, O> Pipe<I, O> into(FlowOut<I> flow, Transformer<I, O> transformer)
     {
@@ -127,6 +142,24 @@ public final class Flow
 
     /** @see #sink(FlowOut, Loader) */
     public static <I> Sink<I> into(FlowOut<I> flow, Loader<I> loader)
+    {
+        return flow.into(loader);
+    }
+
+    /** @see #stream(FlowOut, Function) */
+    public static <I, O> StreamGenerator<I, O> into(FlowOut<I> flow, Function<I, Generator<O>> generatorSupplier)
+    {
+        return flow.stream(generatorSupplier);
+    }
+
+    /** @see #pipe(StreamOut, Transformer) */
+    public static <I, O> StreamPipe<I, O> into(StreamOut<I> flow, Transformer<I, O> transformer)
+    {
+        return flow.into(transformer);
+    }
+
+    /** @see #sink(StreamOut, Loader) */
+    public static <I> StreamSink<I> into(StreamOut<I> flow, Loader<I> loader)
     {
         return flow.into(loader);
     }
@@ -159,6 +192,33 @@ public final class Flow
     }
 
     /**
+     * Returns the StreamPipe node resulting from the binding of a provided stream flow to a Transformer.
+     *
+     * @param flow a flow to which the Transformer will be bound
+     * @param transformer the Transformer to bind
+     * @param <I> the type of the upstream flow
+     * @param <O> the type of the downstream flow
+     * @return the resulting StreamPipe node
+     */
+    public static <I, O> StreamPipe<I, O> pipe(StreamOut<I> flow, Transformer<I, O> transformer)
+    {
+        return flow.into(transformer);
+    }
+
+    /**
+     * Returns the StreamSink node resulting from the binding of a provided stream flow to a Loader.
+     *
+     * @param flow a flow to which the Loader will be bound
+     * @param loader the Loader to bind
+     * @param <I> the type of the upstream flow
+     * @return the resulting StreamSink node
+     */
+    public static <I> StreamSink<I> sink(StreamOut<I> flow, Loader<I> loader)
+    {
+        return flow.into(loader);
+    }
+
+    /**
      * Returns a Join node resulting from the joining of two flows using a provided BiTransformer.
      *
      * @param input1 a FlowOut node of an incoming flow A
@@ -171,7 +231,36 @@ public final class Flow
      */
     public static <I1, I2, O> Join<I1, I2, O> join(FlowOut<I1> input1, FlowOut<I2> input2, BiTransformer<I1, I2, O> transformer)
     {
-        return new Join<>(input1, input2, transformer);
+        return input1.join(input2, transformer);
+    }
+
+    /**
+     *
+     * @param flow a flow from which to initiate the stream
+     * @param generatorSupplier
+     * @param <I>
+     * @param <O>
+     * @return
+     */
+    public static <I, O> StreamGenerator<I, O> stream(FlowOut<I> flow, Function<I, Generator<O>> generatorSupplier)
+    {
+        return flow.stream(generatorSupplier);
+    }
+
+    /**
+     * Returns a StreamJoin node resulting from the joining of a stream flow and a non-stream flow using a provided BiTransformer.
+     *
+     * @param input1 a StreamOut node of an incoming stream flow A
+     * @param input2 a FlowOut node of an incoming flow B
+     * @param transformer a BiTransformer describing how to perform the join
+     * @param <I1> the type of incoming flow A
+     * @param <I2> the type of incoming flow B
+     * @param <O> the type resulting from the merging of flow A and B
+     * @return the resulting StreamJoin node
+     */
+    public static <I1, I2, O> StreamJoin<I1, I2, O> join(StreamOut<I1> input1, FlowOut<I2> input2, BiTransformer<I1, I2, O> transformer)
+    {
+        return input1.join(input2, transformer);
     }
 
     /**

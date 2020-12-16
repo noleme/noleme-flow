@@ -1,6 +1,6 @@
 package com.lumiomedical.flow.recipient;
 
-import com.lumiomedical.flow.etl.loader.Loader;
+import com.lumiomedical.flow.actor.loader.Loader;
 
 /**
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
