@@ -9,11 +9,11 @@ import com.lumiomedical.flow.compiler.CompilationException;
 import com.lumiomedical.flow.compiler.FlowCompiler;
 import com.lumiomedical.flow.compiler.FlowRuntime;
 import com.lumiomedical.flow.compiler.RunException;
-import com.lumiomedical.flow.compiler.pipeline.PipelineCompiler;
-import com.lumiomedical.flow.compiler.pipeline.PipelineRuntime;
-import com.lumiomedical.flow.compiler.pipeline.parallel.ParallelCompiler;
-import com.lumiomedical.flow.compiler.pipeline.parallel.ParallelRuntime;
-import com.lumiomedical.flow.compiler.pipeline.parallel.executor.ExecutorServiceProvider;
+import com.lumiomedical.flow.impl.pipeline.PipelineCompiler;
+import com.lumiomedical.flow.impl.pipeline.PipelineRuntime;
+import com.lumiomedical.flow.impl.parallel.ParallelCompiler;
+import com.lumiomedical.flow.impl.parallel.ParallelRuntime;
+import com.lumiomedical.flow.impl.parallel.runtime.executor.ExecutorServiceProvider;
 import com.lumiomedical.flow.node.Node;
 import com.lumiomedical.flow.stream.*;
 
@@ -22,6 +22,7 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * A helper class for initiating flows, it also provides a handful of shorthand methods for building and launching flow DAGs.
@@ -120,6 +121,17 @@ public final class Flow
     public static <O> Source<O> from(Extractor<O> extractor)
     {
         return new Source<>(extractor);
+    }
+
+    /**
+     *
+     * @param generatorSupplier
+     * @param <O>
+     * @return
+     */
+    public static <O> StreamGenerator<Void, O> stream(Supplier<Generator<O>> generatorSupplier)
+    {
+        return new StreamGenerator<>(i -> generatorSupplier.get());
     }
 
     /** @see #pipe(FlowOut, Transformer) */

@@ -19,7 +19,7 @@ Add the following in your `pom.xml`:
 <dependency>
     <groupId>com.lumiomedical</groupId>
     <artifactId>lumio-flow</artifactId>
-    <version>0.8</version>
+    <version>0.9</version>
 </dependency>
 ```
 
@@ -33,12 +33,17 @@ These actions can be of three different types, mirroring an ETL process:
 * `Transformer` for manipulating data and returning an altered version of it, or new data inferred from the input
 * `Loader` for dumping data out of the flow
 
+Additionally, there are two actions related to stream flows:
+
+* `Generator` for gradually introducing data into the flow, they can be iterating through a `Collection`, reading off an `InputStream` or generating data on-the-fly
+* `Accumulator` for doing the reverse operation, they accumulate all outputs from a stream flow and continue with a standard (ie. non-stream) flow
+
 Once a DAG has been defined, a `FlowCompiler` will be responsible for transforming the DAG representation into a runnable instance, a `FlowRuntime`. 
 
 At the time of this writing, there are two available implementations:
 
 * the serial `PipelineRuntime` which will run one node after another, making sure each one can satisfy its input
-* the parallel `ParallelPipelineRuntime` which will attempt to run any node that can satisfy its input in a parallel fashion
+* the parallel `ParallelRuntime` which will attempt to run any node that can satisfy its input in a parallel fashion
 
 Once a `FlowRuntime` has been produced, we can simply `run` it.
 
@@ -89,6 +94,60 @@ System.out.println(recipient.getContent());
 ```
 
 Upon running this should print `72` (`2*((2*2)^2)+((2*2)*5)`).
+
+Now a final example with a stream flow going on:
+
+```java
+/* Let's have a "standard" flow doing its thing */
+var branch = Flow
+    .from(() -> 2)
+    .into(i -> i + 1)
+;
+
+/* Create a "stream" flow from a list of integers  */
+var flow = Flow
+    .from(() -> List.of(0, 1, 2, 3, 4, 5, 6, 7, 8, 9))
+    .stream(IterableGenerator::new)
+    .into(i -> i * i)
+    .join(branch, (f, b) -> f * b) /* All values in the main flow will be multiplied by the output from the branch flow */
+    .accumulate(values -> values.stream() /* Once the generator is exhausted and all stream nodes have run, we gather the output integers and sum them ; note that accumulation is optional (you could also end the stream with a sink) */
+        .reduce(Integer::sum)
+        .orElseThrow(() -> new AccumulationException("Could not sum data."))
+    )
+    .into(i -> i + 1) /* After the accumulation step, the flow is back to being a "standard" flow so we can queue further transformations */
+    .sink(System.out::println)
+;
+
+Flow.runAsPipeline(flow);
+```
+
+Upon running this should print `856`.
+
+Note that `lumio-flow` doesn't provide any `Generator` implementation, but the IterableGenerator class mentioned above could be implemented the following way:
+
+```java
+public class IterableGenerator<T> implements Generator<T>
+{
+    private final Iterator<T> iterator;
+
+    public IterableGenerator(Iterable<T> iterable)
+    {
+        this.iterator = iterable.iterator();
+    }
+
+    @Override
+    public boolean hasNext()
+    {
+        return this.iterator.hasNext();
+    }
+
+    @Override
+    public T generate()
+    {
+        return this.iterator.hasNext() ? this.iterator.next() : null;
+    }
+}
+``` 
 
 _TODO_
 

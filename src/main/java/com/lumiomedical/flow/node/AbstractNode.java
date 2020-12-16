@@ -73,10 +73,10 @@ public abstract class AbstractNode implements Node
     {
         if (this == o)
             return true;
-        if (o == null || getClass() != o.getClass())
+        if (!(o instanceof Node))
             return false;
-        AbstractNode that = (AbstractNode) o;
-        return this.uid.equals(that.uid);
+        Node that = (Node) o;
+        return this.getUid().equals(that.getUid());
     }
 
     @Override

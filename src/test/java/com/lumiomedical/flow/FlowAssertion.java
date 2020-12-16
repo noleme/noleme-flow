@@ -7,15 +7,22 @@ package com.lumiomedical.flow;
 public class FlowAssertion
 {
     private boolean activated = false;
+    private int activationCount = 0;
 
     public boolean isActivated()
     {
         return activated;
     }
 
-    public FlowAssertion setActivated(boolean activated)
+    public int getActivationCount()
     {
-        this.activated = activated;
+        return this.activationCount;
+    }
+
+    public FlowAssertion activate()
+    {
+        this.activated = true;
+        this.activationCount += 1;
         return this;
     }
 }

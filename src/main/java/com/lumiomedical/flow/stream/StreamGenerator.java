@@ -17,6 +17,8 @@ import java.util.function.Function;
  */
 public class StreamGenerator <I, O> extends SimpleNode<Function<I, Generator<O>>> implements FlowIn<I>, StreamOut<O>
 {
+    private int maxParallelism = 1;
+
     /**
      * @param generatorSupplier
      */
@@ -73,6 +75,25 @@ public class StreamGenerator <I, O> extends SimpleNode<Function<I, Generator<O>>
     public StreamGenerator<I, O> drift(Loader<O> loader)
     {
         this.into(loader);
+        return this;
+    }
+
+    public int getMaxParallelism()
+    {
+        return this.maxParallelism;
+    }
+
+    /**
+     *
+     * @param factor
+     * @return
+     */
+    public StreamGenerator<I, O> setMaxParallelism(int factor)
+    {
+        if (factor < 1)
+            throw new RuntimeException("StreamGenerator maximum parallelism factor is expected to be larger or equal to 1");
+
+        this.maxParallelism = factor;
         return this;
     }
 }

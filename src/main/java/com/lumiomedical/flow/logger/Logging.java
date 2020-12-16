@@ -9,6 +9,17 @@ import org.slf4j.LoggerFactory;
  */
 public final class Logging
 {
-    public static final Logger logger = LoggerFactory.getLogger("com.lumiomedical.flow");
+    private static final String packageName = "com.lumiomedical.flow";
+    public static final Logger logger = LoggerFactory.getLogger(packageName);
+
+    /**
+     *
+     * @param subpackage
+     * @return
+     */
+    public static Logger logger(String subpackage)
+    {
+        return LoggerFactory.getLogger(packageName + "." + subpackage);
+    }
 }
 
