@@ -155,6 +155,6 @@ _TODO_
 
 This project will require you to have the following:
 
-* Java 13+
+* Java 11+
 * Git (versioning)
 * Maven (dependency resolving, publishing and packaging) 
