@@ -31,6 +31,7 @@ public class ParallelStreamInterruptionTest
         ;
 
         Flow.runAsParallel(flow);
+
         Assertions.assertFalse(assertion.isActivated());
         Assertions.assertEquals(0, assertion.getActivationCount());
     }
@@ -49,6 +50,7 @@ public class ParallelStreamInterruptionTest
         ;
 
         Flow.runAsParallel(flow);
+
         Assertions.assertTrue(assertion.isActivated());
         Assertions.assertEquals(3, assertion.getActivationCount());
     }
@@ -65,7 +67,8 @@ public class ParallelStreamInterruptionTest
             .collect()
         ;
 
-        Flow.runAsParallel(flow);
-        Assertions.assertEquals(3, flow.getContent());
+        var output = Flow.runAsParallel(flow);
+
+        Assertions.assertEquals(3, output.get(flow));
     }
 }

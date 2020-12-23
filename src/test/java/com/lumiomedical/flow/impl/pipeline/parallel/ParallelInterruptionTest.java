@@ -25,10 +25,9 @@ public class ParallelInterruptionTest
             .collect()
         ;
 
-        var runtime = Flow.runAsParallel(flow);
-
-        Assertions.assertEquals(15, runtime.getSample("before_interruption", Integer.class));
-        Assertions.assertNull(flow.getContent());
+        var output = Flow.runAsParallel(flow);
+        Assertions.assertEquals(15, output.get("before_interruption", Integer.class));
+        Assertions.assertNull(output.get(flow));
     }
 
     @Test
@@ -42,9 +41,8 @@ public class ParallelInterruptionTest
             .collect()
         ;
 
-        Flow.runAsParallel(flow);
-
-        Assertions.assertEquals(45, flow.getContent());
+        var output = Flow.runAsParallel(flow);
+        Assertions.assertEquals(45, output.get(flow));
     }
 
     @Test
@@ -58,8 +56,7 @@ public class ParallelInterruptionTest
             .collect()
         ;
 
-        Flow.runAsParallel(flow);
-
-        Assertions.assertNull(flow.getContent());
+        var output = Flow.runAsParallel(flow);
+        Assertions.assertNull(output.get(flow));
     }
 }

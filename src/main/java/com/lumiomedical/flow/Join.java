@@ -5,8 +5,8 @@ import com.lumiomedical.flow.actor.loader.Loader;
 import com.lumiomedical.flow.actor.transformer.BiTransformer;
 import com.lumiomedical.flow.actor.transformer.Transformer;
 import com.lumiomedical.flow.interruption.Interruption;
+import com.lumiomedical.flow.io.output.Recipient;
 import com.lumiomedical.flow.node.BiNode;
-import com.lumiomedical.flow.recipient.Recipient;
 import com.lumiomedical.flow.stream.StreamGenerator;
 
 import java.util.function.Function;
@@ -79,7 +79,7 @@ public class Join<I1, I2, O> extends BiNode implements FlowOut<O>
      * @param loader
      * @return
      */
-    public Join<I1, I2, O> drift(Loader<O> loader)
+    public Join<I1, I2, O> driftSink(Loader<O> loader)
     {
         this.into(loader);
         return this;

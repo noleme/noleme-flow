@@ -19,7 +19,7 @@ Add the following in your `pom.xml`:
 <dependency>
     <groupId>com.lumiomedical</groupId>
     <artifactId>lumio-flow</artifactId>
-    <version>0.10</version>
+    <version>0.11</version>
 </dependency>
 ```
 
@@ -85,12 +85,12 @@ var branchB = flow.pipe(i -> i * 5);
 var recipient = branchA
     .join(branchB, Integer::sum)
     .pipe(i -> i * 2)
-    .collect() /* The collect operation is implemented as a stateful Loader */
+    .collect()
 ;
 
-Flow.runAsPipeline(flow);
+var output = Flow.runAsPipeline(flow);
 
-System.out.println(recipient.getContent());
+System.out.println(output.get(recipient));
 ```
 
 Upon running this should print `72` (`2*((2*2)^2)+((2*2)*5)`).
@@ -148,6 +148,15 @@ public class IterableGenerator<T> implements Generator<T>
     }
 }
 ``` 
+
+Other features that will need to be documented include:
+
+* the complete set of DAG building methods (including alternate flavours of `from`, `stream`, as well as `driftSink` and the generic `into`)
+* control-flow with partial DAG interruption (`interrupt` and `interruptIf`)
+* runtime input management (dynamic `from` and the `Input` component) 
+* runtime output management, sampling/collection features (`collect`, `sample` and the `Output` component)
+* stream flows and parallelization (`setMaxParallelism` and implementation-specific considerations)
+* `ParallelRuntime` service executor lifecycle and other considerations
 
 _TODO_
 

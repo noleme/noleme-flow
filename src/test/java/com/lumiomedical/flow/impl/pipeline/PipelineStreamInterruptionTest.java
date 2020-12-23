@@ -65,7 +65,8 @@ public class PipelineStreamInterruptionTest
             .collect()
         ;
 
-        Flow.runAsPipeline(flow);
-        Assertions.assertEquals(3, flow.getContent());
+        var output = Flow.runAsPipeline(flow);
+
+        Assertions.assertEquals(3, output.get(flow));
     }
 }

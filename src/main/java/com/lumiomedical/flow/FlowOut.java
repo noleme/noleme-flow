@@ -4,8 +4,8 @@ import com.lumiomedical.flow.actor.generator.Generator;
 import com.lumiomedical.flow.actor.loader.Loader;
 import com.lumiomedical.flow.actor.transformer.BiTransformer;
 import com.lumiomedical.flow.actor.transformer.Transformer;
+import com.lumiomedical.flow.io.output.Recipient;
 import com.lumiomedical.flow.node.Node;
-import com.lumiomedical.flow.recipient.Recipient;
 import com.lumiomedical.flow.stream.StreamGenerator;
 
 import java.util.UUID;

@@ -2,14 +2,14 @@ package com.lumiomedical.flow.impl.pipeline;
 
 import com.lumiomedical.flow.compiler.CompilationException;
 import com.lumiomedical.flow.compiler.FlowCompiler;
-import com.lumiomedical.flow.impl.pipeline.compiler.PipelineIndexes;
 import com.lumiomedical.flow.impl.pipeline.compiler.pass.PipelineCompilerPass;
 import com.lumiomedical.flow.impl.pipeline.compiler.pass.StreamAggregationPass;
 import com.lumiomedical.flow.impl.pipeline.compiler.pass.TopologicalSortPass;
 import com.lumiomedical.flow.node.Node;
-import com.lumiomedical.flow.recipient.Recipient;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
@@ -26,11 +26,8 @@ public class PipelineCompiler implements FlowCompiler<PipelineRuntime>
     public PipelineRuntime compile(Collection<Node> inputNodes) throws CompilationException
     {
         List<Node> compiledNodes = compile(inputNodes, this.passes);
-        PipelineIndexes indexes = new PipelineIndexes(
-            this.indexRecipients(compiledNodes)
-        );
 
-        return new PipelineRuntime(compiledNodes, indexes);
+        return new PipelineRuntime(compiledNodes);
     }
 
     /**
@@ -49,25 +46,5 @@ public class PipelineCompiler implements FlowCompiler<PipelineRuntime>
             ? (List<Node>) nodes
             : new ArrayList<>(nodes)
         ;
-    }
-
-    /**
-     *
-     * @param compiledNodes
-     */
-    private Map<String, Recipient> indexRecipients(List<Node> compiledNodes)
-    {
-        Map<String, Recipient> recipients = new HashMap<>();
-
-        for (Node node : compiledNodes)
-        {
-            if (node instanceof Recipient)
-            {
-                var recipient = (Recipient) node;
-                recipients.put(recipient.getName(), recipient);
-            }
-        }
-
-        return recipients;
     }
 }

@@ -171,9 +171,9 @@ public class ParallelRuntimeTest
 
         var flow = Flow.from(() -> 10)
             .into(i -> i * 2)
-            .drift(stateA::setValue)
+            .driftSink(stateA::setValue)
             .into(i -> i / 4)
-            .drift(stateB::setValue)
+            .driftSink(stateB::setValue)
             .into(i -> i * 2)
             .into(stateC::setValue)
         ;

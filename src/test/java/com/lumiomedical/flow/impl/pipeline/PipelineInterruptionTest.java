@@ -25,10 +25,10 @@ public class PipelineInterruptionTest
             .collect()
         ;
 
-        var runtime = Flow.runAsPipeline(flow);
+        var output = Flow.runAsPipeline(flow);
 
-        Assertions.assertEquals(15, runtime.getSample("before_interruption", Integer.class));
-        Assertions.assertNull(flow.getContent());
+        Assertions.assertEquals(15, output.get("before_interruption", Integer.class));
+        Assertions.assertNull(output.get(flow));
     }
 
     @Test
@@ -42,9 +42,9 @@ public class PipelineInterruptionTest
             .collect()
         ;
 
-        Flow.runAsPipeline(flow);
+        var output = Flow.runAsPipeline(flow);
 
-        Assertions.assertEquals(45, flow.getContent());
+        Assertions.assertEquals(45, output.get(flow));
     }
 
     @Test
@@ -58,8 +58,8 @@ public class PipelineInterruptionTest
             .collect()
         ;
 
-        Flow.runAsPipeline(flow);
+        var output = Flow.runAsPipeline(flow);
 
-        Assertions.assertNull(flow.getContent());
+        Assertions.assertNull(output.get(flow));
     }
 }

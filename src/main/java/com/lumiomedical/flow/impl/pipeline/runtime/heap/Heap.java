@@ -1,6 +1,7 @@
 package com.lumiomedical.flow.impl.pipeline.runtime.heap;
 
 import com.lumiomedical.flow.actor.generator.Generator;
+import com.lumiomedical.flow.io.output.Output;
 import com.lumiomedical.flow.stream.StreamGenerator;
 
 import java.util.Collection;
@@ -95,4 +96,32 @@ public interface Heap
      * @return
      */
     Collection<Object> consumeAll(String id);
+
+    /**
+     *
+     * @param identifier
+     * @return
+     */
+    boolean hasInput(String identifier);
+
+    /**
+     *
+     * @param identifier
+     * @return
+     */
+    Object getInput(String identifier);
+
+    /**
+     *
+     * @param identifier
+     * @param value
+     * @return
+     */
+    Heap setOutput(String identifier, Object value);
+
+    /**
+     *
+     * @return
+     */
+    Output getOutput();
 }

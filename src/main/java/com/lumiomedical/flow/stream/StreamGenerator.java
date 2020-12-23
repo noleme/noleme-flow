@@ -74,7 +74,7 @@ public class StreamGenerator <I, O> extends SimpleNode<Function<I, Generator<O>>
      * @param loader
      * @return
      */
-    public StreamGenerator<I, O> drift(Loader<O> loader)
+    public StreamGenerator<I, O> driftSink(Loader<O> loader)
     {
         this.into(loader);
         return this;

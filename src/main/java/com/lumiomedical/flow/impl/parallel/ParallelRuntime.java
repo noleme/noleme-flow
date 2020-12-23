@@ -10,6 +10,8 @@ import com.lumiomedical.flow.impl.parallel.runtime.state.RuntimeState;
 import com.lumiomedical.flow.impl.pipeline.runtime.execution.Execution;
 import com.lumiomedical.flow.impl.pipeline.runtime.heap.Heap;
 import com.lumiomedical.flow.impl.pipeline.runtime.node.OffsetNode;
+import com.lumiomedical.flow.io.input.Input;
+import com.lumiomedical.flow.io.output.Output;
 import com.lumiomedical.flow.logger.Logging;
 import com.lumiomedical.flow.node.Node;
 import com.lumiomedical.flow.stream.StreamAccumulator;
@@ -77,9 +79,9 @@ public class ParallelRuntime implements FlowRuntime
     }
 
     @Override
-    synchronized public void run() throws RunException
+    synchronized public Output run(Input input) throws RunException
     {
-        Heap heap = new ConcurrentHashHeap();
+        Heap heap = new ConcurrentHashHeap(input);
         RuntimeState state = new RuntimeState(this.indexes);
 
         if (this.pool == null)
@@ -157,6 +159,8 @@ public class ParallelRuntime implements FlowRuntime
                     }
                 }
             }
+
+            return heap.getOutput();
         }
         catch (InterruptedException e) {
             throw new ParallelRunException(e.getMessage(), e, heap);
@@ -225,18 +229,6 @@ public class ParallelRuntime implements FlowRuntime
                 return node;
             });
         }
-    }
-
-    @Override
-    public <T> T getSample(String name, Class<T> type) throws RunException
-    {
-        Object sample = this.indexes.recipients.get(name).getContent();
-
-        if (!type.isAssignableFrom(sample.getClass()))
-            throw new RunException("A sample was found for name "+name+" but it was of a different type "+sample.getClass().getName()+" (requested type was "+type.getName()+")");
-
-        //noinspection unchecked
-        return (T) sample;
     }
 
     /**

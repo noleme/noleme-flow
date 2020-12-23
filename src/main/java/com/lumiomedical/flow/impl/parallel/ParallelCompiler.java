@@ -9,8 +9,8 @@ import com.lumiomedical.flow.impl.parallel.runtime.executor.Executors;
 import com.lumiomedical.flow.impl.pipeline.PipelineCompiler;
 import com.lumiomedical.flow.impl.pipeline.compiler.pass.PipelineCompilerPass;
 import com.lumiomedical.flow.impl.pipeline.compiler.pass.TopologicalSortPass;
+import com.lumiomedical.flow.io.output.Recipient;
 import com.lumiomedical.flow.node.Node;
-import com.lumiomedical.flow.recipient.Recipient;
 import com.lumiomedical.flow.stream.StreamGenerator;
 import com.lumiomedical.flow.stream.StreamNode;
 
@@ -80,37 +80,12 @@ public class ParallelCompiler implements FlowCompiler<ParallelRuntime>
         Map<Node, StreamGenerator> generatorIndex = new HashMap<>();
         Map<StreamGenerator, Set<Node>> streamNodeIndex = new HashMap<>();
 
-        this.indexRecipients(compiledNodes, recipients);
         this.indexStreamNodes(compiledNodes, generatorIndex, streamNodeIndex);
 
         return new ParallelIndexes(
-            recipients,
             generatorIndex,
             streamNodeIndex
         );
-    }
-
-    /**
-     *
-     * @param compiledNodes
-     * @return
-     */
-    private void indexRecipients(List<Node> compiledNodes, Map<String, Recipient> recipients)
-    {
-        Queue<Node> queue = new LinkedList<>(compiledNodes);
-
-        while (!queue.isEmpty())
-        {
-            Node node = queue.poll();
-
-            if (node instanceof Recipient)
-            {
-                var recipient = (Recipient) node;
-                recipients.put(recipient.getName(), recipient);
-            }
-
-            queue.addAll(node.getDownstream());
-        }
     }
 
     /**

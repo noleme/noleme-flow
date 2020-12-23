@@ -6,9 +6,9 @@ import com.lumiomedical.flow.actor.loader.Loader;
 import com.lumiomedical.flow.actor.transformer.BiTransformer;
 import com.lumiomedical.flow.actor.transformer.Transformer;
 import com.lumiomedical.flow.interruption.Interruption;
+import com.lumiomedical.flow.io.output.Recipient;
 import com.lumiomedical.flow.node.Node;
 import com.lumiomedical.flow.node.SimpleNode;
-import com.lumiomedical.flow.recipient.Recipient;
 import com.lumiomedical.flow.stream.StreamGenerator;
 
 import java.util.Collections;
@@ -69,7 +69,7 @@ public class Source<O> extends SimpleNode<Extractor<O>> implements FlowOut<O>
      * @param loader
      * @return
      */
-    public Source<O> drift(Loader<O> loader)
+    public Source<O> driftSink(Loader<O> loader)
     {
         this.into(loader);
         return this;

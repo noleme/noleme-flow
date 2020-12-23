@@ -61,7 +61,7 @@ public class StreamSource<O> extends SimpleNode<Supplier<Generator<O>>> implemen
      * @param loader
      * @return
      */
-    public StreamSource<O> drift(Loader<O> loader)
+    public StreamSource<O> driftSink(Loader<O> loader)
     {
         this.into(loader);
         return this;

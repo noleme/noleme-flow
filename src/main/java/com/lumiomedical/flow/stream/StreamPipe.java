@@ -59,7 +59,7 @@ public class StreamPipe<I, O> extends SimpleNode<Transformer<I, O>> implements S
      * @param loader
      * @return
      */
-    public StreamPipe<I, O> drift(Loader<O> loader)
+    public StreamPipe<I, O> driftSink(Loader<O> loader)
     {
         this.into(loader);
         return this;

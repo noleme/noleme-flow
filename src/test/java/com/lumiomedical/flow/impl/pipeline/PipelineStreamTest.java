@@ -32,6 +32,7 @@ public class PipelineStreamTest
         ;
 
         Flow.runAsPipeline(flow);
+
         Assertions.assertTrue(assertion.isActivated());
         Assertions.assertEquals(5, assertion.getActivationCount());
     }
@@ -52,6 +53,7 @@ public class PipelineStreamTest
         ;
 
         Flow.runAsPipeline(flow);
+
         Assertions.assertTrue(assertion.isActivated());
         Assertions.assertEquals(1, assertion.getActivationCount());
     }
@@ -69,12 +71,13 @@ public class PipelineStreamTest
                 .reduce(Integer::sum)
                 .orElseThrow(() -> new AccumulationException("Could not sum stream data."))
             )
-            .drift(i -> assertion.activate())
+            .driftSink(i -> assertion.activate())
             .collect()
         ;
 
-        Flow.runAsPipeline(flow);
-        Assertions.assertEquals(20, flow.getContent());
+        var output = Flow.runAsPipeline(flow);
+
+        Assertions.assertEquals(20, output.get(flow));
         Assertions.assertTrue(assertion.isActivated());
         Assertions.assertEquals(1, assertion.getActivationCount());
     }
@@ -99,8 +102,9 @@ public class PipelineStreamTest
             .collect()
         ;
 
-        Flow.runAsPipeline(flow);
-        Assertions.assertEquals(100, flow.getContent());
+        var output = Flow.runAsPipeline(flow);
+
+        Assertions.assertEquals(100, output.get(flow));
     }
 
     @Test
@@ -130,8 +134,9 @@ public class PipelineStreamTest
             .collect()
         ;
 
-        Flow.runAsPipeline(flow);
-        Assertions.assertEquals(570, flow.getContent());
+        var output = Flow.runAsPipeline(flow);
+
+        Assertions.assertEquals(570, output.get(flow));
     }
 
     @Test
@@ -145,8 +150,9 @@ public class PipelineStreamTest
             .collect()
         ;
 
-        Flow.runAsPipeline(flow);
-        Assertions.assertEquals(17, flow.getContent());
+        var output = Flow.runAsPipeline(flow);
+
+        Assertions.assertEquals(17, output.get(flow));
     }
 
     @Test
@@ -168,8 +174,9 @@ public class PipelineStreamTest
             .collect()
         ;
 
-        Flow.runAsPipeline(flow);
-        Assertions.assertEquals(48, flow.getContent());
+        var output = Flow.runAsPipeline(flow);
+
+        Assertions.assertEquals(48, output.get(flow));
     }
 
     @Test
@@ -180,22 +187,23 @@ public class PipelineStreamTest
         var flowA = Flow
             .from(() -> 3)
             .into(i -> i * 4)
-            .drift(i -> assertion.activate())
+            .driftSink(i -> assertion.activate())
         ;
 
         var flowB = Flow
             .from(() -> List.of(6, 7, 8, 9))
             .stream(IterableGenerator::new)
             .into(i -> i + 2)
-            .drift(i -> assertion.activate())
+            .driftSink(i -> assertion.activate())
             .accumulate(Collection::size)
             .collect()
         ;
 
         Flow.sources(flowB).forEach(s -> s.after(flowA));
 
-        Flow.runAsPipeline(flowA, flowB);
-        Assertions.assertEquals(4, flowB.getContent());
+        var output = Flow.runAsPipeline(flowB);
+
+        Assertions.assertEquals(4, output.get(flowB));
         Assertions.assertTrue(assertion.isActivated());
         Assertions.assertEquals(5, assertion.getActivationCount());
     }
@@ -209,7 +217,7 @@ public class PipelineStreamTest
             .from(() -> List.of(1, 2, 3, 4, 5))
             .stream(IterableGenerator::new)
             .into(i -> i + 1)
-            .drift(i -> assertion.activate())
+            .driftSink(i -> assertion.activate())
             .accumulate(ls -> ls.stream()
                 .reduce(Integer::sum)
                 .orElseThrow(() -> new AccumulationException("Could not sum stream data."))
@@ -220,7 +228,7 @@ public class PipelineStreamTest
             .from(() -> List.of(6, 7, 8, 9))
             .stream(IterableGenerator::new)
             .into(i -> i + 2)
-            .drift(i -> assertion.activate())
+            .driftSink(i -> assertion.activate())
             .accumulate(ls -> ls.stream()
                 .reduce(Integer::sum)
                 .orElseThrow(() -> new AccumulationException("Could not sum stream data."))
@@ -234,8 +242,9 @@ public class PipelineStreamTest
 
         Flow.sources(flowB).forEach(s -> s.after(flowA));
 
-        Flow.runAsPipeline(flow);
-        Assertions.assertEquals(58, flow.getContent());
+        var output = Flow.runAsPipeline(flow);
+        
+        Assertions.assertEquals(58, output.get(flow));
         Assertions.assertTrue(assertion.isActivated());
         Assertions.assertEquals(9, assertion.getActivationCount());
     }

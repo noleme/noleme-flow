@@ -1,6 +1,10 @@
 package com.lumiomedical.flow.impl.pipeline.runtime.heap;
 
 import com.lumiomedical.flow.actor.generator.Generator;
+import com.lumiomedical.flow.io.input.Input;
+import com.lumiomedical.flow.io.output.Output;
+import com.lumiomedical.flow.io.output.OutputMap;
+import com.lumiomedical.flow.io.output.WriteableOutput;
 import com.lumiomedical.flow.stream.StreamGenerator;
 
 import java.util.Collection;
@@ -18,14 +22,18 @@ public class HashHeap implements Heap
     private final Map<String, Generator<?>> generators;
     private final Map<String, CounterContainer> streamContents;
     private final Map<String, Integer> offsets;
+    private final Input input;
+    private final WriteableOutput output;
 
-    public HashHeap()
+    public HashHeap(Input input)
     {
         super();
         this.contents = new HashMap<>();
         this.streamContents = new HashMap<>();
         this.generators = new HashMap<>();
         this.offsets = new HashMap<>();
+        this.input = input;
+        this.output = new OutputMap();
     }
 
     @Override
@@ -139,6 +147,31 @@ public class HashHeap implements Heap
         }
 
         return null;
+    }
+
+    @Override
+    public boolean hasInput(String identifier)
+    {
+        return this.input.has(identifier);
+    }
+
+    @Override
+    public Object getInput(String identifier)
+    {
+        return this.input.get(identifier);
+    }
+
+    @Override
+    public Heap setOutput(String identifier, Object value)
+    {
+        this.output.set(identifier, value);
+        return this;
+    }
+
+    @Override
+    public Output getOutput()
+    {
+        return this.output;
     }
 
     /**

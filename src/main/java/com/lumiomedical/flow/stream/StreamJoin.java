@@ -75,7 +75,7 @@ public class StreamJoin<I1, I2, O> extends BiNode implements StreamOut<O>, Strea
      * @param loader
      * @return
      */
-    public StreamJoin<I1, I2, O> drift(Loader<O> loader)
+    public StreamJoin<I1, I2, O> driftSink(Loader<O> loader)
     {
         this.into(loader);
         return this;

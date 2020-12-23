@@ -5,12 +5,16 @@ import com.lumiomedical.flow.actor.generator.Generator;
 import com.lumiomedical.flow.actor.loader.Loader;
 import com.lumiomedical.flow.actor.transformer.BiTransformer;
 import com.lumiomedical.flow.actor.transformer.Transformer;
-import com.lumiomedical.flow.compiler.*;
-import com.lumiomedical.flow.impl.pipeline.PipelineCompiler;
-import com.lumiomedical.flow.impl.pipeline.PipelineRuntime;
+import com.lumiomedical.flow.compiler.CompilationException;
+import com.lumiomedical.flow.compiler.FlowCompiler;
+import com.lumiomedical.flow.compiler.FlowRuntime;
+import com.lumiomedical.flow.compiler.RunException;
 import com.lumiomedical.flow.impl.parallel.ParallelCompiler;
-import com.lumiomedical.flow.impl.parallel.ParallelRuntime;
 import com.lumiomedical.flow.impl.parallel.runtime.executor.ExecutorServiceProvider;
+import com.lumiomedical.flow.impl.pipeline.PipelineCompiler;
+import com.lumiomedical.flow.io.input.Input;
+import com.lumiomedical.flow.io.input.InputExtractor;
+import com.lumiomedical.flow.io.output.Output;
 import com.lumiomedical.flow.node.Node;
 import com.lumiomedical.flow.stream.*;
 
@@ -36,15 +40,29 @@ public final class Flow
      *
      * @param compiler a FlowCompiler instance
      * @param inputNodes one or several nodes from the DAG
-     * @return the resulting FlowRuntime instance
+     * @return the Output result
      * @throws CompilationException
      * @throws RunException
      */
-    public static <C extends FlowCompiler<R>, R extends FlowRuntime> R runAs(C compiler, Node... inputNodes) throws CompilationException, RunException
+    public static <C extends FlowCompiler<R>, R extends FlowRuntime> Output runAs(C compiler, Node... inputNodes) throws CompilationException, RunException
+    {
+        return runAs(compiler, Input.empty(), inputNodes);
+    }
+
+    /**
+     * Compiles and runs the provided DAG using the provided FlowCompiler implementation.
+     *
+     * @param compiler a FlowCompiler instance
+     * @param input an Input instance
+     * @param inputNodes one or several nodes from the DAG
+     * @return the Output result
+     * @throws CompilationException
+     * @throws RunException
+     */
+    public static <C extends FlowCompiler<R>, R extends FlowRuntime> Output runAs(C compiler, Input input, Node... inputNodes) throws CompilationException, RunException
     {
         R runtime = compiler.compile(inputNodes);
-        runtime.run();
-        return runtime;
+        return runtime.run(input);
     }
 
     /**
@@ -55,9 +73,23 @@ public final class Flow
      * @throws CompilationException
      * @throws RunException
      */
-    public static PipelineRuntime runAsPipeline(Node... inputNodes) throws CompilationException, RunException
+    public static Output runAsPipeline(Node... inputNodes) throws CompilationException, RunException
     {
         return runAs(new PipelineCompiler(), inputNodes);
+    }
+
+    /**
+     * Compiles and runs the provided DAG as a pipeline using the PipelineCompiler implementation.
+     *
+     * @param input an input container for the DAG at runtime
+     * @param inputNodes one or several nodes from the DAG
+     * @return the Output result
+     * @throws CompilationException
+     * @throws RunException
+     */
+    public static Output runAsPipeline(Input input, Node... inputNodes) throws CompilationException, RunException
+    {
+        return runAs(new PipelineCompiler(), input, inputNodes);
     }
 
     /**
@@ -67,28 +99,29 @@ public final class Flow
      *
      * @param threadCount the number of threads used for parallelization
      * @param inputNodes one or several nodes from the DAG
-     * @return the resulting ParallelPipelineRuntime instance
+     * @return the Output result
      * @throws CompilationException
      * @throws RunException
      */
-    public static ParallelRuntime runAsParallel(int threadCount, Node... inputNodes) throws CompilationException, RunException
+    public static Output runAsParallel(int threadCount, Node... inputNodes) throws CompilationException, RunException
     {
         return runAs(new ParallelCompiler(threadCount, true), inputNodes);
     }
 
     /**
      * Compiles and runs the provided DAG as a pipeline using the ParallelPipelineCompiler implementation.
+     * Property autoRefresh is set to true, so the ExecutorService will be shutdown/relaunched between each run.
      *
      * @param provider an ExecutorServiceProvider for setting up the ExecutorService used for parallelization
-     * @param autoRefresh whether to automatically shutdown the ExecutorService upon running, or preserve it for subsequent runs
+     * @param input an input container for the DAG at runtime
      * @param inputNodes one or several nodes from the DAG
-     * @return the resulting ParallelPipelineRuntime instance
+     * @return the Output result
      * @throws CompilationException
      * @throws RunException
      */
-    public static ParallelRuntime runAsParallel(ExecutorServiceProvider provider, boolean autoRefresh, Node... inputNodes) throws CompilationException, RunException
+    public static Output runAsParallel(ExecutorServiceProvider provider, Input input, Node... inputNodes) throws CompilationException, RunException
     {
-        return runAs(new ParallelCompiler(provider, autoRefresh), inputNodes);
+        return runAs(new ParallelCompiler(provider, true), input, inputNodes);
     }
 
     /**
@@ -98,13 +131,30 @@ public final class Flow
      * Property autoRefresh is set to true, so the ExecutorService will be shutdown/relaunched between each run.
      *
      * @param inputNodes one or several nodes from the DAG
-     * @return the resulting ParallelPipelineRuntime instance
+     * @return the Output result
      * @throws CompilationException
      * @throws RunException
      */
-    public static ParallelRuntime runAsParallel(Node... inputNodes) throws CompilationException, RunException
+    public static Output runAsParallel(Node... inputNodes) throws CompilationException, RunException
     {
         return runAs(new ParallelCompiler(), inputNodes);
+    }
+
+    /**
+     * Compiles and runs the provided DAG as a pipeline using the ParallelPipelineCompiler implementation.
+     * This implementation uses a ThrowingThreadPoolExecutor implementation as an ExecutorService.
+     * The number of threads used for parallelization is equal to Runtime.getRuntime().availableProcessors().
+     * Property autoRefresh is set to true, so the ExecutorService will be shutdown/relaunched between each run.
+     *
+     * @param input an input container for the DAG at runtime
+     * @param inputNodes one or several nodes from the DAG
+     * @return the Output result
+     * @throws CompilationException
+     * @throws RunException
+     */
+    public static Output runAsParallel(Input input, Node... inputNodes) throws CompilationException, RunException
+    {
+        return runAs(new ParallelCompiler(), input, inputNodes);
     }
 
     /**
@@ -118,6 +168,17 @@ public final class Flow
     public static <O> Source<O> from(Extractor<O> extractor)
     {
         return new Source<>(extractor);
+    }
+
+    /**
+     *
+     * @param inputIdentifier
+     * @param <O>
+     * @return
+     */
+    public static <O> Source<O> from(String inputIdentifier)
+    {
+        return new Source<>(new InputExtractor<>(inputIdentifier));
     }
 
     /**

@@ -5,8 +5,8 @@ import com.lumiomedical.flow.actor.loader.Loader;
 import com.lumiomedical.flow.actor.transformer.BiTransformer;
 import com.lumiomedical.flow.actor.transformer.Transformer;
 import com.lumiomedical.flow.interruption.Interruption;
+import com.lumiomedical.flow.io.output.Recipient;
 import com.lumiomedical.flow.node.SimpleNode;
-import com.lumiomedical.flow.recipient.Recipient;
 import com.lumiomedical.flow.stream.StreamGenerator;
 
 import java.util.function.Function;
@@ -65,7 +65,7 @@ public class Pipe<I, O> extends SimpleNode<Transformer<I, O>> implements FlowIn<
      * @param loader
      * @return
      */
-    public Pipe<I, O> drift(Loader<O> loader)
+    public Pipe<I, O> driftSink(Loader<O> loader)
     {
         this.into(loader);
         return this;

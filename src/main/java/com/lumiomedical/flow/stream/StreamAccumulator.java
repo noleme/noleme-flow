@@ -9,8 +9,8 @@ import com.lumiomedical.flow.actor.generator.Generator;
 import com.lumiomedical.flow.actor.loader.Loader;
 import com.lumiomedical.flow.actor.transformer.BiTransformer;
 import com.lumiomedical.flow.actor.transformer.Transformer;
+import com.lumiomedical.flow.io.output.Recipient;
 import com.lumiomedical.flow.node.SimpleNode;
-import com.lumiomedical.flow.recipient.Recipient;
 
 import java.util.function.Function;
 
@@ -63,7 +63,7 @@ public class StreamAccumulator <I, O> extends SimpleNode<Accumulator<I, O>> impl
      * @param loader
      * @return
      */
-    public StreamAccumulator<I, O> drift(Loader<O> loader)
+    public StreamAccumulator<I, O> driftSink(Loader<O> loader)
     {
         this.into(loader);
         return this;

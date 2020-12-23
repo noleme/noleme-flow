@@ -30,6 +30,7 @@ public class PipelineRuntimeTest
             });
 
         Flow.runAsPipeline(pipe);
+
         Assertions.assertTrue(pipeAssertion.isActivated());
     }
 
@@ -44,6 +45,7 @@ public class PipelineRuntimeTest
         });
 
         Flow.runAsPipeline(pipe);
+
         Assertions.assertTrue(pipeAssertion.isActivated());
     }
 
@@ -58,6 +60,7 @@ public class PipelineRuntimeTest
         });
 
         Flow.runAsPipeline(pipe);
+
         Assertions.assertTrue(pipeAssertion.isActivated());
     }
 
@@ -95,6 +98,7 @@ public class PipelineRuntimeTest
             });
 
         Flow.runAsPipeline(sink1, sink2);
+
         Assertions.assertTrue(pipeAssertion1.isActivated());
         Assertions.assertTrue(pipeAssertion2.isActivated());
     }
@@ -122,6 +126,7 @@ public class PipelineRuntimeTest
         sink1.after(sink2);
 
         Flow.runAsPipeline(sink1, sink2);
+
         Assertions.assertTrue(pipeAssertion2.isActivated());
     }
 
@@ -139,6 +144,7 @@ public class PipelineRuntimeTest
         });
 
         Flow.runAsPipeline(pipe);
+
         Assertions.assertTrue(pipeAssertion.isActivated());
     }
 
@@ -159,6 +165,7 @@ public class PipelineRuntimeTest
         });
 
         Flow.runAsPipeline(pipe);
+
         Assertions.assertTrue(pipeAssertion.isActivated());
     }
 
@@ -171,9 +178,9 @@ public class PipelineRuntimeTest
 
         var flow = Flow.from(() -> 10)
             .into(i -> i * 2)
-            .drift(stateA::setValue)
+            .driftSink(stateA::setValue)
             .into(i -> i / 4)
-            .drift(stateB::setValue)
+            .driftSink(stateB::setValue)
             .into(i -> i * 2)
             .into(stateC::setValue);
 

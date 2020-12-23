@@ -33,6 +33,7 @@ public class ParallelStreamTest
         ;
 
         Flow.runAsParallel(flow);
+
         Assertions.assertTrue(assertion.isActivated());
         Assertions.assertEquals(5, assertion.getActivationCount());
     }
@@ -53,6 +54,7 @@ public class ParallelStreamTest
         ;
 
         Flow.runAsParallel(flow);
+
         Assertions.assertTrue(assertion.isActivated());
         Assertions.assertEquals(1, assertion.getActivationCount());
     }
@@ -70,12 +72,13 @@ public class ParallelStreamTest
                 .reduce(Integer::sum)
                 .orElseThrow(() -> new AccumulationException("Could not sum stream data."))
             )
-            .drift(i -> assertion.activate())
+            .driftSink(i -> assertion.activate())
             .collect()
         ;
 
-        Flow.runAsParallel(flow);
-        Assertions.assertEquals(20, flow.getContent());
+        var output = Flow.runAsParallel(flow);
+
+        Assertions.assertEquals(20, output.get(flow));
         Assertions.assertTrue(assertion.isActivated());
         Assertions.assertEquals(1, assertion.getActivationCount());
     }
@@ -100,8 +103,9 @@ public class ParallelStreamTest
             .collect()
         ;
 
-        Flow.runAsParallel(flow);
-        Assertions.assertEquals(100, flow.getContent());
+        var output = Flow.runAsParallel(flow);
+
+        Assertions.assertEquals(100, output.get(flow));
     }
 
     @Test
@@ -131,8 +135,9 @@ public class ParallelStreamTest
             .collect()
         ;
 
-        Flow.runAsParallel(flow);
-        Assertions.assertEquals(570, flow.getContent());
+        var output = Flow.runAsParallel(flow);
+
+        Assertions.assertEquals(570, output.get(flow));
     }
 
     @Test
@@ -146,8 +151,9 @@ public class ParallelStreamTest
             .collect()
         ;
 
-        Flow.runAsParallel(flow);
-        Assertions.assertEquals(17, flow.getContent());
+        var output = Flow.runAsParallel(flow);
+
+        Assertions.assertEquals(17, output.get(flow));
     }
 
     @Test
@@ -169,8 +175,9 @@ public class ParallelStreamTest
             .collect()
         ;
 
-        Flow.runAsParallel(flow);
-        Assertions.assertEquals(48, flow.getContent());
+        var output = Flow.runAsParallel(flow);
+
+        Assertions.assertEquals(48, output.get(flow));
     }
 
     @Test
@@ -193,8 +200,9 @@ public class ParallelStreamTest
             .collect()
         ;
 
-        Flow.runAsParallel(flowB);
-        Assertions.assertEquals(1610613819, flowB.getContent());
+        var output = Flow.runAsParallel(flowB);
+
+        Assertions.assertEquals(1610613819, output.get(flowB));
     }
 
     @Test
@@ -220,8 +228,9 @@ public class ParallelStreamTest
             .collect()
         ;
 
-        Flow.runAsParallel(flow);
-        Assertions.assertEquals(10_200_548_430L, flow.getContent());
+        var output = Flow.runAsParallel(flow);
+
+        Assertions.assertEquals(10_200_548_430L, output.get(flow));
     }
 
     @Test
@@ -232,22 +241,23 @@ public class ParallelStreamTest
         var flowA = Flow
             .from(() -> 3)
             .into(i -> i * 4)
-            .drift(i -> assertion.activate())
+            .driftSink(i -> assertion.activate())
         ;
 
         var flowB = Flow
             .from(() -> List.of(6, 7, 8, 9))
             .stream(IterableGenerator::new)
             .into(i -> i + 2)
-            .drift(i -> assertion.activate())
+            .driftSink(i -> assertion.activate())
             .accumulate(Collection::size)
             .collect()
         ;
 
         Flow.sources(flowB).forEach(s -> s.after(flowA));
 
-        Flow.runAsParallel(flowA, flowB);
-        Assertions.assertEquals(4, flowB.getContent());
+        var output = Flow.runAsParallel(flowA, flowB);
+
+        Assertions.assertEquals(4, output.get(flowB));
         Assertions.assertTrue(assertion.isActivated());
         Assertions.assertEquals(5, assertion.getActivationCount());
     }
@@ -261,7 +271,7 @@ public class ParallelStreamTest
             .from(() -> List.of(1, 2, 3, 4, 5))
             .stream(IterableGenerator::new)
             .into(i -> i + 1)
-            .drift(i -> assertion.activate())
+            .driftSink(i -> assertion.activate())
             .accumulate(ls -> ls.stream()
                 .reduce(Integer::sum)
                 .orElseThrow(() -> new AccumulationException("Could not sum stream data."))
@@ -272,7 +282,7 @@ public class ParallelStreamTest
             .from(() -> List.of(6, 7, 8, 9))
             .stream(IterableGenerator::new)
             .into(i -> i + 2)
-            .drift(i -> assertion.activate())
+            .driftSink(i -> assertion.activate())
             .accumulate(ls -> ls.stream()
                 .reduce(Integer::sum)
                 .orElseThrow(() -> new AccumulationException("Could not sum stream data."))
@@ -286,8 +296,9 @@ public class ParallelStreamTest
 
         Flow.sources(flowB).forEach(s -> s.after(flowA));
 
-        Flow.runAsParallel(flow);
-        Assertions.assertEquals(58, flow.getContent());
+        var output = Flow.runAsParallel(flow);
+
+        Assertions.assertEquals(58, output.get(flow));
         Assertions.assertTrue(assertion.isActivated());
         Assertions.assertEquals(9, assertion.getActivationCount());
     }
@@ -325,7 +336,8 @@ public class ParallelStreamTest
             .collect()
         ;
 
-        Flow.runAsParallel(flow, flowB);
-        Assertions.assertEquals(27, flow.getContent());
+        var output = Flow.runAsParallel(flow, flowB);
+
+        Assertions.assertEquals(27, output.get(flow));
     }
 }

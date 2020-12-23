@@ -3,15 +3,15 @@ package com.lumiomedical.flow.impl.pipeline;
 import com.lumiomedical.flow.actor.generator.Generator;
 import com.lumiomedical.flow.compiler.FlowRuntime;
 import com.lumiomedical.flow.compiler.RunException;
-import com.lumiomedical.flow.impl.pipeline.compiler.PipelineIndexes;
 import com.lumiomedical.flow.impl.pipeline.compiler.stream.StreamPipeline;
 import com.lumiomedical.flow.impl.pipeline.runtime.execution.Execution;
 import com.lumiomedical.flow.impl.pipeline.runtime.heap.HashHeap;
 import com.lumiomedical.flow.impl.pipeline.runtime.heap.Heap;
 import com.lumiomedical.flow.impl.pipeline.runtime.node.OffsetNode;
+import com.lumiomedical.flow.io.input.Input;
+import com.lumiomedical.flow.io.output.Output;
 import com.lumiomedical.flow.logger.Logging;
 import com.lumiomedical.flow.node.Node;
-import com.lumiomedical.flow.recipient.Recipient;
 import com.lumiomedical.flow.stream.StreamAccumulator;
 import com.lumiomedical.flow.stream.StreamGenerator;
 import org.slf4j.Logger;
@@ -26,28 +26,25 @@ public class PipelineRuntime implements FlowRuntime
 {
     protected final Execution execution;
     private final List<Node> compiledNodes;
-    private final PipelineIndexes indexes;
 
     private static final Logger logger = Logging.logger("pipeline");
 
     /**
      *
      * @param compiledNodes
-     * @param indexes
      */
-    protected PipelineRuntime(List<Node> compiledNodes, PipelineIndexes indexes)
+    protected PipelineRuntime(List<Node> compiledNodes)
     {
         this.execution = new Execution();
         this.compiledNodes = compiledNodes;
-        this.indexes = indexes;
     }
 
     @Override
-    public void run() throws RunException
+    public Output run(Input input) throws RunException
     {
         LinkedList<Node> runQueue = new LinkedList<>(this.compiledNodes);
         Set<Node> blocked = new HashSet<>();
-        Heap heap = new HashHeap();
+        Heap heap = new HashHeap(input);
 
         /*
          * Fires the whole running queue and discards dead branches resulting from failed executions.
@@ -67,23 +64,8 @@ public class PipelineRuntime implements FlowRuntime
             else if (!this.execution.launch(n, heap))
                 blockBranch(n, blocked);
         }
-    }
 
-    @Override
-    public <T> T getSample(String name, Class<T> type) throws RunException
-    {
-        Recipient recipient = this.indexes.recipients.get(name);
-
-        if (recipient == null)
-            return null;
-
-        Object sample = recipient.getContent();
-
-        if (!type.isAssignableFrom(sample.getClass()))
-            throw new RunException("A sample was found for name "+name+" but it was of a different type "+sample.getClass().getName()+" (requested type was "+type.getName()+")");
-
-        //noinspection unchecked
-        return (T) sample;
+        return heap.getOutput();
     }
 
     /**

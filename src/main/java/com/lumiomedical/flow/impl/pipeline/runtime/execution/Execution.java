@@ -19,6 +19,8 @@ import com.lumiomedical.flow.impl.pipeline.PipelineRunException;
 import com.lumiomedical.flow.impl.pipeline.runtime.heap.Heap;
 import com.lumiomedical.flow.impl.pipeline.runtime.node.OffsetNode;
 import com.lumiomedical.flow.interruption.InterruptionException;
+import com.lumiomedical.flow.io.input.InputExtractor;
+import com.lumiomedical.flow.io.output.Recipient;
 import com.lumiomedical.flow.logger.Logging;
 import com.lumiomedical.flow.node.Node;
 import com.lumiomedical.flow.stream.*;
@@ -105,7 +107,19 @@ public class Execution
 
         logger.debug("Launching flow source #"+source.getUid()+" of extractor "+extractor.getClass().getName());
 
-        heap.push(source.getUid(), extractor.extract(), source.getDownstream().size());
+        /* If the extractor is an InputExtractor, the output value comes from the provided input instead of the extractor itself ; the extractor only holds a reference to the expected input */
+        if (extractor instanceof InputExtractor)
+        {
+            var identifier = ((InputExtractor<?>) extractor).getIdentifier();
+            if (!heap.hasInput(identifier))
+                throw new ExtractionException("The InputExtractor in node #"+source.getUid()+" couldn't find its expected input "+identifier);
+
+            heap.push(source.getUid(), heap.getInput(identifier), source.getDownstream().size());
+        }
+        /* Otherwise normal rules apply */
+        else
+            heap.push(source.getUid(), extractor.extract(), source.getDownstream().size());
+
         return true;
     }
 
@@ -162,7 +176,16 @@ public class Execution
         logger.debug("Launching flow sink #"+sink.getUid()+" of loader "+loader.getClass().getName());
 
         Object input = heap.consume(sink.getSimpleUpstream().getUid());
-        loader.load(input);
+
+        /* If the sink is a Recipient, the output value comes from the provided input instead of the extractor itself ; the extractor only holds a reference to the expected input */
+        if (sink instanceof Recipient)
+        {
+            var identifier = ((Recipient) sink).getIdentifier();
+            heap.setOutput(identifier, input);
+        }
+        else
+            loader.load(input);
+
         return true;
     }
 
