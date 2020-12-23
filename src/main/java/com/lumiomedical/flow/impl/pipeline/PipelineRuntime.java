@@ -11,6 +11,8 @@ import com.lumiomedical.flow.impl.pipeline.runtime.heap.Heap;
 import com.lumiomedical.flow.impl.pipeline.runtime.node.OffsetNode;
 import com.lumiomedical.flow.logger.Logging;
 import com.lumiomedical.flow.node.Node;
+import com.lumiomedical.flow.recipient.Recipient;
+import com.lumiomedical.flow.stream.StreamAccumulator;
 import com.lumiomedical.flow.stream.StreamGenerator;
 import org.slf4j.Logger;
 
@@ -70,7 +72,12 @@ public class PipelineRuntime implements FlowRuntime
     @Override
     public <T> T getSample(String name, Class<T> type) throws RunException
     {
-        Object sample = this.indexes.recipients.get(name).getContent();
+        Recipient recipient = this.indexes.recipients.get(name);
+
+        if (recipient == null)
+            return null;
+
+        Object sample = recipient.getContent();
 
         if (!type.isAssignableFrom(sample.getClass()))
             throw new RunException("A sample was found for name "+name+" but it was of a different type "+sample.getClass().getName()+" (requested type was "+type.getName()+")");
@@ -84,15 +91,20 @@ public class PipelineRuntime implements FlowRuntime
      * @param n
      * @param blocked
      */
-    private static void blockBranch(Node n, Set<Node> blocked)
+    public static void blockBranch(Node n, Set<Node> blocked)
     {
         Queue<Node> q = new LinkedList<>();
         q.add(n);
         while (!q.isEmpty())
         {
-            Node blockedNode = q.poll();
-            blocked.add(blockedNode);
-            q.addAll(blockedNode.getDownstream());
+            Node node = q.poll();
+
+            /* We don't block stream accumulators as they are expected to accumulate any stream that did complete, and return an empty list if none did */
+            if (node instanceof StreamAccumulator)
+                continue;
+
+            blocked.add(node);
+            q.addAll(node.getDownstream());
         }
     }
 

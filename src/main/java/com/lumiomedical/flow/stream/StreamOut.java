@@ -7,6 +7,8 @@ import com.lumiomedical.flow.actor.transformer.BiTransformer;
 import com.lumiomedical.flow.actor.transformer.Transformer;
 import com.lumiomedical.flow.node.Node;
 
+import java.util.Collection;
+
 /**
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
  * Created on 2020/12/01
@@ -29,6 +31,15 @@ public interface StreamOut<O> extends Node
      * @return the resulting StreamSink node
      */
     StreamSink<O> into(Loader<O> loader);
+
+    /**
+     * Synonymous with into(Transformer), has the advantage of not allowing ambiguous lambdas.
+     * @see #into(Transformer)
+     */
+    default <NO> StreamPipe<O, NO> pipe(Transformer<O, NO> transformer)
+    {
+        return this.into(transformer);
+    }
 
     /**
      * Synonymous with into(Loader), has the advantage of not allowing ambiguous lambdas.
@@ -57,4 +68,13 @@ public interface StreamOut<O> extends Node
      * @return
      */
     <N> StreamAccumulator<O, N> accumulate(Accumulator<O, N> accumulator);
+
+    /**
+     *
+     * @return
+     */
+    default StreamAccumulator<O, Collection<O>> accumulate()
+    {
+        return this.accumulate(input -> input);
+    }
 }

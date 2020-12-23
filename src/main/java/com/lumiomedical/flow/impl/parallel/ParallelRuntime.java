@@ -122,13 +122,17 @@ public class ParallelRuntime implements FlowRuntime
                         removeIfSubmitted = false;
                     }
 
-                    if (this.isReady(waitingNode, state, heap) == NodeState.READY)
+                    NodeState readiness = this.isReady(waitingNode, state, heap);
+
+                    if (readiness == NodeState.READY)
                     {
                         if (removeIfSubmitted)
                             waitingIterator.remove();
 
                         this.submitNode(waitingNode, heap, state);
                     }
+                    else if (readiness == NodeState.BLOCKED)
+                        waitingIterator.remove();
                 }
                 /* If we have submitted nodes, we use the blocking completion service in order to wait for the first completed node */
                 if (state.hasSubmitted())
@@ -205,11 +209,18 @@ public class ParallelRuntime implements FlowRuntime
             state.submit(node);
 
             this.completionService.submit(() -> {
-                if (!this.execution.launch(node, heap))
+                boolean isSuccess = this.execution.launch(node, heap);
+
+                if (!isSuccess)
                     state.blockAll(node.getDownstream());
 
                 if (node instanceof OffsetNode)
-                    state.completeStreamItem((OffsetNode) node);
+                {
+                    if (!isSuccess)
+                        state.terminateStream((OffsetNode) node);
+                    else
+                        state.completeStreamItem((OffsetNode) node);
+                }
 
                 return node;
             });
@@ -242,7 +253,7 @@ public class ParallelRuntime implements FlowRuntime
             OffsetNode offsetNode = (OffsetNode) node;
             Node actualNode = offsetNode.getNode();
 
-            if (state.isBlocked(actualNode))
+            if (state.isBlocked(offsetNode) || state.isBlocked(actualNode))
                 return NodeState.BLOCKED;
             for (Node usn : actualNode.getUpstream())
             {

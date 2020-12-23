@@ -4,11 +4,13 @@ import com.lumiomedical.flow.actor.generator.Generator;
 import com.lumiomedical.flow.actor.loader.Loader;
 import com.lumiomedical.flow.actor.transformer.BiTransformer;
 import com.lumiomedical.flow.actor.transformer.Transformer;
+import com.lumiomedical.flow.interruption.Interruption;
 import com.lumiomedical.flow.node.BiNode;
 import com.lumiomedical.flow.recipient.Recipient;
 import com.lumiomedical.flow.stream.StreamGenerator;
 
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 /**
  * Joins are a point of passage joining two upstream branchs of a DAG.
@@ -100,5 +102,25 @@ public class Join<I1, I2, O> extends BiNode implements FlowOut<O>
     {
         this.collect(name);
         return this;
+    }
+
+
+    /**
+     *
+     * @return
+     */
+    public Pipe<O, O> interrupt()
+    {
+        return this.into(new Interruption<>());
+    }
+
+    /**
+     *
+     * @param predicate
+     * @return
+     */
+    public Pipe<O, O> interruptIf(Predicate<O> predicate)
+    {
+        return this.into(new Interruption<>(predicate));
     }
 }

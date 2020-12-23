@@ -1,16 +1,14 @@
 package com.lumiomedical.flow.impl.parallel.runtime.state;
 
 import com.lumiomedical.flow.impl.parallel.compiler.ParallelIndexes;
+import com.lumiomedical.flow.impl.pipeline.PipelineRuntime;
 import com.lumiomedical.flow.impl.pipeline.runtime.node.OffsetNode;
 import com.lumiomedical.flow.node.Node;
 import com.lumiomedical.flow.stream.StreamAccumulator;
 import com.lumiomedical.flow.stream.StreamGenerator;
 import com.lumiomedical.flow.stream.StreamNode;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.stream.Collectors;
@@ -104,7 +102,8 @@ public class RuntimeState
 
     public RuntimeState blockAll(Collection<Node> nodes)
     {
-        this.blocked.addAll(nodes);
+        for (Node node : nodes)
+            PipelineRuntime.blockBranch(node, this.blocked);
         return this;
     }
 
@@ -195,6 +194,20 @@ public class RuntimeState
 
         if (checklist.isEmpty())
             this.getParallelism(generator).decrement();
+    }
+
+    /**
+     *
+     * @param node
+     */
+    synchronized public void terminateStream(OffsetNode node)
+    {
+        StreamGenerator generator = this.getGenerator(node.getNode());
+        OffsetNode key = new OffsetNode(generator, node.getOffset());
+        if (!this.streamChecklist.containsKey(key))
+            return;
+        this.streamChecklist.put(key, new HashSet<>());
+        this.getParallelism(generator).decrement();
     }
 
     /**

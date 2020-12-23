@@ -19,7 +19,7 @@ Add the following in your `pom.xml`:
 <dependency>
     <groupId>com.lumiomedical</groupId>
     <artifactId>lumio-flow</artifactId>
-    <version>0.9.1</version>
+    <version>0.10</version>
 </dependency>
 ```
 

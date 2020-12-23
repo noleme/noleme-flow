@@ -5,6 +5,7 @@ import com.lumiomedical.flow.actor.generator.Generator;
 import com.lumiomedical.flow.actor.loader.Loader;
 import com.lumiomedical.flow.actor.transformer.BiTransformer;
 import com.lumiomedical.flow.actor.transformer.Transformer;
+import com.lumiomedical.flow.interruption.Interruption;
 import com.lumiomedical.flow.node.Node;
 import com.lumiomedical.flow.node.SimpleNode;
 import com.lumiomedical.flow.recipient.Recipient;
@@ -13,6 +14,7 @@ import com.lumiomedical.flow.stream.StreamGenerator;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 /**
  * Sources represent an entrypoint node in a DAG.
@@ -90,6 +92,25 @@ public class Source<O> extends SimpleNode<Extractor<O>> implements FlowOut<O>
     {
         this.collect(name);
         return this;
+    }
+
+    /**
+     *
+     * @return
+     */
+    public Pipe<O, O> interrupt()
+    {
+        return this.into(new Interruption<>());
+    }
+
+    /**
+     *
+     * @param predicate
+     * @return
+     */
+    public Pipe<O, O> interruptIf(Predicate<O> predicate)
+    {
+        return this.into(new Interruption<>(predicate));
     }
 
     @Override

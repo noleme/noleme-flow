@@ -5,7 +5,10 @@ import com.lumiomedical.flow.actor.accumulator.Accumulator;
 import com.lumiomedical.flow.actor.loader.Loader;
 import com.lumiomedical.flow.actor.transformer.BiTransformer;
 import com.lumiomedical.flow.actor.transformer.Transformer;
+import com.lumiomedical.flow.interruption.Interruption;
 import com.lumiomedical.flow.node.BiNode;
+
+import java.util.function.Predicate;
 
 /**
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
@@ -76,5 +79,24 @@ public class StreamJoin<I1, I2, O> extends BiNode implements StreamOut<O>, Strea
     {
         this.into(loader);
         return this;
+    }
+
+    /**
+     *
+     * @return
+     */
+    public StreamPipe<O, O> interrupt()
+    {
+        return this.into(new Interruption<>());
+    }
+
+    /**
+     *
+     * @param predicate
+     * @return
+     */
+    public StreamPipe<O, O> interruptIf(Predicate<O> predicate)
+    {
+        return this.into(new Interruption<>(predicate));
     }
 }

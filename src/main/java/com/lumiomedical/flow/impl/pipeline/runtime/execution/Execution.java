@@ -18,6 +18,7 @@ import com.lumiomedical.flow.actor.transformer.Transformer;
 import com.lumiomedical.flow.impl.pipeline.PipelineRunException;
 import com.lumiomedical.flow.impl.pipeline.runtime.heap.Heap;
 import com.lumiomedical.flow.impl.pipeline.runtime.node.OffsetNode;
+import com.lumiomedical.flow.interruption.InterruptionException;
 import com.lumiomedical.flow.logger.Logging;
 import com.lumiomedical.flow.node.Node;
 import com.lumiomedical.flow.stream.*;
@@ -76,6 +77,11 @@ public class Execution
             logger.error("Flow node #"+node.getUid()+" is of an unknown "+node.getClass().getName()+" type");
 
             throw new PipelineRunException("Unknown node type " + node.getClass().getName(), heap);
+        }
+        catch (InterruptionException e) {
+            logger.debug("Flow node #"+node.getUid()+" has requested an interruption, blocking downstream nodes.");
+
+            return false;
         }
         catch (ExtractionException | TransformationException | LoadingException | GenerationException | AccumulationException e) {
             logger.error("Flow node #"+node.getUid()+" has thrown an error: "+e.getMessage(), e);

@@ -40,6 +40,15 @@ public interface FlowOut <O> extends Node
     Sink<O> into(Loader<O> loader);
 
     /**
+     * Synonymous with into(Transformer), has the advantage of not allowing ambiguous lambdas.
+     * @see #into(Transformer)
+     */
+    default <NO> Pipe<O, NO> pipe(Transformer<O, NO> transformer)
+    {
+        return this.into(transformer);
+    }
+
+    /**
      * Synonymous with into(Loader), has the advantage of not allowing ambiguous lambdas.
      * @see #into(Loader)
      */

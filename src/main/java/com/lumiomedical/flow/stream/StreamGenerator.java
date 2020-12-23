@@ -7,9 +7,11 @@ import com.lumiomedical.flow.actor.generator.Generator;
 import com.lumiomedical.flow.actor.loader.Loader;
 import com.lumiomedical.flow.actor.transformer.BiTransformer;
 import com.lumiomedical.flow.actor.transformer.Transformer;
+import com.lumiomedical.flow.interruption.Interruption;
 import com.lumiomedical.flow.node.SimpleNode;
 
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 /**
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
@@ -76,6 +78,25 @@ public class StreamGenerator <I, O> extends SimpleNode<Function<I, Generator<O>>
     {
         this.into(loader);
         return this;
+    }
+
+    /**
+     *
+     * @return
+     */
+    public StreamPipe<O, O> interrupt()
+    {
+        return this.into(new Interruption<>());
+    }
+
+    /**
+     *
+     * @param predicate
+     * @return
+     */
+    public StreamPipe<O, O> interruptIf(Predicate<O> predicate)
+    {
+        return this.into(new Interruption<>(predicate));
     }
 
     public int getMaxParallelism()
