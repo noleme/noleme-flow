@@ -57,8 +57,8 @@ Here is a very basic example of pipeline we could create:
 /* We initialize a flow */
 var flow = Flow
     .from(() -> 1)
-    .into(i -> i + 1)
-    .into(i -> i * 2)
+    .pipe(i -> i + 1)
+    .pipe(i -> i * 2)
     .sink(System.out::println)
 ;
 
@@ -74,17 +74,17 @@ Another example:
 /* We initialize a flow */
 var flow = Flow
     .from(() -> 2)
-    .into(i -> i * 2)
+    .pipe(i -> i * 2)
 ;
 
 /* We branch the flow in two branchs */
-var branchA = flow.into(i -> i * i);
-var branchB = flow.into(i -> i * 5);
+var branchA = flow.pipe(i -> i * i);
+var branchB = flow.pipe(i -> i * 5);
 
 /* We join the two branchs and collect the end result */
 var recipient = branchA
     .join(branchB, Integer::sum)
-    .into(i -> i * 2)
+    .pipe(i -> i * 2)
     .collect() /* The collect operation is implemented as a stateful Loader */
 ;
 
@@ -101,20 +101,20 @@ Now a final example with a stream flow going on:
 /* Let's have a "standard" flow doing its thing */
 var branch = Flow
     .from(() -> 2)
-    .into(i -> i + 1)
+    .pipe(i -> i + 1)
 ;
 
 /* Create a "stream" flow from a list of integers  */
 var flow = Flow
     .from(() -> List.of(0, 1, 2, 3, 4, 5, 6, 7, 8, 9))
     .stream(IterableGenerator::new)
-    .into(i -> i * i)
+    .pipe(i -> i * i)
     .join(branch, (f, b) -> f * b) /* All values in the main flow will be multiplied by the output from the branch flow */
     .accumulate(values -> values.stream() /* Once the generator is exhausted and all stream nodes have run, we gather the output integers and sum them ; note that accumulation is optional (you could also end the stream with a sink) */
         .reduce(Integer::sum)
         .orElseThrow(() -> new AccumulationException("Could not sum data."))
     )
-    .into(i -> i + 1) /* After the accumulation step, the flow is back to being a "standard" flow so we can queue further transformations */
+    .pipe(i -> i + 1) /* After the accumulation step, the flow is back to being a "standard" flow so we can queue further transformations */
     .sink(System.out::println)
 ;
 
