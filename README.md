@@ -151,7 +151,7 @@ public class IterableGenerator<T> implements Generator<T>
 
 Other features that will need to be documented include:
 
-* the complete set of DAG building methods (including alternate flavours of `from`, `stream`, as well as `driftSink` and the generic `into`)
+* the complete set of DAG building methods (including alternate flavours of `from`, `stream`, as well as `driftSink`, `after` and the generic `into`)
 * control-flow with partial DAG interruption (`interrupt` and `interruptIf`)
 * runtime input management (dynamic `from` and the `Input` component) 
 * runtime output management, sampling/collection features (`collect`, `sample` and the `Output` component)
