@@ -5,7 +5,7 @@
 [![javadoc](https://javadoc.io/badge2/com.lumiomedical/lumio-flow/javadoc.svg)](https://javadoc.io/doc/com.lumiomedical/lumio-flow)
 ![GitHub](https://img.shields.io/github/license/lumio-medical/lumio-flow)
 
-This library provides an opinionated way of structuring data processing programs such as ETLs.
+This library provides features enabling DAG structuring of data processing programs such as ETLs.
 
 Implementations found in this package will shouldn't be tied to any specific Lumio project.
 
