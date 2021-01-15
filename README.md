@@ -4,6 +4,7 @@
 [![Maven Central Repository](https://maven-badges.herokuapp.com/maven-central/com.lumiomedical/lumio-flow/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.lumiomedical/lumio-flow)
 [![javadoc](https://javadoc.io/badge2/com.lumiomedical/lumio-flow/javadoc.svg)](https://javadoc.io/doc/com.lumiomedical/lumio-flow)
 ![GitHub](https://img.shields.io/github/license/lumio-medical/lumio-flow)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Flumio-medical%2Flumio-flow.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Flumio-medical%2Flumio-flow?ref=badge_shield)
 
 This library provides features enabling DAG structuring of data processing programs such as ETLs.
 
@@ -167,3 +168,7 @@ This project will require you to have the following:
 * Java 11+
 * Git (versioning)
 * Maven (dependency resolving, publishing and packaging) 
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Flumio-medical%2Flumio-flow.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Flumio-medical%2Flumio-flow?ref=badge_large)
