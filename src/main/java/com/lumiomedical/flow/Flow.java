@@ -1,9 +1,11 @@
 package com.lumiomedical.flow;
 
+import com.lumiomedical.flow.actor.extractor.ExtractionException;
 import com.lumiomedical.flow.actor.extractor.Extractor;
 import com.lumiomedical.flow.actor.generator.Generator;
 import com.lumiomedical.flow.actor.loader.Loader;
 import com.lumiomedical.flow.actor.transformer.BiTransformer;
+import com.lumiomedical.flow.actor.transformer.TransformationException;
 import com.lumiomedical.flow.actor.transformer.Transformer;
 import com.lumiomedical.flow.compiler.CompilationException;
 import com.lumiomedical.flow.compiler.FlowCompiler;
@@ -168,6 +170,19 @@ public final class Flow
     public static <O> Source<O> from(Extractor<O> extractor)
     {
         return new Source<>(extractor);
+    }
+
+    /**
+     *
+     * @param transformer
+     * @param input
+     * @param <I>
+     * @param <O>
+     * @return
+     */
+    public static <I, O> Source<O> from(Transformer<I, O> transformer, I input)
+    {
+        return new Source<>(transformer.asExtractor(input));
     }
 
     /**
