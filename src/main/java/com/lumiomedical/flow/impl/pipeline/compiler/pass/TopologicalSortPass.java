@@ -1,8 +1,9 @@
 package com.lumiomedical.flow.impl.pipeline.compiler.pass;
 
 import com.lumiomedical.flow.compiler.CompilationException;
-import com.lumiomedical.flow.logger.Logging;
 import com.lumiomedical.flow.node.Node;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
@@ -12,6 +13,8 @@ import java.util.*;
  */
 public class TopologicalSortPass implements PipelineCompilerPass
 {
+    private static final Logger logger = LoggerFactory.getLogger(TopologicalSortPass.class);
+
     @Override
     public Collection<Node> run(Collection<Node> nodes) throws CompilationException
     {
@@ -38,7 +41,7 @@ public class TopologicalSortPass implements PipelineCompilerPass
                 this.checkEdgeIntegrity(n, temporary, permanent, sorted);
         }
 
-        Logging.logger.debug("Flow execution graph contains "+sorted.size()+" nodes");
+        logger.debug("Flow execution graph contains {} nodes", sorted.size());
 
         return sorted;
     }
@@ -101,7 +104,7 @@ public class TopologicalSortPass implements PipelineCompilerPass
             }
         }
 
-        Logging.logger.debug("Collected "+startingPoints.size()+" flow execution graph entry nodes");
+        logger.debug("Collected {} flow execution graph entry nodes", startingPoints.size());
 
         return startingPoints;
     }

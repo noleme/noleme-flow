@@ -12,12 +12,12 @@ import com.lumiomedical.flow.impl.pipeline.runtime.heap.Heap;
 import com.lumiomedical.flow.impl.pipeline.runtime.node.OffsetNode;
 import com.lumiomedical.flow.io.input.Input;
 import com.lumiomedical.flow.io.output.Output;
-import com.lumiomedical.flow.logger.Logging;
 import com.lumiomedical.flow.node.Node;
 import com.lumiomedical.flow.stream.StreamAccumulator;
 import com.lumiomedical.flow.stream.StreamGenerator;
 import com.lumiomedical.flow.stream.StreamNode;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Iterator;
 import java.util.List;
@@ -37,7 +37,7 @@ public class ParallelRuntime implements FlowRuntime
     private ExecutorService pool;
     private CompletionService<Node> completionService;
 
-    private static final Logger logger = Logging.logger("parallel");
+    private static final Logger logger = LoggerFactory.getLogger(ParallelRuntime.class);
     
     /**
      *
@@ -187,10 +187,10 @@ public class ParallelRuntime implements FlowRuntime
         if (node instanceof OffsetNode)
         {
             Node actualNode = ((OffsetNode) node).getNode();
-            logger.debug("Submitting flow node #"+actualNode.getUid()+" offset "+((OffsetNode) node).getOffset()+" ("+actualNode.getClass().getSimpleName()+")");
+            logger.debug("Submitting flow node #{} offset {} ({})", actualNode.getUid(), ((OffsetNode) node).getOffset(), actualNode.getClass().getSimpleName());
         }
         else
-            logger.debug("Submitting flow node #"+node.getUid()+" ("+node.getClass().getSimpleName()+")");
+            logger.debug("Submitting flow node #{} ({})", node.getUid(), node.getClass().getSimpleName());
 
         if (node instanceof StreamGenerator)
         {

@@ -21,10 +21,10 @@ import com.lumiomedical.flow.impl.pipeline.runtime.node.OffsetNode;
 import com.lumiomedical.flow.interruption.InterruptionException;
 import com.lumiomedical.flow.io.input.InputExtractor;
 import com.lumiomedical.flow.io.output.Recipient;
-import com.lumiomedical.flow.logger.Logging;
 import com.lumiomedical.flow.node.Node;
 import com.lumiomedical.flow.stream.*;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 
@@ -34,7 +34,7 @@ import java.util.Collection;
  */
 public class Execution
 {
-    private static final Logger logger = Logging.logger("runtime.execution");
+    private static final Logger logger = LoggerFactory.getLogger(Execution.class);
     
     /**
      * Actually executes the Node passed as parameter.
@@ -76,17 +76,17 @@ public class Execution
              * Returning false is a "silent" failure mode, which can be used to signify a no-go for downstream node without stopping the rest of the graph execution.
              * Here we really want to crash the whole party since we apparently have an unknown node subtype.
              */
-            logger.error("Flow node #"+node.getUid()+" is of an unknown "+node.getClass().getName()+" type");
+            logger.error("Flow node #{} is of an unknown {} type", node.getUid(), node.getClass().getName());
 
             throw new PipelineRunException("Unknown node type " + node.getClass().getName(), heap);
         }
         catch (InterruptionException e) {
-            logger.debug("Flow node #"+node.getUid()+" has requested an interruption, blocking downstream nodes.");
+            logger.debug("Flow node #{} has requested an interruption, blocking downstream nodes.", node.getUid());
 
             return false;
         }
         catch (ExtractionException | TransformationException | LoadingException | GenerationException | AccumulationException e) {
-            logger.error("Flow node #"+node.getUid()+" has thrown an error: "+e.getMessage(), e);
+            logger.error("Flow node #{} has thrown an error: {}", node.getUid(), e.getMessage());
 
             throw new PipelineRunException(
                 "Node " + node.getClass().getName() + "#" + node.getUid() + " has thrown an exception. (" + e.getClass() + ")", e, heap
@@ -105,7 +105,7 @@ public class Execution
     {
         Extractor extractor = source.getActor();
 
-        logger.debug("Launching flow source #"+source.getUid()+" of extractor "+extractor.getClass().getName());
+        logger.debug("Launching flow source #{} of extractor {}", source.getUid(), extractor.getClass().getName());
 
         /* If the extractor is an InputExtractor, the output value comes from the provided input instead of the extractor itself ; the extractor only holds a reference to the expected input */
         if (extractor instanceof InputExtractor)
@@ -135,7 +135,7 @@ public class Execution
     {
         Transformer transformer = pipe.getActor();
 
-        logger.debug("Launching flow pipe #"+pipe.getUid()+" of transformer "+transformer.getClass().getName());
+        logger.debug("Launching flow pipe #{} of transformer {}", pipe.getUid(), transformer.getClass().getName());
 
         Object input = heap.consume(pipe.getSimpleUpstream().getUid());
         heap.push(pipe.getUid(), transformer.transform(input), pipe.getDownstream().size());
@@ -154,7 +154,7 @@ public class Execution
     {
         BiTransformer transformer = join.getActor();
 
-        logger.debug("Launching flow join #"+join.getUid()+" of upstream flows #"+join.getUpstream1().getUid()+" and #"+join.getUpstream2().getUid());
+        logger.debug("Launching flow join #{} of upstream flows #{} and #{}", join.getUid(), join.getUpstream1().getUid(), join.getUpstream2().getUid());
 
         Object input1 = heap.consume(join.getUpstream1().getUid());
         Object input2 = heap.consume(join.getUpstream2().getUid());
@@ -173,7 +173,7 @@ public class Execution
     {
         Loader loader = sink.getActor();
 
-        logger.debug("Launching flow sink #"+sink.getUid()+" of loader "+loader.getClass().getName());
+        logger.debug("Launching flow sink #{} of loader {}", sink.getUid(), loader.getClass().getName());
 
         Object input = heap.consume(sink.getSimpleUpstream().getUid());
 
@@ -213,7 +213,7 @@ public class Execution
         else if (node instanceof StreamSink)
             return this.launchStreamSink((StreamSink<?>) node, offset, heap);
 
-        logger.error("Flow node #"+node.getUid()+" is of an unknown "+node.getClass().getName()+" type");
+        logger.error("Flow node #{} is of an unknown {} type", node.getUid(), node.getClass().getName());
 
         throw new PipelineRunException("Unknown node type " + node.getClass().getName(), heap);
     }
@@ -230,7 +230,7 @@ public class Execution
     {
         Generator generator = heap.getStreamGenerator(generatorNode);
 
-        logger.debug("Launching flow stream generator #"+generatorNode.getUid()+" at offset "+offset+" with generator "+generator.getClass().getName());
+        logger.debug("Launching flow stream generator #{} at offset {} with generator {}", generatorNode.getUid(), offset, generator.getClass().getName());
 
         heap.push(generatorNode.getUid(), offset, generator.generate(), generatorNode.getDownstream().size());
         return true;
@@ -248,7 +248,7 @@ public class Execution
     {
         Transformer transformer = pipe.getActor();
 
-        logger.debug("Launching flow stream pipe #"+pipe.getUid()+" at offset "+offset+" of transformer "+transformer.getClass().getName());
+        logger.debug("Launching flow stream pipe #{} at offset {} of transformer {}", pipe.getUid(), offset, transformer.getClass().getName());
 
         Object input = heap.consume(pipe.getSimpleUpstream().getUid(), offset);
         heap.push(pipe.getUid(), offset, transformer.transform(input), pipe.getDownstream().size());
@@ -267,7 +267,7 @@ public class Execution
     {
         BiTransformer transformer = join.getActor();
 
-        logger.debug("Launching flow stream join #"+join.getUid()+" at offset "+offset+" of upstream flows #"+join.getUpstream1().getUid()+" and #"+join.getUpstream2().getUid());
+        logger.debug("Launching flow stream join #{} at offset {} of upstream flows #{} and #{}", join.getUid(), offset, join.getUpstream1().getUid(), join.getUpstream2().getUid());
 
         Object input1 = heap.consume(join.getUpstream1().getUid(), offset);
         Object input2 = heap.consume(join.getUpstream2().getUid(), offset);
@@ -287,7 +287,7 @@ public class Execution
     {
         Loader loader = sink.getActor();
 
-        logger.debug("Launching flow stream sink #"+sink.getUid()+" at offset "+offset+" of loader "+loader.getClass().getName());
+        logger.debug("Launching flow stream sink #{} at offset {} of loader {}", sink.getUid(), offset, loader.getClass().getName());
 
         Object input = heap.consume(sink.getSimpleUpstream().getUid(), offset);
         loader.load(input);
@@ -306,7 +306,7 @@ public class Execution
     {
         Accumulator accumulator = node.getActor();
 
-        logger.debug("Launching flow stream accumulator #"+node.getUid()+" of accumulator "+node.getClass().getName());
+        logger.debug("Launching flow stream accumulator #{} of accumulator {}", node.getUid(), node.getClass().getName());
 
         Collection<Object> input = heap.consumeAll(node.getSimpleUpstream().getUid());
 

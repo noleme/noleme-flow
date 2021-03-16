@@ -10,11 +10,9 @@ import com.lumiomedical.flow.impl.pipeline.runtime.heap.Heap;
 import com.lumiomedical.flow.impl.pipeline.runtime.node.OffsetNode;
 import com.lumiomedical.flow.io.input.Input;
 import com.lumiomedical.flow.io.output.Output;
-import com.lumiomedical.flow.logger.Logging;
 import com.lumiomedical.flow.node.Node;
 import com.lumiomedical.flow.stream.StreamAccumulator;
 import com.lumiomedical.flow.stream.StreamGenerator;
-import org.slf4j.Logger;
 
 import java.util.*;
 
@@ -26,8 +24,6 @@ public class PipelineRuntime implements FlowRuntime
 {
     protected final Execution execution;
     private final List<Node> compiledNodes;
-
-    private static final Logger logger = Logging.logger("pipeline");
 
     /**
      *
