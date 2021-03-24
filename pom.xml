@@ -4,26 +4,26 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.lumiomedical</groupId>
-    <artifactId>lumio-flow</artifactId>
+    <groupId>com.noleme</groupId>
+    <artifactId>noleme-flow</artifactId>
     <version>0.12.1</version>
     <packaging>jar</packaging>
 
-    <name>Lumio Flow</name>
+    <name>Noleme Flow</name>
     <description>A library providing an opinionated way of structuring data processing programs such as ETLs</description>
-    <url>https://github.com/lumio-medical/lumio-flow</url>
+    <url>https://github.com/noleme/noleme-flow</url>
 
     <organization>
-        <name>Lumio Medical</name>
-        <url>https://lumiomedical.com</url>
+        <name>Noleme</name>
+        <url>https://noleme.com</url>
     </organization>
 
     <developers>
         <developer>
             <name>Pierre Lecerf</name>
-            <email>plecerf@lumiomedical.com</email>
-            <organization>Lumio Medical</organization>
-            <organizationUrl>https://lumiomedical.com</organizationUrl>
+            <email>pierre@noleme.com</email>
+            <organization>Noleme</organization>
+            <organizationUrl>https://noleme.com</organizationUrl>
         </developer>
     </developers>
 
@@ -57,21 +57,21 @@
 
     <issueManagement>
         <system>GitHub</system>
-        <url>https://github.com/lumio-medical/lumio-flow/issues</url>
+        <url>https://github.com/noleme/noleme-flow/issues</url>
     </issueManagement>
 
     <licenses>
         <license>
             <name>MIT License</name>
-            <url>https://github.com/lumio-medical/lumio-flow/blob/master/LICENSE</url>
+            <url>https://github.com/noleme/noleme-flow/blob/master/LICENSE</url>
             <distribution>repo</distribution>
         </license>
     </licenses>
 
     <scm>
-        <connection>scm:git:git://github.com:lumio-medical/lumio-flow.git</connection>
-        <developerConnection>scm:git:ssh://github.com:lumio-medical/lumio-flow.git</developerConnection>
-        <url>https://github.com/lumio-medical/lumio-flow</url>
+        <connection>scm:git:git://github.com:noleme/noleme-flow.git</connection>
+        <developerConnection>scm:git:ssh://github.com:noleme/noleme-flow.git</developerConnection>
+        <url>https://github.com/noleme/noleme-flow</url>
     </scm>
 
     <build>

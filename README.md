@@ -1,14 +1,17 @@
-# Lumio Flow
+# Noleme Flow
 
-[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/lumio-medical/lumio-flow/Java%20CI%20with%20Maven)](https://github.com/lumio-medical/lumio-flow/actions?query=workflow%3A%22Java+CI+with+Maven%22)
-[![Maven Central Repository](https://maven-badges.herokuapp.com/maven-central/com.lumiomedical/lumio-flow/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.lumiomedical/lumio-flow)
-[![javadoc](https://javadoc.io/badge2/com.lumiomedical/lumio-flow/javadoc.svg)](https://javadoc.io/doc/com.lumiomedical/lumio-flow)
-![GitHub](https://img.shields.io/github/license/lumio-medical/lumio-flow)
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Flumio-medical%2Flumio-flow.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Flumio-medical%2Flumio-flow?ref=badge_shield)
+[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/noleme/noleme-flow/Java%20CI%20with%20Maven)](https://github.com/noleme/noleme-flow/actions?query=workflow%3A%22Java+CI+with+Maven%22)
+[![Maven Central Repository](https://maven-badges.herokuapp.com/maven-central/com.noleme/noleme-flow/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.noleme/noleme-flow)
+[![javadoc](https://javadoc.io/badge2/com.noleme/noleme-flow/javadoc.svg)](https://javadoc.io/doc/com.noleme/noleme-flow)
+![GitHub](https://img.shields.io/github/license/noleme/noleme-flow)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fnoleme%2Fnoleme-flow.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fnoleme%2Fnoleme-flow?ref=badge_shield)
 
 This library provides features enabling DAG structuring of data processing programs such as ETLs.
 
-Implementations found in this package will shouldn't be tied to any specific Lumio project.
+It is a fork of [Lumio Flow](https://github.com/lumio-medical/lumio-flow) which unfortunately couldn't continue under Lumio Medical's banner.
+At the time of this writing `lumio-flow` is considered inactive and any further development will come to life in this repository.
+
+Implementations found in this package will shouldn't be tied to any specific Noleme project.
 
 _Note: This library is considered as "in beta" and as such significant API changes may occur without prior warning._
 
@@ -18,9 +21,9 @@ Add the following in your `pom.xml`:
 
 ```xml
 <dependency>
-    <groupId>com.lumiomedical</groupId>
-    <artifactId>lumio-flow</artifactId>
-    <version>0.12</version>
+    <groupId>com.noleme</groupId>
+    <artifactId>noleme-flow</artifactId>
+    <version>0.12.1</version>
 </dependency>
 ```
 
@@ -124,7 +127,7 @@ Flow.runAsPipeline(flow);
 
 Upon running this should print `856`.
 
-Note that `lumio-flow` doesn't provide any `Generator` implementation, but the IterableGenerator class mentioned above could be implemented the following way:
+Note that `noleme-flow` doesn't provide any `Generator` implementation, but the IterableGenerator class mentioned above could be implemented the following way:
 
 ```java
 public class IterableGenerator<T> implements Generator<T>
@@ -171,4 +174,4 @@ This project will require you to have the following:
 
 
 ## License
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Flumio-medical%2Flumio-flow.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Flumio-medical%2Flumio-flow?ref=badge_large)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fnoleme%2Fnoleme-flow.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fnoleme%2Fnoleme-flow?ref=badge_large)
