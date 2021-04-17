@@ -8,9 +8,6 @@
 
 This library provides features enabling DAG structuring of data processing programs such as ETLs.
 
-It is a fork of [Lumio Flow](https://github.com/lumio-medical/lumio-flow) which unfortunately couldn't continue under Lumio Medical's banner.
-At the time of this writing `lumio-flow` is considered inactive and any further development will come to life in this repository.
-
 Implementations found in this package shouldn't be tied to any specific Noleme project.
 
 _Note: This library is considered as "in beta" and as such significant API changes may occur without prior warning._
@@ -23,7 +20,7 @@ Add the following in your `pom.xml`:
 <dependency>
     <groupId>com.noleme</groupId>
     <artifactId>noleme-flow</artifactId>
-    <version>0.12.1</version>
+    <version>0.13</version>
 </dependency>
 ```
 
