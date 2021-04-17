@@ -124,31 +124,7 @@ Flow.runAsPipeline(flow);
 
 Upon running this should print `856`.
 
-Note that `noleme-flow` doesn't provide any `Generator` implementation, but the IterableGenerator class mentioned above could be implemented the following way:
-
-```java
-public class IterableGenerator<T> implements Generator<T>
-{
-    private final Iterator<T> iterator;
-
-    public IterableGenerator(Iterable<T> iterable)
-    {
-        this.iterator = iterable.iterator();
-    }
-
-    @Override
-    public boolean hasNext()
-    {
-        return this.iterator.hasNext();
-    }
-
-    @Override
-    public T generate()
-    {
-        return this.iterator.hasNext() ? this.iterator.next() : null;
-    }
-}
-``` 
+Note that `noleme-flow` itself doesn't provide any `Generator` implementation, but the `IterableGenerator` class mentioned above is part of the `noleme-flow-connect-commons` library ([over there](https://github.com/noleme/noleme-flow-connectors)).
 
 Other features that will need to be documented include:
 
