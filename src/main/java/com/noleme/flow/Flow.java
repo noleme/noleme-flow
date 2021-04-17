@@ -14,16 +14,16 @@ import com.noleme.flow.compiler.RunException;
 import com.noleme.flow.impl.parallel.ParallelCompiler;
 import com.noleme.flow.impl.parallel.runtime.executor.ExecutorServiceProvider;
 import com.noleme.flow.impl.pipeline.PipelineCompiler;
+import com.noleme.flow.interruption.InterruptionException;
 import com.noleme.flow.io.input.Input;
 import com.noleme.flow.io.input.InputExtractor;
 import com.noleme.flow.io.output.Output;
 import com.noleme.flow.node.Node;
 import com.noleme.flow.stream.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Queue;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -35,6 +35,8 @@ import java.util.function.Supplier;
  */
 public final class Flow
 {
+    private static final Logger logger = LoggerFactory.getLogger(Flow.class);
+
     private Flow() {}
 
     /**
@@ -334,6 +336,127 @@ public final class Flow
     public static <I1, I2, O> StreamJoin<I1, I2, O> join(StreamOut<I1> input1, FlowOut<I2> input2, BiTransformer<I1, I2, O> transformer)
     {
         return input1.join(input2, transformer);
+    }
+
+    /**
+     * An adapter function for absorbing ExtractionException and replace them with a log line and the control InterruptionException.
+     *
+     * @param extractor An extractor instance to be wrapped
+     * @param <O> the type of the downstream flow
+     * @return the resulting wrapper Extractor node
+     */
+    public static <O> Extractor<O> nonFatal(Extractor<O> extractor)
+    {
+        return () -> {
+            try {
+                return extractor.extract();
+            }
+            catch (ExtractionException e) {
+                logger.error(e.getMessage(), e);
+                throw InterruptionException.interrupt();
+            }
+        };
+    }
+
+    /**
+     * An adapter function for absorbing TransformationException and replace them with a log line and the control InterruptionException.
+     *
+     * @param transformer A transformer instance to be wrapped
+     * @param <I> the type of the upstream flow
+     * @param <O> the type of the downstream flow
+     * @return the resulting wrapper Transformer node
+     */
+    public static <I, O> Transformer<I, O> nonFatal(Transformer<I, O> transformer)
+    {
+        return input -> {
+            try {
+                return transformer.transform(input);
+            }
+            catch (TransformationException e) {
+                logger.error(e.getMessage(), e);
+                throw InterruptionException.interrupt();
+            }
+        };
+    }
+
+    /**
+     * An adapter function for absorbing TransformationException and replace them with a log line and the control InterruptionException.
+     *
+     * @param transformer A bi-transformer instance to be wrapped
+     * @param <I1> the type of incoming flow A
+     * @param <I2> the type of incoming flow B
+     * @param <O> the type of the downstream flow
+     * @return the resulting wrapper BiTransformer node
+     */
+    public static <I1, I2, O> BiTransformer<I1, I2, O> nonFatal(BiTransformer<I1, I2, O> transformer)
+    {
+        return (a, b) -> {
+            try {
+                return transformer.transform(a, b);
+            }
+            catch (TransformationException e) {
+                logger.error(e.getMessage(), e);
+                throw InterruptionException.interrupt();
+            }
+        };
+    }
+
+    /**
+     * An adapter function for leveraging a given Transformer over a collection of its inputs.
+     * It essentially produces a Transformer that will iterate over the input collection and delegate each item to the provided Transformer implementation.
+     *
+     * @param transformer A transformer instance to be wrapped
+     * @param <C> the type of the upstream flow collection
+     * @param <I> the type of the upstream flow collection items
+     * @param <O> the type of the downstream flow
+     * @return the resulting wrapper Transformer node
+     */
+    public static <I, O, C extends Collection<I>> Transformer<C, List<O>> aggregate(Transformer<I, O> transformer)
+    {
+        return collection -> {
+            List<O> output = new ArrayList<>(collection.size());
+            for (I input : collection)
+                output.add(transformer.transform(input));
+            return output;
+        };
+    }
+
+    /**
+     * An adapter function for leveraging a given BiTransformer over a collection of its inputs.
+     * It essentially produces a BiTransformer that will iterate over the input collection and delegate each item to the provided BiTransformer implementation.
+     *
+     * @param transformer A bi-transformer instance to be wrapped
+     * @param <C> the type of incoming flow collection A
+     * @param <I1> the type of incoming flow collection items A
+     * @param <I2> the type of incoming flow B
+     * @param <O> the type of the downstream flow
+     * @return the resulting wrapper BiTransformer node
+     */
+    public static <I1, I2, O, C extends Collection<I1>> BiTransformer<C, I2, List<O>> aggregate(BiTransformer<I1, I2, O> transformer)
+    {
+        return (collection, joined) -> {
+            List<O> output = new ArrayList<>(collection.size());
+            for (I1 input : collection)
+                output.add(transformer.transform(input, joined));
+            return output;
+        };
+    }
+
+    /**
+     * An adapter function for leveraging a given Loader over a collection of its inputs.
+     * It essentially produces a Loader that will iterate over the input collection and delegate each item to the provided Loader implementation.
+     *
+     * @param loader A loader instance to be wrapped
+     * @param <C> the type of the upstream flow collection
+     * @param <I> the type of the upstream flow collection items
+     * @return the resulting wrapper Loader node
+     */
+    public static <I, C extends Collection<I>> Loader<C> aggregate(Loader<I> loader)
+    {
+        return collection -> {
+            for (I input : collection)
+                loader.load(input);
+        };
     }
 
     /**
