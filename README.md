@@ -55,7 +55,38 @@ _TODO_
 
 ## III. Usage
 
-Here is a very basic example of pipeline we could create:
+First, let us start by the end and have a look at what it can look like "in practice".
+
+Starting with a CSV located at `data/my.csv` such that:
+
+```csv
+key,value,metadata,flag
+0,234,interesting,false
+1,139,not_interesting,false
+3,982,interesting,true
+4,389,interesting,false
+5,093,not_interesting,false
+```
+
+Below is a flow that will leverage [tablesaw](https://github.com/jtablesaw/tablesaw) for transforming this local CSV, perform some transformations, and dump it back on the filesystem.
+
+```java
+var flow = Flow
+    .from(new FileStreamer(), "data/my.csv")
+    .pipe(new TablesawCSVParser(tableProperties)) //tableProperties is a tablesaw-specific configuration classs, don't mind it
+    .pipe(table -> table.where(t -> t.stringColumn("metadata").isEqualTo("interesting")))
+    .pipe(table -> table.where(t -> t.booleanColumn("flag").isFalse()))
+    .sink(new TablesawCSVWrite("data/my-filtered.csv"))
+;
+```
+
+The overarching goal for `noleme-flow` is to have a simple yet flexible API that can enable both:
+* simplistic scenarios like this one, where ease of use and not being locked-in by a heavy ecosystem is paramount: `noleme-flow` aims to remain first and foremost a lightweight library enabling quick drafts
+* intermediate and complex scenarios joining multiple data-sources where `noleme-flow`'s main goal shifts towards enabling better code reuse, with the help of [noleme-vault](https://github.com/noleme/noleme-vault) for configuration management, by making it easy to bundle flow sequences for reuse into larger flow graphs 
+
+Implementations mentioned above can be found over at [noleme-flow-connectors](https://github.com/noleme/noleme-flow-connectors).
+
+Going back, here is a very basic example of pipeline we could create:
 
 ```java
 /* We initialize a flow */
