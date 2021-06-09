@@ -8,9 +8,6 @@
 
 This library provides features enabling DAG structuring of data processing programs such as ETLs.
 
-It is a fork of [Lumio Flow](https://github.com/lumio-medical/lumio-flow) which unfortunately couldn't continue under Lumio Medical's banner.
-At the time of this writing `lumio-flow` is considered inactive and any further development will come to life in this repository.
-
 Implementations found in this package shouldn't be tied to any specific Noleme project.
 
 _Note: This library is considered as "in beta" and as such significant API changes may occur without prior warning._
@@ -23,7 +20,7 @@ Add the following in your `pom.xml`:
 <dependency>
     <groupId>com.noleme</groupId>
     <artifactId>noleme-flow</artifactId>
-    <version>0.12.1</version>
+    <version>0.13</version>
 </dependency>
 ```
 
@@ -158,31 +155,7 @@ Flow.runAsPipeline(flow);
 
 Upon running this should print `856`.
 
-Note that `noleme-flow` doesn't provide any `Generator` implementation, but the IterableGenerator class mentioned above could be implemented the following way:
-
-```java
-public class IterableGenerator<T> implements Generator<T>
-{
-    private final Iterator<T> iterator;
-
-    public IterableGenerator(Iterable<T> iterable)
-    {
-        this.iterator = iterable.iterator();
-    }
-
-    @Override
-    public boolean hasNext()
-    {
-        return this.iterator.hasNext();
-    }
-
-    @Override
-    public T generate()
-    {
-        return this.iterator.hasNext() ? this.iterator.next() : null;
-    }
-}
-``` 
+Note that `noleme-flow` itself doesn't provide any `Generator` implementation, but the `IterableGenerator` class mentioned above is part of the `noleme-flow-connect-commons` library ([over there](https://github.com/noleme/noleme-flow-connectors)).
 
 Other features that will need to be documented include:
 
