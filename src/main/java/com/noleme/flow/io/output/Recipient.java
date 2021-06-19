@@ -10,13 +10,13 @@ import com.noleme.flow.actor.loader.Loader;
  */
 public final class Recipient <I> extends Sink<I>
 {
-    private static final Loader blackHole = new BlackHole();
+    private static final Loader<?> blackHole = new BlackHole<>();
     private final String identifier;
 
     public Recipient(String identifier)
     {
         //noinspection unchecked
-        super(blackHole);
+        super((Loader<I>) blackHole);
         this.identifier = identifier;
     }
 

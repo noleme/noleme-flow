@@ -1,10 +1,9 @@
 package com.noleme.flow.impl.pipeline.runtime.heap;
 
+import com.noleme.flow.impl.parallel.runtime.state.RRWLock;
+
 import java.util.Arrays;
 import java.util.Objects;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Stream;
 
 /**
@@ -13,9 +12,7 @@ import java.util.stream.Stream;
  */
 public class CounterContainer
 {
-    private final ReadWriteLock lock = new ReentrantReadWriteLock();
-    private final Lock readLock = this.lock.readLock();
-    private final Lock writeLock = this.lock.writeLock();
+    private final RRWLock lock = new RRWLock();
     private Counter[] data;
     private static final int OFFSET_GROWTH = 10;
 
@@ -34,11 +31,11 @@ public class CounterContainer
         this.ensureOffset(offset);
 
         try {
-            this.readLock.lock();
+            this.lock.read.lock();
             return this.data[offset];
         }
         finally {
-            this.readLock.unlock();
+            this.lock.read.unlock();
         }
     }
 
@@ -49,23 +46,26 @@ public class CounterContainer
     public Stream<Counter> stream()
     {
         try {
-            this.readLock.lock();
+            this.lock.read.lock();
             return Stream.of(this.data)
                 .filter(Objects::nonNull)
             ;
         }
         finally {
-            this.readLock.unlock();
+            this.lock.read.unlock();
         }
     }
 
     /**
      *
+     * @return
      */
-    public void removeConsumed()
+    public int removeConsumed()
     {
         try {
-            this.writeLock.lock();
+            this.lock.write.lock();
+
+            int remaining = 0;
             for (int offset = 0 ; offset < this.data.length ; ++offset)
             {
                 if (this.data[offset] == null)
@@ -73,10 +73,14 @@ public class CounterContainer
 
                 if (this.data[offset].getCount() == 0)
                     this.data[offset] = null;
+                else
+                    ++remaining;
             }
+
+            return remaining;
         }
         finally {
-            this.writeLock.unlock();
+            this.lock.write.unlock();
         }
     }
 
@@ -90,11 +94,11 @@ public class CounterContainer
         this.ensureOffset(offset);
 
         try {
-            this.writeLock.lock();
+            this.lock.write.lock();
             this.data[offset] = counter;
         }
         finally {
-            this.writeLock.unlock();
+            this.lock.write.unlock();
         }
     }
 
@@ -108,7 +112,7 @@ public class CounterContainer
             return;
 
         try {
-            this.writeLock.lock();
+            this.lock.write.lock();
 
             if (offset < this.data.length)
                 return;
@@ -119,7 +123,7 @@ public class CounterContainer
                 this.data = Arrays.copyOf(this.data, targetSize);
         }
         finally {
-            this.writeLock.unlock();
+            this.lock.write.unlock();
         }
     }
 }

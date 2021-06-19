@@ -1,8 +1,9 @@
 package com.noleme.flow.impl.parallel.runtime.heap;
 
 import com.noleme.flow.actor.generator.Generator;
-import com.noleme.flow.impl.pipeline.runtime.heap.CounterContainer;
+import com.noleme.flow.impl.parallel.runtime.state.RRWLock;
 import com.noleme.flow.impl.pipeline.runtime.heap.Counter;
+import com.noleme.flow.impl.pipeline.runtime.heap.CounterContainer;
 import com.noleme.flow.impl.pipeline.runtime.heap.Heap;
 import com.noleme.flow.io.input.Input;
 import com.noleme.flow.io.output.Output;
@@ -20,14 +21,17 @@ import java.util.stream.Collectors;
 /**
  * @author Pierre Lecerf (pierre.lecerf@gmail.com) on 23/07/15.
  */
+@SuppressWarnings("rawtypes")
 public class ConcurrentHashHeap implements Heap
 {
     private final Map<String, Counter> contents;
-    private final Map<String, Generator<?>> generators;
+    private final Map<String, Generator> generators;
     private final Map<String, CounterContainer> streamContents;
     private final Map<String, Integer> offsets;
     private final Input input;
     private final WriteableOutput output;
+    private final RRWLock contentLock = new RRWLock();
+    private final RRWLock streamLock = new RRWLock();
 
     public ConcurrentHashHeap(Input input)
     {
@@ -50,28 +54,48 @@ public class ConcurrentHashHeap implements Heap
     @Override
     public boolean has(String id)
     {
-        return this.contents.containsKey(id);
-    }
-
-    @Override
-    synchronized public Object peek(String id)
-    {
-        if (this.contents.containsKey(id))
-            return this.contents.get(id).getValue();
-        return null;
-    }
-
-    @Override
-    synchronized public Object consume(String id)
-    {
-        if (this.contents.containsKey(id))
-        {
-            Counter counter = this.contents.get(id).decrement();
-            if (counter.getCount() == 0)
-                this.contents.remove(id);
-            return counter.getValue();
+        try {
+            this.contentLock.read.lock();
+            return this.contents.containsKey(id);
         }
-        return null;
+        finally {
+            this.contentLock.read.unlock();
+        }
+    }
+
+    @Override
+    public Object peek(String id)
+    {
+        try {
+            this.contentLock.read.lock();
+
+            if (this.contents.containsKey(id))
+                return this.contents.get(id).getValue();
+            return null;
+        }
+        finally {
+            this.contentLock.read.unlock();
+        }
+    }
+
+    @Override
+    public Object consume(String id)
+    {
+        try {
+            this.contentLock.write.lock();
+
+            if (this.contents.containsKey(id))
+            {
+                Counter counter = this.contents.get(id).decrement();
+                if (counter.getCount() == 0)
+                    this.contents.remove(id);
+                return counter.getValue();
+            }
+            return null;
+        }
+        finally {
+            this.contentLock.write.unlock();
+        }
     }
 
     @Override
@@ -99,60 +123,100 @@ public class ConcurrentHashHeap implements Heap
     }
 
     @Override
-    synchronized public Heap push(String id, int offset, Object returnValue, int counter)
+    public Heap push(String id, int offset, Object returnValue, int counter)
     {
-        if (!this.streamContents.containsKey(id))
-            this.streamContents.put(id, new CounterContainer());
+        try {
+            this.streamLock.write.lock();
 
-        this.streamContents.get(id).set(offset, new Counter(returnValue, counter));
+            if (!this.streamContents.containsKey(id))
+                this.streamContents.put(id, new CounterContainer());
 
-        return this;
+            this.streamContents.get(id).set(offset, new Counter(returnValue, counter));
+
+            return this;
+        }
+        finally {
+            this.streamLock.write.unlock();
+        }
     }
 
     @Override
     public boolean has(String id, int offset)
     {
-        if (this.hasStreamContent(id, offset))
-            return true;
-        return this.has(id);
+        try {
+            this.streamLock.read.lock();
+            this.contentLock.read.lock();
+
+            if (this.hasStreamContent(id, offset))
+                return true;
+            return this.has(id);
+        }
+        finally {
+            this.streamLock.read.unlock();
+            this.contentLock.read.unlock();
+        }
     }
 
     @Override
     public Object peek(String id, int offset)
     {
-        if (this.hasStreamContent(id, offset))
-            return this.streamContents.get(id).get(offset).getValue();
-        else if (this.has(id))
-            return this.contents.get(id).getValue();
-        return null;
+        try {
+            this.streamLock.read.lock();
+            this.contentLock.read.lock();
+
+            if (this.hasStreamContent(id, offset))
+                return this.streamContents.get(id).get(offset).getValue();
+            else if (this.contents.containsKey(id))
+                return this.contents.get(id).getValue();
+            return null;
+        }
+        finally {
+            this.streamLock.read.unlock();
+            this.contentLock.read.unlock();
+        }
     }
 
     @Override
-    synchronized public Object consume(String id, int offset)
+    public Object consume(String id, int offset)
     {
-        if (this.hasStreamContent(id, offset))
-            return this.streamContents.get(id).get(offset).decrement().getValue();
-        else if (this.has(id))
-            return this.contents.get(id).decrement().getValue();
-        return null;
+        try {
+            this.streamLock.write.lock();
+            this.contentLock.write.lock();
+
+            if (this.hasStreamContent(id, offset))
+                return this.streamContents.get(id).get(offset).decrement().getValue();
+            else if (this.contents.containsKey(id))
+                return this.contents.get(id).decrement().getValue();
+            return null;
+        }
+        finally {
+            this.streamLock.write.unlock();
+            this.contentLock.write.unlock();
+        }
     }
 
     @Override
-    synchronized public Collection<Object> consumeAll(String id)
+    public Collection<Object> consumeAll(String id)
     {
-        if (this.streamContents.containsKey(id))
-        {
+        try {
+            this.streamLock.write.lock();
+
+            if (!this.streamContents.containsKey(id))
+                return null;
+
             List<Object> values = this.streamContents.get(id).stream()
                 .map(c -> c.decrement().getValue())
                 .collect(Collectors.toList())
             ;
 
-            this.streamContents.get(id).removeConsumed();
+            if (this.streamContents.get(id).removeConsumed() == 0)
+                this.streamContents.remove(id);
 
             return values;
         }
-
-        return null;
+        finally {
+            this.streamLock.write.unlock();
+        }
     }
 
     @Override
@@ -193,5 +257,40 @@ public class ConcurrentHashHeap implements Heap
         return container != null
             && container.get(offset) != null
         ;
+    }
+
+    @Override
+    public String dump() {
+        var sb = new StringBuilder();
+
+        sb.append(this).append("\n");
+        sb.append("  contentlock:\n");
+        sb.append("    read: ").append(this.contentLock.read).append("\n");
+        sb.append("    write: ").append(this.contentLock.write).append("\n");
+        sb.append("  streamlock:\n");
+        sb.append("    read: ").append(this.streamLock.read).append("\n");
+        sb.append("    write: ").append(this.streamLock.write).append("\n");
+        sb.append("  contents:\n");
+        this.contents.forEach((uid, counter) -> {
+            sb.append("    ").append(uid).append(": ").append(counter.getValue()).append(" (count=").append(counter.getCount()).append(")\n");
+        });
+        sb.append("  streams:\n");
+        sb.append("    generators:\n");
+        this.generators.forEach((uid, gen) -> {
+            sb.append("      ").append(uid).append(": ").append(gen).append(" (hasNext=").append(gen.hasNext()).append(")\n");
+        });
+        sb.append("    offsets:\n");
+        this.offsets.forEach((uid, offset) -> {
+            sb.append("      ").append(uid).append(": ").append(offset).append("\n");
+        });
+        sb.append("    contents:\n");
+        this.streamContents.forEach((uid, container) -> {
+            sb.append("      ").append(uid).append(":\n");
+            container.stream().forEach(counter -> {
+                sb.append("        ").append(counter.getValue()).append(" (count=").append(counter.getCount()).append(")\n");
+            });
+        });
+
+        return sb.toString();
     }
 }

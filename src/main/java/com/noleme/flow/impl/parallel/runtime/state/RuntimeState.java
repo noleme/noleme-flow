@@ -9,7 +9,6 @@ import com.noleme.flow.stream.StreamGenerator;
 import com.noleme.flow.stream.StreamNode;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.stream.Collectors;
 
@@ -17,20 +16,24 @@ import java.util.stream.Collectors;
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
  * Created on 2020/12/14
  */
+@SuppressWarnings("rawtypes")
 public class RuntimeState
 {
-    private final Map<StreamGenerator, ParallelismCounter> streamParallelism = new ConcurrentHashMap<>();
-    private final Map<OffsetNode, Set<OffsetNode>> streamChecklist = new ConcurrentHashMap<>();
-    private final Set<Node> waiting = new ConcurrentSkipListSet<>();
-    private final Set<Node> submitted = new ConcurrentSkipListSet<>();
-    private final Set<Node> completed = new ConcurrentSkipListSet<>();
-    private final Set<Node> blocked = new ConcurrentSkipListSet<>();
-    private final Set<StreamGenerator> submittedGenerators = new ConcurrentSkipListSet<>();
+    private final ParallelismState parallelism = new ParallelismState();
+    /* Each stream generation offset has its own checklist (hence why we index by the offset generator, and not the generator itself) */
+    private final Map<OffsetNode, Set<OffsetNode>> streamChecklist = new HashMap<>();
+    private final Set<Node> waiting = new HashSet<>();
+    private final Set<Node> submitted = new HashSet<>();
+    private final Set<Node> completed = new HashSet<>();
+    private final Set<Node> blocked = new HashSet<>();
+    private final Set<StreamGenerator> submittedGenerators = new HashSet<>();
     private final ParallelIndexes indexes;
+    private final RRWLock blockLock = new RRWLock();
+    private final RRWLock streamLock = new RRWLock();
 
     public RuntimeState(ParallelIndexes indexes)
     {
-        this.indexes = indexes;
+        this.indexes = indexes.copy();
     }
 
     public RuntimeState queue(Node node)
@@ -45,12 +48,6 @@ public class RuntimeState
         return this;
     }
 
-    public RuntimeState unqueue(Node node)
-    {
-        this.waiting.remove(node);
-        return this;
-    }
-
     public RuntimeState submit(Node node)
     {
         if (node instanceof OffsetNode && ((OffsetNode) node).getNode() instanceof StreamGenerator)
@@ -60,13 +57,6 @@ public class RuntimeState
         return this;
     }
 
-    public RuntimeState submitAll(Collection<Node> nodes)
-    {
-        this.submitted.addAll(nodes);
-        return this;
-    }
-
-    @SuppressWarnings("SuspiciousMethodCalls")
     public RuntimeState unsubmit(Node node)
     {
         if (node instanceof OffsetNode && ((OffsetNode) node).getNode() instanceof StreamGenerator)
@@ -82,35 +72,29 @@ public class RuntimeState
         return this;
     }
 
-    public RuntimeState completeAll(Collection<Node> nodes)
-    {
-        this.completed.addAll(nodes);
-        return this;
-    }
-
-    public RuntimeState uncomplete(Node node)
-    {
-        this.completed.remove(node);
-        return this;
-    }
-
     public RuntimeState block(Node node)
     {
-        this.blocked.add(node);
-        return this;
+        try {
+            this.blockLock.write.lock();
+            this.blocked.add(node);
+            return this;
+        }
+        finally {
+            this.blockLock.write.unlock();
+        }
     }
 
     public RuntimeState blockAll(Collection<Node> nodes)
     {
-        for (Node node : nodes)
-            PipelineRuntime.blockBranch(node, this.blocked);
-        return this;
-    }
-
-    public RuntimeState unblock(Node node)
-    {
-        this.blocked.remove(node);
-        return this;
+        try {
+            this.blockLock.write.lock();
+            for (Node node : nodes)
+                PipelineRuntime.blockBranch(node, this.blocked);
+            return this;
+        }
+        finally {
+            this.blockLock.write.unlock();
+        }
     }
 
     public Iterator<Node> waitingIterator()
@@ -141,7 +125,13 @@ public class RuntimeState
 
     public boolean isBlocked(Node node)
     {
-        return this.blocked.contains(node);
+        try {
+            this.blockLock.read.lock();
+            return this.blocked.contains(node);
+        }
+        finally {
+            this.blockLock.read.unlock();
+        }
     }
 
     public boolean hasWaiting()
@@ -159,10 +149,10 @@ public class RuntimeState
      * @param node
      * @return
      */
-    private StreamGenerator getGenerator(Node node)
+    private StreamGenerator<?, ?> getGenerator(Node node)
     {
         return node instanceof StreamGenerator
-            ? (StreamGenerator) node
+            ? (StreamGenerator<?, ?>) node
             : this.indexes.generators.get(node)
         ;
     }
@@ -171,43 +161,62 @@ public class RuntimeState
      *
      * @param offsetGenerator
      */
-    synchronized public void initiateStream(OffsetNode offsetGenerator)
+    public void initiateStream(OffsetNode offsetGenerator)
     {
-        StreamGenerator generator = (StreamGenerator) offsetGenerator.getNode();
+        try {
+            this.streamLock.write.lock();
+            StreamGenerator generator = (StreamGenerator) offsetGenerator.getNode();
 
-        this.streamChecklist.put(offsetGenerator, this.indexes.streamNodes.get(generator).stream()
-            .map(sn -> new OffsetNode(sn, offsetGenerator.getOffset()))
-            .collect(Collectors.toCollection(ConcurrentSkipListSet::new))
-        );
-        this.getParallelism(generator).increment();
+            this.streamChecklist.put(offsetGenerator, this.indexes.streamNodes.get(generator).stream()
+                .map(sn -> new OffsetNode(sn, offsetGenerator.getOffset()))
+                .collect(Collectors.toCollection(ConcurrentSkipListSet::new))
+            );
+
+            this.parallelism.increase(generator);
+        }
+        finally {
+            this.streamLock.write.unlock();
+        }
     }
 
     /**
      *
      * @param node
      */
-    synchronized public void completeStreamItem(OffsetNode node)
+    public void completeStreamItem(OffsetNode node)
     {
-        StreamGenerator generator = this.getGenerator(node.getNode());
-        Set<OffsetNode> checklist = this.streamChecklist.get(new OffsetNode(generator, node.getOffset()));
-        checklist.remove(node);
+        try {
+            this.streamLock.write.lock();
+            StreamGenerator generator = this.getGenerator(node.getNode());
+            Set<OffsetNode> checklist = this.streamChecklist.get(new OffsetNode(generator, node.getOffset()));
+            checklist.remove(node);
 
-        if (checklist.isEmpty())
-            this.getParallelism(generator).decrement();
+            if (checklist.isEmpty())
+                this.parallelism.decrease(generator);
+        }
+        finally {
+            this.streamLock.write.unlock();
+        }
     }
 
     /**
      *
      * @param node
      */
-    synchronized public void terminateStream(OffsetNode node)
+    public void terminateStream(OffsetNode node)
     {
-        StreamGenerator generator = this.getGenerator(node.getNode());
-        OffsetNode key = new OffsetNode(generator, node.getOffset());
-        if (!this.streamChecklist.containsKey(key))
-            return;
-        this.streamChecklist.put(key, new HashSet<>());
-        this.getParallelism(generator).decrement();
+        try {
+            this.streamLock.write.lock();
+            StreamGenerator generator = this.getGenerator(node.getNode());
+            OffsetNode key = new OffsetNode(generator, node.getOffset());
+            if (!this.streamChecklist.containsKey(key))
+                return;
+            this.streamChecklist.put(key, new HashSet<>());
+            this.parallelism.decrease(generator);
+        }
+        finally {
+            this.streamLock.write.unlock();
+        }
     }
 
     /**
@@ -215,14 +224,20 @@ public class RuntimeState
      * @param accumulator
      * @return
      */
-    public boolean isStreamComplete(StreamAccumulator accumulator)
+    public boolean isStreamComplete(StreamAccumulator<?, ?> accumulator)
     {
-        StreamGenerator generator = this.getGenerator(accumulator.getSimpleUpstream());
+        try {
+            this.streamLock.read.lock();
+            StreamGenerator generator = this.getGenerator(accumulator.getSimpleUpstream());
 
-        if (this.isWaiting(generator))
-            return false;
+            if (this.isWaiting(generator))
+                return false;
 
-        return this.getParallelism(generator).counter == 0;
+            return this.parallelism.isIdle(generator);
+        }
+        finally {
+            this.streamLock.read.unlock();
+        }
     }
 
     /**
@@ -230,62 +245,81 @@ public class RuntimeState
      * @param node
      * @return
      */
-    @SuppressWarnings("SuspiciousMethodCalls")
     public boolean isStreamComplete(StreamNode node)
     {
-        StreamGenerator generator = this.indexes.generators.get(node);
+        try {
+            this.streamLock.read.lock();
+            StreamGenerator generator = this.indexes.generators.get(node);
 
-        /* If the stream was never started, it cannot be completed */
-        if (!this.streamParallelism.containsKey(generator))
-            return false;
-        /* If the generator is still in waiting, it cannot be completed */
-        if (this.isWaiting(generator))
-            return false;
+            /* If the stream was never started, it cannot be completed */
+            if (!this.parallelism.has(generator))
+                return false;
+            /* If the generator is still in waiting, it cannot be completed */
+            if (this.isWaiting(generator))
+                return false;
 
-        /* If the generator is not in waiting and parallelism count is set to 0, all downstream stream nodes should be completed */
-        return this.getParallelism(generator).counter == 0;
+            /* If the generator is not in waiting and parallelism count is set to 0, all downstream stream nodes should be completed */
+            return this.parallelism.isIdle(generator);
+        }
+        finally {
+            this.streamLock.read.unlock();
+        }
     }
 
     /**
      *
-     * @param node
+     * @param generatorNode
      * @return
      */
-    public boolean hasReachedMaxParallelism(StreamGenerator node)
+    public boolean hasReachedMaxParallelism(StreamGenerator generatorNode)
     {
-        return this.streamParallelism.containsKey(node)
-            && this.streamParallelism.get(node).count() >= node.getMaxParallelism()
-        ;
+        return this.parallelism.hasReachedMax(generatorNode);
     }
 
-    /**
-     *
-     * @param node
-     * @return
-     */
-    synchronized public ParallelismCounter getParallelism(StreamGenerator node)
-    {
-        if (!this.streamParallelism.containsKey(node))
-            this.streamParallelism.put(node, new ParallelismCounter());
-        return this.streamParallelism.get(node);
-    }
+    public String dump() {
+        var sb = new StringBuilder();
 
-    /**
-     *
-     * @param waitingNode
-     * @return
-     */
-    public boolean isGeneratorSubmitted(StreamGenerator waitingNode)
-    {
-        return false;
-    }
+        sb.append(this).append("\n");
+        sb.append("  blocklock:\n");
+        sb.append("    read: ").append(this.blockLock.read).append("\n");
+        sb.append("    write: ").append(this.blockLock.write).append("\n");
+        sb.append("  streamlock:\n");
+        sb.append("    read: ").append(this.streamLock.read).append("\n");
+        sb.append("    write: ").append(this.streamLock.write).append("\n");
+        sb.append("  waiting:\n");
+        this.waiting.forEach(node -> {
+            sb.append("    ").append(node.getUid()).append(": ").append(node).append("\n");
+        });
+        sb.append("  submitted:\n");
+        this.submitted.forEach(node -> {
+            sb.append("    ").append(node.getUid()).append(": ").append(node).append("\n");
+        });
+        sb.append("  completed:\n");
+        this.completed.forEach(node -> {
+            sb.append("    ").append(node.getUid()).append(": ").append(node).append("\n");
+        });
+        sb.append("  blocked:\n");
+        this.blocked.forEach(node -> {
+            sb.append("    ").append(node.getUid()).append(": ").append(node).append("\n");
+        });
+        sb.append("  streams:\n");
+        sb.append("    generators:\n");
+        this.submittedGenerators.forEach(node -> {
+            sb.append("      ").append(node.getUid()).append(": ").append(node).append("\n");
+        });
+        sb.append("    checklists:\n");
+        this.streamChecklist.forEach((offsetNode, checklist) -> {
+            sb.append("      ").append(offsetNode.getUid()).append(":");
+            if (checklist.isEmpty())
+                sb.append(" empty\n");
+            else {
+                sb.append("\n");
+                checklist.forEach(node -> {
+                    sb.append("        ").append(node.getUid()).append(": ").append(node.getNode()).append("\n");
+                });
+            }
+        });
 
-    public static class ParallelismCounter
-    {
-        private int counter = 0;
-
-        public int count() { return this.counter; }
-        public int increment() { return ++this.counter; }
-        public int decrement() { return --this.counter; }
+        return sb.toString();
     }
 }

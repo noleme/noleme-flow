@@ -52,10 +52,12 @@ public abstract class AbstractNode implements Node
     public Node after(Node other)
     {
         if (other.getRequirements().contains(this))
+        {
             throw new RuntimeException(
                 "You are attempting an illegal requirement towards " + other.getClass() + "#" + other.getUid()
                     + " as it already declared itself dependent upon this (" + this.getClass() + "#" + this.getUid() + ")"
             );
+        }
         this.requirements.add(other);
         other.getRequiredBy().add(this);
         return this;

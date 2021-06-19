@@ -10,6 +10,8 @@ import com.noleme.flow.compiler.RunException;
 import com.noleme.flow.impl.pipeline.stream.IterableGenerator;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.List;
@@ -20,6 +22,8 @@ import java.util.List;
  */
 public class ParallelStreamTest
 {
+    private static final Logger logger = LoggerFactory.getLogger(ParallelStreamTest.class);
+
     @Test
     void testStream() throws RunException, CompilationException
     {
@@ -81,6 +85,24 @@ public class ParallelStreamTest
         Assertions.assertEquals(20, output.get(flow));
         Assertions.assertTrue(assertion.isActivated());
         Assertions.assertEquals(1, assertion.getActivationCount());
+    }
+
+    @Test
+    void testAccumulationOnEmptyStream() throws RunException, CompilationException
+    {
+        var flow = Flow
+            .from(() -> List.of(1, 2, 3, 4, 5))
+            .stream(IterableGenerator::new)
+            .accumulate(ls -> ls.stream()
+                .reduce(Integer::sum)
+                .orElseThrow(() -> new AccumulationException("Could not sum stream data."))
+            )
+            .collect()
+        ;
+
+        var output = Flow.runAsParallel(flow);
+
+        Assertions.assertEquals(15, output.get(flow));
     }
 
     @Test

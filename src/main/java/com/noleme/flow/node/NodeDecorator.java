@@ -86,4 +86,10 @@ public abstract class NodeDecorator implements Node
     {
         return Objects.hash(this.getUid());
     }
+
+    @Override
+    public String toString()
+    {
+        return super.toString()+" (-> "+this.node+")";
+    }
 }
