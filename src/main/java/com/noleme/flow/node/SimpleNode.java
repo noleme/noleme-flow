@@ -63,4 +63,10 @@ public abstract class SimpleNode<T> extends AbstractNode
             return Collections.emptyList();
         return Collections.singletonList(this.upstream);
     }
+
+    @Override
+    public String toString()
+    {
+        return super.toString()+" ("+this.actor+")";
+    }
 }

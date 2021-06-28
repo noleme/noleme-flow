@@ -27,6 +27,7 @@ import java.util.concurrent.*;
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
  * Created on 2020/03/03
  */
+@SuppressWarnings("rawtypes")
 public class ParallelRuntime implements FlowRuntime
 {
     private final Execution execution;
@@ -154,6 +155,12 @@ public class ParallelRuntime implements FlowRuntime
                             continue;
                         if (state.isWaiting(downstream) || state.isSubmitted(downstream))
                             continue;
+                        /*
+                         * If an accumulator added by a previous stream node managed to complete in the timespan it takes for the last stream node to return and be considered here, it can create issues.
+                         * So we check for completed accumulator nodes too. Note that this should apply to any non-stream node that is designed to be directly downstream of stream nodes.
+                         */
+                        if (downstream instanceof StreamAccumulator && state.isCompleted(downstream))
+                            continue;
 
                         state.queue(downstream);
                     }
@@ -192,16 +199,29 @@ public class ParallelRuntime implements FlowRuntime
         else
             logger.debug("Submitting flow node #{} ({})", node.getUid(), node.getClass().getSimpleName());
 
+        /*
+         * Note regarding behaviour, there are two possible paths here:
+         *
+         * First is for StreamGenerators, these are responsible for initiating a stream and submitting the first OffsetNode of the stream.
+         *
+         * Second is for standard nodes and OffsetNodes. OffsetNodes override the getDownstream method so that any downstream StreamNode is returned as an OffsetNode with the same offset value.
+         * StreamAccumulators are not StreamNodes, so they will be returned unchanged, and the first stream to finish will submit it to the waiting queue.
+         *
+         * TODO: it would certainly be a better design to have all state updates in the main loop and get rid of the current RRWLock mess ;
+         *       for later: consider returning tuples of (node, result) and perform all state operations after the CompletionService returns
+         */
         if (node instanceof StreamGenerator)
         {
-            int offset = heap.getNextStreamOffset((StreamGenerator) node);
+            int offset = heap.getNextStreamOffset((StreamGenerator<?, ?>) node);
             OffsetNode offsetNode = new OffsetNode(node, offset);
 
             state.submit(offsetNode);
             state.initiateStream(offsetNode);
 
             this.completionService.submit(() -> {
-                if (!this.execution.launch(offsetNode, heap))
+                boolean isSuccess = this.execution.launch(offsetNode, heap);
+
+                if (!isSuccess)
                     state.blockAll(offsetNode.getDownstream());
 
                 state.completeStreamItem(offsetNode);
@@ -220,10 +240,10 @@ public class ParallelRuntime implements FlowRuntime
 
                 if (node instanceof OffsetNode)
                 {
-                    if (!isSuccess)
-                        state.terminateStream((OffsetNode) node);
-                    else
+                    if (isSuccess)
                         state.completeStreamItem((OffsetNode) node);
+                    else
+                        state.terminateStream((OffsetNode) node);
                 }
 
                 return node;

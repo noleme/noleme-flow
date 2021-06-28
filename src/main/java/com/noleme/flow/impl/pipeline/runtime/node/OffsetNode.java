@@ -17,7 +17,6 @@ public final class OffsetNode extends NodeDecorator
     private final int offset;
     private List<Node> downstream;
     private List<Node> requirements;
-    //private List<Node> requiredBy;
 
     /**
      *
@@ -28,7 +27,7 @@ public final class OffsetNode extends NodeDecorator
     {
         super(node);
         this.offset = offset;
-        this.uid = node.getUid() + "#"+this.offset;
+        this.uid = node.getUid() + "#" + this.offset;
     }
 
     /**
@@ -76,9 +75,8 @@ public final class OffsetNode extends NodeDecorator
                         return new OffsetNode(n, this.offset);
                     return n;
                 })
-                .collect(Collectors.toList())
+                .collect(Collectors.toUnmodifiableList())
             ;
-
         }
         return this.downstream;
     }
@@ -102,10 +100,9 @@ public final class OffsetNode extends NodeDecorator
                         return new OffsetNode(n, this.offset);
                     return n;
                 })
-                .collect(Collectors.toList())
+                .collect(Collectors.toUnmodifiableList())
             ;
         }
-
         return this.requirements;
     }
 }

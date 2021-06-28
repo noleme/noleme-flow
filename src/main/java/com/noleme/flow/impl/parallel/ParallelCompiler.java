@@ -9,7 +9,6 @@ import com.noleme.flow.impl.parallel.runtime.executor.Executors;
 import com.noleme.flow.impl.pipeline.PipelineCompiler;
 import com.noleme.flow.impl.pipeline.compiler.pass.PipelineCompilerPass;
 import com.noleme.flow.impl.pipeline.compiler.pass.TopologicalSortPass;
-import com.noleme.flow.io.output.Recipient;
 import com.noleme.flow.node.Node;
 import com.noleme.flow.stream.StreamGenerator;
 import com.noleme.flow.stream.StreamNode;
@@ -20,6 +19,7 @@ import java.util.*;
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
  * Created on 2020/03/03
  */
+@SuppressWarnings("rawtypes")
 public class ParallelCompiler implements FlowCompiler<ParallelRuntime>
 {
     private final ExecutorServiceProvider provider;
@@ -76,7 +76,6 @@ public class ParallelCompiler implements FlowCompiler<ParallelRuntime>
 
     private ParallelIndexes computeIndexes(List<Node> compiledNodes)
     {
-        Map<String, Recipient> recipients = new HashMap<>();
         Map<Node, StreamGenerator> generatorIndex = new HashMap<>();
         Map<StreamGenerator, Set<Node>> streamNodeIndex = new HashMap<>();
 

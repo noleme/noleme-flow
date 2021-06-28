@@ -1,7 +1,5 @@
 package com.noleme.flow.io.output;
 
-import com.noleme.flow.compiler.RunException;
-
 import java.util.HashMap;
 import java.util.Map;
 

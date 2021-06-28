@@ -19,9 +19,10 @@ public class Counter
      *
      * @return
      */
-    public Counter decrement()
+    synchronized public Counter decrement()
     {
-        this.count--;
+        if (this.count > 0)
+            this.count--;
         return this;
     }
 

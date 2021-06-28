@@ -32,6 +32,7 @@ import java.util.Collection;
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
  * Created on 2020/03/03
  */
+@SuppressWarnings("rawtypes")
 public class Execution
 {
     private static final Logger logger = LoggerFactory.getLogger(Execution.class);
@@ -44,8 +45,7 @@ public class Execution
      * - upon success: push the return values to the Heap
      * - upon failure: either abort the Node, stop or abort the Runtime
      *
-     * Note that in the current implementation, only "blocking" errors are handled, resulting in a complete exit from the pipe.
-     * Returning false was designed as a mean for a "soft exit" which results in blocking downstream paths while continuing on running paths that are still valid.
+     * Returning false is designed as a mean for a "soft exit" which results in blocking downstream paths while continuing on running paths that are still valid.
      *
      * @param node Target node
      * @param heap Heap object used for retrieving module parameters
@@ -64,7 +64,7 @@ public class Execution
             else if (node instanceof Pipe)
                 return this.launchPipe((Pipe<?, ?>) node, heap);
             else if (node instanceof Join)
-                return this.launchJoin((Join) node, heap);
+                return this.launchJoin((Join<?, ?, ?>) node, heap);
             else if (node instanceof Sink)
                 return this.launchSink((Sink<?>) node, heap);
             else if (node instanceof OffsetNode)
@@ -72,12 +72,12 @@ public class Execution
             else if (node instanceof StreamAccumulator)
                 return this.launchStreamAccumulator((StreamAccumulator<?, ?>) node, heap);
 
+            logger.error("Flow node #{} is of an unknown {} type", node.getUid(), node.getClass().getName());
+
             /*
              * Returning false is a "silent" failure mode, which can be used to signify a no-go for downstream node without stopping the rest of the graph execution.
              * Here we really want to crash the whole party since we apparently have an unknown node subtype.
              */
-            logger.error("Flow node #{} is of an unknown {} type", node.getUid(), node.getClass().getName());
-
             throw new PipelineRunException("Unknown node type " + node.getClass().getName(), heap);
         }
         catch (InterruptionException e) {
@@ -88,9 +88,7 @@ public class Execution
         catch (ExtractionException | TransformationException | LoadingException | GenerationException | AccumulationException e) {
             logger.error("Flow node #{} has thrown an error: {}", node.getUid(), e.getMessage());
 
-            throw new PipelineRunException(
-                "Node " + node.getClass().getName() + "#" + node.getUid() + " has thrown an exception. (" + e.getClass() + ")", e, heap
-            );
+            throw new PipelineRunException("Node " + node.getClass().getName() + "#" + node.getUid() + " has thrown an exception. (" + e.getClass() + ")", e, heap);
         }
     }
 
@@ -150,7 +148,7 @@ public class Execution
      * @throws TransformationException
      */
     @SuppressWarnings("unchecked")
-    private boolean launchJoin(Join join, Heap heap) throws TransformationException
+    private boolean launchJoin(Join<?, ?, ?> join, Heap heap) throws TransformationException
     {
         BiTransformer transformer = join.getActor();
 
@@ -209,7 +207,7 @@ public class Execution
         else if (node instanceof StreamPipe)
             return this.launchStreamPipe((StreamPipe<?, ?>) node, offset, heap);
         else if (node instanceof StreamJoin)
-            return this.launchStreamJoin((StreamJoin) node, offset, heap);
+            return this.launchStreamJoin((StreamJoin<?, ?, ?>) node, offset, heap);
         else if (node instanceof StreamSink)
             return this.launchStreamSink((StreamSink<?>) node, offset, heap);
 
@@ -239,6 +237,7 @@ public class Execution
     /**
      *
      * @param pipe
+     * @param offset
      * @param heap
      * @return
      * @throws TransformationException
@@ -258,12 +257,13 @@ public class Execution
     /**
      *
      * @param join
+     * @param offset
      * @param heap
      * @return
      * @throws TransformationException
      */
     @SuppressWarnings("unchecked")
-    private boolean launchStreamJoin(StreamJoin join, int offset, Heap heap) throws TransformationException
+    private boolean launchStreamJoin(StreamJoin<?, ?, ?> join, int offset, Heap heap) throws TransformationException
     {
         BiTransformer transformer = join.getActor();
 
@@ -278,6 +278,7 @@ public class Execution
     /**
      *
      * @param sink
+     * @param offset
      * @param heap
      * @return
      * @throws LoadingException
@@ -309,9 +310,7 @@ public class Execution
         logger.debug("Launching flow stream accumulator #{} of accumulator {}", node.getUid(), node.getClass().getName());
 
         Collection<Object> input = heap.consumeAll(node.getSimpleUpstream().getUid());
-
         heap.push(node.getUid(), accumulator.accumulate(input), node.getDownstream().size());
-
         return true;
     }
 }

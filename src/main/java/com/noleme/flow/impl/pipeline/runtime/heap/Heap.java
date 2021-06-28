@@ -9,6 +9,7 @@ import java.util.Collection;
 /**
  * @author Pierre Lecerf (pierre.lecerf@gmail.com) on 23/07/2015.
  */
+@SuppressWarnings("rawtypes")
 public interface Heap
 {
     /**
@@ -124,4 +125,8 @@ public interface Heap
      * @return
      */
     Output getOutput();
+
+    default String dump() {
+        return this.toString();
+    }
 }
