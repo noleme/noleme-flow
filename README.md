@@ -1,6 +1,6 @@
 # Noleme Flow
 
-[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/noleme/noleme-flow/Java%20CI%20with%20Maven)](https://github.com/noleme/noleme-flow/actions?query=workflow%3A%22Java+CI+with+Maven%22)
+[![Maven Build](https://github.com/noleme/noleme-flow/actions/workflows/maven.yml/badge.svg?branch=master)](https://github.com/noleme/noleme-flow/actions/workflows/maven.yml)
 [![Maven Central Repository](https://maven-badges.herokuapp.com/maven-central/com.noleme/noleme-flow/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.noleme/noleme-flow)
 [![javadoc](https://javadoc.io/badge2/com.noleme/noleme-flow/javadoc.svg)](https://javadoc.io/doc/com.noleme/noleme-flow)
 ![GitHub](https://img.shields.io/github/license/noleme/noleme-flow)
