@@ -12,10 +12,10 @@ import java.util.UUID;
 import java.util.function.Function;
 
 /**
- * Concept representing a Node with a potential downstream.
- * It features an "output" of type O which can be processed by a Pipe, Join or Sink.
+ * Concept representing a {@link Node} with a potential downstream.
+ * It features an "output" of type O which can be processed by a {@link Pipe}, {@link Join} or {@link Sink}.
  *
- * FlowOut nodes include Sources, Pipes and Joins.
+ * FlowOut nodes include {@link Source}, {@link Pipe}, {@link Join} and {@link com.noleme.flow.stream.StreamAccumulator}.
  *
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
  * Created on 2020/03/01

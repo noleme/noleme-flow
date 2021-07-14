@@ -40,13 +40,13 @@ public final class Flow
     private Flow() {}
 
     /**
-     * Compiles and runs the provided DAG using the provided FlowCompiler implementation.
+     * Compiles and runs the provided DAG using the provided {@link FlowCompiler} implementation.
      *
      * @param compiler a FlowCompiler instance
      * @param inputNodes one or several nodes from the DAG
      * @return the Output result
-     * @throws CompilationException
-     * @throws RunException
+     * @throws CompilationException if an error occurred during the compilation phase if an error occurred during the compilation phase
+     * @throws RunException if an error occurred during the execution phase
      */
     public static <C extends FlowCompiler<R>, R extends FlowRuntime> Output runAs(C compiler, Node... inputNodes) throws CompilationException, RunException
     {
@@ -54,14 +54,14 @@ public final class Flow
     }
 
     /**
-     * Compiles and runs the provided DAG using the provided FlowCompiler implementation.
+     * Compiles and runs the provided DAG using the provided {@link FlowCompiler} implementation.
      *
      * @param compiler a FlowCompiler instance
      * @param input an Input instance
      * @param inputNodes one or several nodes from the DAG
      * @return the Output result
-     * @throws CompilationException
-     * @throws RunException
+     * @throws CompilationException if an error occurred during the compilation phase
+     * @throws RunException if an error occurred during the execution phase
      */
     public static <C extends FlowCompiler<R>, R extends FlowRuntime> Output runAs(C compiler, Input input, Node... inputNodes) throws CompilationException, RunException
     {
@@ -70,12 +70,12 @@ public final class Flow
     }
 
     /**
-     * Compiles and runs the provided DAG as a pipeline using the PipelineCompiler implementation.
+     * Compiles and runs the provided DAG as a pipeline using the {@link PipelineCompiler} implementation.
      *
      * @param inputNodes one or several nodes from the DAG
      * @return the resulting PipelineRuntime instance
-     * @throws CompilationException
-     * @throws RunException
+     * @throws CompilationException if an error occurred during the compilation phase
+     * @throws RunException if an error occurred during the execution phase
      */
     public static Output runAsPipeline(Node... inputNodes) throws CompilationException, RunException
     {
@@ -83,13 +83,13 @@ public final class Flow
     }
 
     /**
-     * Compiles and runs the provided DAG as a pipeline using the PipelineCompiler implementation.
+     * Compiles and runs the provided DAG as a pipeline using the {@link PipelineCompiler} implementation.
      *
      * @param input an input container for the DAG at runtime
      * @param inputNodes one or several nodes from the DAG
      * @return the Output result
-     * @throws CompilationException
-     * @throws RunException
+     * @throws CompilationException if an error occurred during the compilation phase
+     * @throws RunException if an error occurred during the execution phase
      */
     public static Output runAsPipeline(Input input, Node... inputNodes) throws CompilationException, RunException
     {
@@ -97,15 +97,15 @@ public final class Flow
     }
 
     /**
-     * Compiles and runs the provided DAG as a pipeline using the ParallelPipelineCompiler implementation.
-     * This implementation uses a ThrowingThreadPoolExecutor implementation as an ExecutorService.
-     * Property autoRefresh is set to true, so the ExecutorService will be shutdown/relaunched between each run.
+     * Compiles and runs the provided DAG as a pipeline using the {@link ParallelCompiler} implementation.
+     * This implementation uses a {@link com.noleme.flow.impl.parallel.runtime.executor.ThrowingThreadPoolExecutor} implementation as an {@link java.util.concurrent.ExecutorService}.
+     * Property autoRefresh is set to true, so the {@link java.util.concurrent.ExecutorService} will be shutdown/relaunched between each run.
      *
      * @param threadCount the number of threads used for parallelization
      * @param inputNodes one or several nodes from the DAG
      * @return the Output result
-     * @throws CompilationException
-     * @throws RunException
+     * @throws CompilationException if an error occurred during the compilation phase
+     * @throws RunException if an error occurred during the execution phase
      */
     public static Output runAsParallel(int threadCount, Node... inputNodes) throws CompilationException, RunException
     {
@@ -113,15 +113,15 @@ public final class Flow
     }
 
     /**
-     * Compiles and runs the provided DAG as a pipeline using the ParallelPipelineCompiler implementation.
-     * Property autoRefresh is set to true, so the ExecutorService will be shutdown/relaunched between each run.
+     * Compiles and runs the provided DAG as a pipeline using the {@link ParallelCompiler} implementation.
+     * Property autoRefresh is set to true, so the {@link java.util.concurrent.ExecutorService} will be shutdown/relaunched between each run.
      *
      * @param provider an ExecutorServiceProvider for setting up the ExecutorService used for parallelization
      * @param input an input container for the DAG at runtime
      * @param inputNodes one or several nodes from the DAG
      * @return the Output result
-     * @throws CompilationException
-     * @throws RunException
+     * @throws CompilationException if an error occurred during the compilation phase
+     * @throws RunException if an error occurred during the execution phase
      */
     public static Output runAsParallel(ExecutorServiceProvider provider, Input input, Node... inputNodes) throws CompilationException, RunException
     {
@@ -129,15 +129,15 @@ public final class Flow
     }
 
     /**
-     * Compiles and runs the provided DAG as a pipeline using the ParallelPipelineCompiler implementation.
-     * This implementation uses a ThrowingThreadPoolExecutor implementation as an ExecutorService.
+     * Compiles and runs the provided DAG as a pipeline using the {@link ParallelCompiler} implementation.
+     * This implementation uses a {@link com.noleme.flow.impl.parallel.runtime.executor.ThrowingThreadPoolExecutor} implementation as an {@link java.util.concurrent.ExecutorService}.
      * The number of threads used for parallelization is equal to Runtime.getRuntime().availableProcessors().
-     * Property autoRefresh is set to true, so the ExecutorService will be shutdown/relaunched between each run.
+     * Property autoRefresh is set to true, so the {@link java.util.concurrent.ExecutorService} will be shutdown/relaunched between each run.
      *
      * @param inputNodes one or several nodes from the DAG
      * @return the Output result
-     * @throws CompilationException
-     * @throws RunException
+     * @throws CompilationException if an error occurred during the compilation phase
+     * @throws RunException if an error occurred during the execution phase
      */
     public static Output runAsParallel(Node... inputNodes) throws CompilationException, RunException
     {
@@ -145,16 +145,16 @@ public final class Flow
     }
 
     /**
-     * Compiles and runs the provided DAG as a pipeline using the ParallelPipelineCompiler implementation.
-     * This implementation uses a ThrowingThreadPoolExecutor implementation as an ExecutorService.
+     * Compiles and runs the provided DAG as a pipeline using the {@link ParallelCompiler} implementation.
+     * This implementation uses a {@link com.noleme.flow.impl.parallel.runtime.executor.ThrowingThreadPoolExecutor} implementation as an {@link java.util.concurrent.ExecutorService}.
      * The number of threads used for parallelization is equal to Runtime.getRuntime().availableProcessors().
-     * Property autoRefresh is set to true, so the ExecutorService will be shutdown/relaunched between each run.
+     * Property autoRefresh is set to true, so the {@link java.util.concurrent.ExecutorService} will be shutdown/relaunched between each run.
      *
      * @param input an input container for the DAG at runtime
      * @param inputNodes one or several nodes from the DAG
      * @return the Output result
-     * @throws CompilationException
-     * @throws RunException
+     * @throws CompilationException if an error occurred during the compilation phase
+     * @throws RunException if an error occurred during the execution phase
      */
     public static Output runAsParallel(Input input, Node... inputNodes) throws CompilationException, RunException
     {
@@ -162,7 +162,7 @@ public final class Flow
     }
 
     /**
-     * Returns a Source node from a given Extractor instance.
+     * Returns a {@link Source} node from a given {@link Extractor} instance.
      * The source node can be used to initiate a flow.
      *
      * @param extractor an Extractor instance from which to initiate a flow Source
@@ -175,12 +175,15 @@ public final class Flow
     }
 
     /**
+     * Returns a {@link Source} node from a {@link Transformer} and a static input.
+     * The transformer will be effectively used as an {@link Extractor}.
+     * The source node can be used to initiate a flow.
      *
-     * @param transformer
-     * @param input
-     * @param <I>
-     * @param <O>
-     * @return
+     * @param transformer a Transformer instance from which to initiate a flow Source
+     * @param input a value that will be provided as input to the transformer
+     * @param <I> the type of the Transformer input
+     * @param <O> the type of the Source
+     * @return the resulting Source node
      */
     public static <I, O> Source<O> from(Transformer<I, O> transformer, I input)
     {
@@ -188,10 +191,11 @@ public final class Flow
     }
 
     /**
+     * Returns a {@link Source} node from a dynamic input referenced by its input identifier within the {@link Input} container.
      *
-     * @param inputIdentifier
-     * @param <O>
-     * @return
+     * @param inputIdentifier the identifier of a value within the Input container
+     * @param <O> the expected type of the value
+     * @return the resulting Source node
      */
     public static <O> Source<O> from(String inputIdentifier)
     {
@@ -199,10 +203,12 @@ public final class Flow
     }
 
     /**
+     * Returns a {@link StreamGenerator} node from a {@link Generator} provider function.
+     * If the node is activated during a flow run, the supplier will be called once to initiate a {@link Generator}, and the generator will be responsible for providing stream inputs.
      *
-     * @param generatorSupplier
-     * @param <O>
-     * @return
+     * @param generatorSupplier the Generator provider
+     * @param <O> the type of downstream stream flow
+     * @return the resulting StreamGenerator node
      */
     public static <O> StreamGenerator<Void, O> stream(Supplier<Generator<O>> generatorSupplier)
     {
@@ -240,7 +246,7 @@ public final class Flow
     }
 
     /**
-     * Returns the Pipe node resulting from the binding of a provided flow to a Transformer.
+     * Returns the {@link Pipe} node resulting from the binding of a provided flow to a {@link Transformer}.
      *
      * @param flow a flow to which the Transformer will be bound
      * @param transformer the Transformer to bind
@@ -254,7 +260,7 @@ public final class Flow
     }
 
     /**
-     * Returns the Sink node resulting from the binding of a provided flow to a Loader.
+     * Returns the {@link Sink} node resulting from the binding of a provided flow to a {@link Loader}.
      *
      * @param flow a flow to which the Loader will be bound
      * @param loader the Loader to bind
@@ -267,7 +273,7 @@ public final class Flow
     }
 
     /**
-     * Returns the StreamPipe node resulting from the binding of a provided stream flow to a Transformer.
+     * Returns the {@link StreamPipe} node resulting from the binding of a provided stream flow to a {@link Transformer}.
      *
      * @param flow a flow to which the Transformer will be bound
      * @param transformer the Transformer to bind
@@ -281,7 +287,7 @@ public final class Flow
     }
 
     /**
-     * Returns the StreamSink node resulting from the binding of a provided stream flow to a Loader.
+     * Returns the {@link StreamSink} node resulting from the binding of a provided stream flow to a {@link Loader}.
      *
      * @param flow a flow to which the Loader will be bound
      * @param loader the Loader to bind
@@ -294,7 +300,7 @@ public final class Flow
     }
 
     /**
-     * Returns a Join node resulting from the joining of two flows using a provided BiTransformer.
+     * Returns a {@link Join} node resulting from the joining of two flows using a provided {@link BiTransformer}.
      *
      * @param input1 a FlowOut node of an incoming flow A
      * @param input2 a FlowOut node of an incoming flow B
@@ -310,12 +316,14 @@ public final class Flow
     }
 
     /**
+     * Returns a {@link StreamGenerator} node resulting from the binding of a standard flow to a stream {@link Generator} provider function.
+     * If the node is activated during a flow run, the supplier will be called once to initiate a {@link Generator}, and the generator will be responsible for providing stream inputs.
      *
      * @param flow a flow from which to initiate the stream
-     * @param generatorSupplier
-     * @param <I>
-     * @param <O>
-     * @return
+     * @param generatorSupplier the Generator provider
+     * @param <I> the type of the upstream flow
+     * @param <O> the type of downstream stream flow
+     * @return the resulting StreamGenerator node
      */
     public static <I, O> StreamGenerator<I, O> stream(FlowOut<I> flow, Function<I, Generator<O>> generatorSupplier)
     {
@@ -323,7 +331,7 @@ public final class Flow
     }
 
     /**
-     * Returns a StreamJoin node resulting from the joining of a stream flow and a non-stream flow using a provided BiTransformer.
+     * Returns a {@link StreamJoin} node resulting from the joining of a stream flow and a non-stream flow using a provided {@link BiTransformer}.
      *
      * @param input1 a StreamOut node of an incoming stream flow A
      * @param input2 a FlowOut node of an incoming flow B
@@ -339,7 +347,7 @@ public final class Flow
     }
 
     /**
-     * An adapter function for absorbing ExtractionException and replace them with a log line and the control InterruptionException.
+     * An adapter function for absorbing {@link ExtractionException} and replace them with a log line and the control {@link InterruptionException}.
      *
      * @param extractor An extractor instance to be wrapped
      * @param <O> the type of the downstream flow
@@ -359,7 +367,7 @@ public final class Flow
     }
 
     /**
-     * An adapter function for absorbing TransformationException and replace them with a log line and the control InterruptionException.
+     * An adapter function for absorbing {@link TransformationException} and replace them with a log line and the control {@link InterruptionException}.
      *
      * @param transformer A transformer instance to be wrapped
      * @param <I> the type of the upstream flow
@@ -380,7 +388,7 @@ public final class Flow
     }
 
     /**
-     * An adapter function for absorbing TransformationException and replace them with a log line and the control InterruptionException.
+     * An adapter function for absorbing {@link TransformationException} and replace them with a log line and the control {@link InterruptionException}.
      *
      * @param transformer A bi-transformer instance to be wrapped
      * @param <I1> the type of incoming flow A
@@ -402,8 +410,8 @@ public final class Flow
     }
 
     /**
-     * An adapter function for leveraging a given Transformer over a collection of its inputs.
-     * It essentially produces a Transformer that will iterate over the input collection and delegate each item to the provided Transformer implementation.
+     * An adapter function for leveraging a given {@link Transformer} over a collection of its inputs.
+     * It essentially produces a {@link Transformer} that will iterate over the input collection and delegate each item to the provided {@link Transformer} implementation.
      *
      * @param transformer A transformer instance to be wrapped
      * @param <C> the type of the upstream flow collection
@@ -422,8 +430,8 @@ public final class Flow
     }
 
     /**
-     * An adapter function for leveraging a given BiTransformer over a collection of its inputs.
-     * It essentially produces a BiTransformer that will iterate over the input collection and delegate each item to the provided BiTransformer implementation.
+     * An adapter function for leveraging a given {@link BiTransformer} over a collection of its inputs.
+     * It essentially produces a {@link BiTransformer} that will iterate over the input collection and delegate each item to the provided {@link BiTransformer} implementation.
      *
      * @param transformer A bi-transformer instance to be wrapped
      * @param <C> the type of incoming flow collection A
@@ -444,7 +452,7 @@ public final class Flow
 
     /**
      * An adapter function for leveraging a given Loader over a collection of its inputs.
-     * It essentially produces a Loader that will iterate over the input collection and delegate each item to the provided Loader implementation.
+     * It essentially produces a {@link Loader} that will iterate over the input collection and delegate each item to the provided Loader implementation.
      *
      * @param loader A loader instance to be wrapped
      * @param <C> the type of the upstream flow collection
@@ -460,7 +468,7 @@ public final class Flow
     }
 
     /**
-     * Returns a set of Nodes that are considered to be "source nodes" or "root nodes" to the provided node.
+     * Returns a set of {@link Node} that are considered to be "source nodes" or "root nodes" to the provided node.
      * A "source node" is defined here as an entry-point into the node graph that has to be traversed in order to reach a given node.
      *
      * This can be useful if you want to chain pipeline sections for which you only have references to the lowest nodes (which should be common given the builder pattern used by the Pipe API).
