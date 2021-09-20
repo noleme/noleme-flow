@@ -86,4 +86,15 @@ public class StreamSource<O> extends SimpleNode<Supplier<Generator<O>>> implemen
     {
         return this.into(new Interruption<>(predicate));
     }
+
+    /**
+     *
+     * @param name
+     * @return
+     */
+    public StreamSource<O> name(String name)
+    {
+        this.name = name;
+        return this;
+    }
 }

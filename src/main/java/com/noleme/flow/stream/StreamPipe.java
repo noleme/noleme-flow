@@ -84,4 +84,15 @@ public class StreamPipe<I, O> extends SimpleNode<Transformer<I, O>> implements S
     {
         return this.into(new Interruption<>(predicate));
     }
+
+    /**
+     *
+     * @param name
+     * @return
+     */
+    public StreamPipe<I, O> name(String name)
+    {
+        this.name = name;
+        return this;
+    }
 }

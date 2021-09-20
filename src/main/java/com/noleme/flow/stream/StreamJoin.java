@@ -99,4 +99,15 @@ public class StreamJoin<I1, I2, O> extends BiNode implements StreamOut<O>, Strea
     {
         return this.into(new Interruption<>(predicate));
     }
+
+    /**
+     *
+     * @param name
+     * @return
+     */
+    public StreamJoin<I1, I2, O> name(String name)
+    {
+        this.name = name;
+        return this;
+    }
 }

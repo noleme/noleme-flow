@@ -81,14 +81,14 @@ public class Execution
             throw new PipelineRunException("Unknown node type " + node.getClass().getName(), heap);
         }
         catch (InterruptionException e) {
-            logger.debug("Flow node #{} has requested an interruption, blocking downstream nodes.", node.getUid());
+            logger.debug("Flow node {}#{} has requested an interruption, blocking downstream nodes.", getName(node), node.getUid());
 
             return false;
         }
         catch (ExtractionException | TransformationException | LoadingException | GenerationException | AccumulationException e) {
-            logger.error("Flow node #{} has thrown an error: {}", node.getUid(), e.getMessage());
+            logger.error("Flow node {}#{} has thrown an error: {}", getName(node), node.getUid(), e.getMessage());
 
-            throw new PipelineRunException("Node " + node.getClass().getName() + "#" + node.getUid() + " has thrown an exception. (" + e.getClass() + ")", e, heap);
+            throw new PipelineRunException("Node " + node.getClass().getName() + " " + getName(node) + "#" + node.getUid() + " has thrown an exception. (" + e.getClass() + ")", e, heap);
         }
     }
 
@@ -103,7 +103,7 @@ public class Execution
     {
         Extractor extractor = source.getActor();
 
-        logger.debug("Launching flow source #{} of extractor {}", source.getUid(), extractor.getClass().getName());
+        logger.debug("Launching flow source {}#{} of extractor {}", getName(source), source.getUid(), extractor.getClass().getName());
 
         /* If the extractor is an InputExtractor, the output value comes from the provided input instead of the extractor itself ; the extractor only holds a reference to the expected input */
         if (extractor instanceof InputExtractor)
@@ -133,7 +133,7 @@ public class Execution
     {
         Transformer transformer = pipe.getActor();
 
-        logger.debug("Launching flow pipe #{} of transformer {}", pipe.getUid(), transformer.getClass().getName());
+        logger.debug("Launching flow pipe {}#{} of transformer {}", getName(pipe), pipe.getUid(), transformer.getClass().getName());
 
         Object input = heap.consume(pipe.getSimpleUpstream().getUid());
         heap.push(pipe.getUid(), transformer.transform(input), pipe.getDownstream().size());
@@ -152,7 +152,15 @@ public class Execution
     {
         BiTransformer transformer = join.getActor();
 
-        logger.debug("Launching flow join #{} of upstream flows #{} and #{}", join.getUid(), join.getUpstream1().getUid(), join.getUpstream2().getUid());
+        logger.debug(
+            "Launching flow join {}#{} of upstream flows {}#{} and {}#{}",
+            getName(join),
+            join.getUid(),
+            getName(join.getUpstream1()),
+            join.getUpstream1().getUid(),
+            getName(join.getUpstream2()),
+            join.getUpstream2().getUid()
+        );
 
         Object input1 = heap.consume(join.getUpstream1().getUid());
         Object input2 = heap.consume(join.getUpstream2().getUid());
@@ -171,7 +179,7 @@ public class Execution
     {
         Loader loader = sink.getActor();
 
-        logger.debug("Launching flow sink #{} of loader {}", sink.getUid(), loader.getClass().getName());
+        logger.debug("Launching flow sink {}#{} of loader {}", getName(sink), sink.getUid(), loader.getClass().getName());
 
         Object input = heap.consume(sink.getSimpleUpstream().getUid());
 
@@ -228,7 +236,7 @@ public class Execution
     {
         Generator generator = heap.getStreamGenerator(generatorNode);
 
-        logger.debug("Launching flow stream generator #{} at offset {} with generator {}", generatorNode.getUid(), offset, generator.getClass().getName());
+        logger.debug("Launching flow stream generator {}#{} at offset {} with generator {}", getName(generatorNode), generatorNode.getUid(), offset, generator.getClass().getName());
 
         heap.push(generatorNode.getUid(), offset, generator.generate(), generatorNode.getDownstream().size());
         return true;
@@ -247,7 +255,7 @@ public class Execution
     {
         Transformer transformer = pipe.getActor();
 
-        logger.debug("Launching flow stream pipe #{} at offset {} of transformer {}", pipe.getUid(), offset, transformer.getClass().getName());
+        logger.debug("Launching flow stream pipe {}#{} at offset {} of transformer {}", getName(pipe), pipe.getUid(), offset, transformer.getClass().getName());
 
         Object input = heap.consume(pipe.getSimpleUpstream().getUid(), offset);
         heap.push(pipe.getUid(), offset, transformer.transform(input), pipe.getDownstream().size());
@@ -267,7 +275,16 @@ public class Execution
     {
         BiTransformer transformer = join.getActor();
 
-        logger.debug("Launching flow stream join #{} at offset {} of upstream flows #{} and #{}", join.getUid(), offset, join.getUpstream1().getUid(), join.getUpstream2().getUid());
+        logger.debug(
+            "Launching flow stream join {}#{} at offset {} of upstream flows {}#{} and {}#{}",
+            getName(join),
+            join.getUid(),
+            offset,
+            getName(join.getUpstream1()),
+            join.getUpstream1().getUid(),
+            getName(join.getUpstream2()),
+            join.getUpstream2().getUid()
+        );
 
         Object input1 = heap.consume(join.getUpstream1().getUid(), offset);
         Object input2 = heap.consume(join.getUpstream2().getUid(), offset);
@@ -288,7 +305,7 @@ public class Execution
     {
         Loader loader = sink.getActor();
 
-        logger.debug("Launching flow stream sink #{} at offset {} of loader {}", sink.getUid(), offset, loader.getClass().getName());
+        logger.debug("Launching flow stream sink {}#{} at offset {} of loader {}", getName(sink), sink.getUid(), offset, loader.getClass().getName());
 
         Object input = heap.consume(sink.getSimpleUpstream().getUid(), offset);
         loader.load(input);
@@ -307,10 +324,20 @@ public class Execution
     {
         Accumulator accumulator = node.getActor();
 
-        logger.debug("Launching flow stream accumulator #{} of accumulator {}", node.getUid(), node.getClass().getName());
+        logger.debug("Launching flow stream accumulator {}#{} of accumulator {}", getName(node), node.getUid(), node.getClass().getName());
 
         Collection<Object> input = heap.consumeAll(node.getSimpleUpstream().getUid());
         heap.push(node.getUid(), accumulator.accumulate(input), node.getDownstream().size());
         return true;
+    }
+
+    /**
+     *
+     * @param node
+     * @return
+     */
+    private static String getName(Node node)
+    {
+        return node.getName() != null ? node.getName() : "";
     }
 }

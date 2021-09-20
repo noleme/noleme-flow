@@ -94,8 +94,8 @@ public class PipelineRuntime implements FlowRuntime
      */
     private static void registerStream(StreamPipeline node, LinkedList<Node> runQueue, Heap heap)
     {
-        StreamGenerator generatorNode = node.getGeneratorNode();
-        Generator generator = heap.getStreamGenerator(generatorNode);
+        StreamGenerator<?, ?> generatorNode = node.getGeneratorNode();
+        Generator<?> generator = heap.getStreamGenerator(generatorNode);
 
         if (generator.hasNext())
         {

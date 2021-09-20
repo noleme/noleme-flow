@@ -87,4 +87,15 @@ public class StreamAccumulator <I, O> extends SimpleNode<Accumulator<I, O>> impl
         this.collect(name);
         return this;
     }
+
+    /**
+     *
+     * @param name
+     * @return
+     */
+    public StreamAccumulator<I, O> name(String name)
+    {
+        this.name = name;
+        return this;
+    }
 }

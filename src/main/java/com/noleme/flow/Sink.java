@@ -20,4 +20,15 @@ public class Sink<I> extends SimpleNode<Loader<I>> implements FlowIn<I>
     {
         super(actor);
     }
+
+    /**
+     *
+     * @param name
+     * @return
+     */
+    public Sink<I> name(String name)
+    {
+        this.name = name;
+        return this;
+    }
 }

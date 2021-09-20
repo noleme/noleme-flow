@@ -39,6 +39,12 @@ public final class OffsetNode extends NodeDecorator
         return this.uid;
     }
 
+    @Override
+    public String getName()
+    {
+        return this.getNode().getName();
+    }
+
     public int getOffset()
     {
         return this.offset;

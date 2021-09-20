@@ -9,6 +9,7 @@ import java.util.*;
 public abstract class AbstractNode implements Node
 {
     private final String uid;
+    protected String name;
     final List<Node> downstream;
     final List<Node> requirements;
     final List<Node> requiredBy;
@@ -28,6 +29,11 @@ public abstract class AbstractNode implements Node
     public String getUid()
     {
         return this.uid;
+    }
+
+    public String getName()
+    {
+        return this.name;
     }
 
     @Override

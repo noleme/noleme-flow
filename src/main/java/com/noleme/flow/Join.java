@@ -123,4 +123,15 @@ public class Join<I1, I2, O> extends BiNode implements FlowOut<O>
     {
         return this.into(new Interruption<>(predicate));
     }
+
+    /**
+     *
+     * @param name
+     * @return
+     */
+    public Join<I1, I2, O> name(String name)
+    {
+        this.name = name;
+        return this;
+    }
 }

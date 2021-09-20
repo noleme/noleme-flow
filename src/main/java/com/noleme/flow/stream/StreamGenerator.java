@@ -117,4 +117,15 @@ public class StreamGenerator <I, O> extends SimpleNode<Function<I, Generator<O>>
         this.maxParallelism = factor;
         return this;
     }
+
+    /**
+     *
+     * @param name
+     * @return
+     */
+    public StreamGenerator<I, O> name(String name)
+    {
+        this.name = name;
+        return this;
+    }
 }

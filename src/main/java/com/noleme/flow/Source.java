@@ -113,6 +113,17 @@ public class Source<O> extends SimpleNode<Extractor<O>> implements FlowOut<O>
         return this.into(new Interruption<>(predicate));
     }
 
+    /**
+     *
+     * @param name
+     * @return
+     */
+    public Source<O> name(String name)
+    {
+        this.name = name;
+        return this;
+    }
+
     @Override
     public List<Node> getUpstream()
     {

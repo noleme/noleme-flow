@@ -16,4 +16,15 @@ public class StreamSink<I> extends SimpleNode<Loader<I>> implements StreamIn<I>,
     {
         super(actor);
     }
+
+    /**
+     *
+     * @param name
+     * @return
+     */
+    public StreamSink<I> name(String name)
+    {
+        this.name = name;
+        return this;
+    }
 }

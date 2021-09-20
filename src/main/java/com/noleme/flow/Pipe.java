@@ -108,4 +108,15 @@ public class Pipe<I, O> extends SimpleNode<Transformer<I, O>> implements FlowIn<
     {
         return this.into(new Interruption<>(predicate));
     }
+
+    /**
+     *
+     * @param name
+     * @return
+     */
+    public Pipe<I, O> name(String name)
+    {
+        this.name = name;
+        return this;
+    }
 }

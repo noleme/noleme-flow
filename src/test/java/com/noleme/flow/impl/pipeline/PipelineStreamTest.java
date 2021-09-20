@@ -86,14 +86,14 @@ public class PipelineStreamTest
     void testStreamJoinSmall() throws RunException, CompilationException
     {
         var flowA = Flow
-            .from(() -> 3)
-            .into(i -> i + 2)
+            .from(() -> 3).name("source_a")
+            .into(i -> i + 2).name("flow_a")
         ;
 
         var flow = Flow
-            .from(() -> List.of(1, 2, 3, 4, 5))
+            .from(() -> List.of(1, 2, 3, 4, 5)).name("source_b")
             .stream(IterableGenerator::new)
-            .into(i -> i + 1)
+            .into(i -> i + 1).name("flow_b")
             .join(flowA, (current, a) -> current * a)
             .accumulate(ls -> ls.stream()
                 .reduce(Integer::sum)

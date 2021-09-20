@@ -17,6 +17,14 @@ public interface Node extends Comparable<Node>
     String getUid();
 
     /**
+     * Returns a user-specified name for the node within a flow DAG.
+     * The name can be used to clarify logs and traces when a specific actor is used at multiple places within a DAG.
+     *
+     * @return the node name, null if none was specified
+     */
+    String getName();
+
+    /**
      * Returns the list of downstream nodes, ie. nodes which require the current node's output in order to be executed.
      *
      * @return the list of downstream nodes
