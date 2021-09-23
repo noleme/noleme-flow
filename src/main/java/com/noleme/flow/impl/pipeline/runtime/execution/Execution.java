@@ -208,7 +208,7 @@ public class Execution
     private boolean launchOffset(OffsetNode offsetNode, Heap heap) throws GenerationException, TransformationException, LoadingException, PipelineRunException
     {
         Node node = offsetNode.getNode();
-        int offset = offsetNode.getOffset();
+        long offset = offsetNode.getOffset();
 
         if (node instanceof StreamGenerator)
             return this.launchStreamGenerator((StreamGenerator<?, ?>) node, offset, heap);
@@ -232,7 +232,7 @@ public class Execution
      * @return
      * @throws GenerationException
      */
-    private boolean launchStreamGenerator(StreamGenerator<?, ?> generatorNode, int offset, Heap heap) throws GenerationException
+    private boolean launchStreamGenerator(StreamGenerator<?, ?> generatorNode, long offset, Heap heap) throws GenerationException
     {
         Generator generator = heap.getStreamGenerator(generatorNode);
 
@@ -251,7 +251,7 @@ public class Execution
      * @throws TransformationException
      */
     @SuppressWarnings("unchecked")
-    private boolean launchStreamPipe(StreamPipe<?, ?> pipe, int offset, Heap heap) throws TransformationException
+    private boolean launchStreamPipe(StreamPipe<?, ?> pipe, long offset, Heap heap) throws TransformationException
     {
         Transformer transformer = pipe.getActor();
 
@@ -271,7 +271,7 @@ public class Execution
      * @throws TransformationException
      */
     @SuppressWarnings("unchecked")
-    private boolean launchStreamJoin(StreamJoin<?, ?, ?> join, int offset, Heap heap) throws TransformationException
+    private boolean launchStreamJoin(StreamJoin<?, ?, ?> join, long offset, Heap heap) throws TransformationException
     {
         BiTransformer transformer = join.getActor();
 
@@ -301,7 +301,7 @@ public class Execution
      * @throws LoadingException
      */
     @SuppressWarnings("unchecked")
-    private boolean launchStreamSink(StreamSink<?> sink, int offset, Heap heap) throws LoadingException
+    private boolean launchStreamSink(StreamSink<?> sink, long offset, Heap heap) throws LoadingException
     {
         Loader loader = sink.getActor();
 

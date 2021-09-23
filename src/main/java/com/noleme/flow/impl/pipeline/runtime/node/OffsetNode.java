@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 public final class OffsetNode extends NodeDecorator
 {
     private final String uid;
-    private final int offset;
+    private final long offset;
     private List<Node> downstream;
     private List<Node> requirements;
 
@@ -23,7 +23,7 @@ public final class OffsetNode extends NodeDecorator
      * @param node
      * @param offset
      */
-    public OffsetNode(Node node, int offset)
+    public OffsetNode(Node node, long offset)
     {
         super(node);
         this.offset = offset;
@@ -45,7 +45,7 @@ public final class OffsetNode extends NodeDecorator
         return this.getNode().getName();
     }
 
-    public int getOffset()
+    public long getOffset()
     {
         return this.offset;
     }

@@ -99,7 +99,7 @@ public class PipelineRuntime implements FlowRuntime
 
         if (generator.hasNext())
         {
-            int offset = heap.getNextStreamOffset(generatorNode);
+            long offset = heap.getNextStreamOffset(generatorNode);
 
             /* We add the stream pipeline to the top of the queue, in case it will still have to iterate further */
             runQueue.push(node);

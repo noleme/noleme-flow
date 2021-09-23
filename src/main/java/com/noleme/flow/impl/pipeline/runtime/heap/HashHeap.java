@@ -21,7 +21,7 @@ public class HashHeap implements Heap
     private final Map<String, Counter> contents;
     private final Map<String, Generator<?>> generators;
     private final Map<String, CounterContainer> streamContents;
-    private final Map<String, Integer> offsets;
+    private final Map<String, Long> offsets;
     private final Input input;
     private final WriteableOutput output;
 
@@ -88,14 +88,14 @@ public class HashHeap implements Heap
     }
 
     @Override
-    public int getNextStreamOffset(StreamGenerator node)
+    public long getNextStreamOffset(StreamGenerator node)
     {
-        this.offsets.put(node.getUid(), this.offsets.getOrDefault(node.getUid(), -1) + 1);
+        this.offsets.put(node.getUid(), this.offsets.getOrDefault(node.getUid(), -1L) + 1);
         return this.offsets.get(node.getUid());
     }
 
     @Override
-    public Heap push(String id, int offset, Object returnValue, int counter)
+    public Heap push(String id, long offset, Object returnValue, int counter)
     {
         if (!this.streamContents.containsKey(id))
             this.streamContents.put(id, new CounterContainer());
@@ -106,13 +106,13 @@ public class HashHeap implements Heap
     }
 
     @Override
-    public boolean has(String id, int offset)
+    public boolean has(String id, long offset)
     {
         return this.hasStreamContent(id, offset);
     }
 
     @Override
-    public Object peek(String id, int offset)
+    public Object peek(String id, long offset)
     {
         if (this.hasStreamContent(id, offset))
             return this.streamContents.get(id).get(offset).getValue();
@@ -122,10 +122,18 @@ public class HashHeap implements Heap
     }
 
     @Override
-    public Object consume(String id, int offset)
+    public Object consume(String id, long offset)
     {
         if (this.hasStreamContent(id, offset))
-            return this.streamContents.get(id).get(offset).decrement().getValue();
+        {
+            CounterContainer container = this.streamContents.get(id);
+            Counter counter = container.get(offset).decrement();
+
+            if (counter.getCount() == 0)
+                container.remove(offset);
+
+            return counter.getValue();
+        }
         else if (this.has(id))
             return this.contents.get(id).decrement().getValue();
         return null;
@@ -181,7 +189,7 @@ public class HashHeap implements Heap
      * @param offset
      * @return
      */
-    private boolean hasStreamContent(String id, int offset)
+    private boolean hasStreamContent(String id, long offset)
     {
         var container = this.streamContents.get(id);
 

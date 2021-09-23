@@ -55,7 +55,7 @@ public interface Heap
      * @param node
      * @return
      */
-    int getNextStreamOffset(StreamGenerator node);
+    long getNextStreamOffset(StreamGenerator node);
 
     /**
      *
@@ -65,7 +65,7 @@ public interface Heap
      * @param counter
      * @return
      */
-    Heap push(String id, int offset, Object returnValue, int counter);
+    Heap push(String id, long offset, Object returnValue, int counter);
 
     /**
      *
@@ -73,7 +73,7 @@ public interface Heap
      * @param offset
      * @return boolean
      */
-    boolean has(String id, int offset);
+    boolean has(String id, long offset);
 
     /**
      *
@@ -81,7 +81,7 @@ public interface Heap
      * @param offset
      * @return Object
      */
-    Object peek(String id, int offset);
+    Object peek(String id, long offset);
 
     /**
      *
@@ -89,7 +89,7 @@ public interface Heap
      * @param offset
      * @return
      */
-    Object consume(String id, int offset);
+    Object consume(String id, long offset);
 
     /**
      *
