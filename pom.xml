@@ -6,7 +6,7 @@
 
     <groupId>com.noleme</groupId>
     <artifactId>noleme-flow</artifactId>
-    <version>0.14</version>
+    <version>0.14.1</version>
     <packaging>jar</packaging>
 
     <name>Noleme Flow</name>
@@ -28,7 +28,7 @@
     </developers>
 
     <properties>
-        <slf4j.version>1.7.30</slf4j.version>
+        <slf4j.version>1.7.32</slf4j.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.release>11</maven.compiler.release>
     </properties>

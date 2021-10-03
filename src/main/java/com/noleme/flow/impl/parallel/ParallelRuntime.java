@@ -212,7 +212,7 @@ public class ParallelRuntime implements FlowRuntime
          */
         if (node instanceof StreamGenerator)
         {
-            int offset = heap.getNextStreamOffset((StreamGenerator<?, ?>) node);
+            long offset = heap.getNextStreamOffset((StreamGenerator<?, ?>) node);
             OffsetNode offsetNode = new OffsetNode(node, offset);
 
             state.submit(offsetNode);
