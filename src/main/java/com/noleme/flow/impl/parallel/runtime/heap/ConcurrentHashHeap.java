@@ -11,10 +11,7 @@ import com.noleme.flow.io.output.OutputMap;
 import com.noleme.flow.io.output.WriteableOutput;
 import com.noleme.flow.stream.StreamGenerator;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -214,7 +211,7 @@ public class ConcurrentHashHeap implements Heap
             this.streamLock.write.lock();
 
             if (!this.streamContents.containsKey(id))
-                return null;
+                return Collections.emptyList();
 
             List<Object> values = this.streamContents.get(id).stream()
                 .map(c -> c.decrement().getValue())

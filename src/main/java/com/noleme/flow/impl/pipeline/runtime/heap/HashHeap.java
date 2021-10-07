@@ -7,10 +7,7 @@ import com.noleme.flow.io.output.OutputMap;
 import com.noleme.flow.io.output.WriteableOutput;
 import com.noleme.flow.stream.StreamGenerator;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -142,20 +139,18 @@ public class HashHeap implements Heap
     @Override
     public Collection<Object> consumeAll(String id)
     {
-        if (this.streamContents.containsKey(id))
-        {
-            List<Object> values = this.streamContents.get(id).stream()
-                .map(c -> c.decrement().getValue())
-                .collect(Collectors.toList())
-            ;
+        if (!this.streamContents.containsKey(id))
+            return Collections.emptyList();
 
-            if (this.streamContents.get(id).removeConsumed() == 0)
-                this.streamContents.remove(id);
+        List<Object> values = this.streamContents.get(id).stream()
+            .map(c -> c.decrement().getValue())
+            .collect(Collectors.toList())
+        ;
 
-            return values;
-        }
+        if (this.streamContents.get(id).removeConsumed() == 0)
+            this.streamContents.remove(id);
 
-        return null;
+        return values;
     }
 
     @Override
