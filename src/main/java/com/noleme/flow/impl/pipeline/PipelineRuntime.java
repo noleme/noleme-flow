@@ -13,7 +13,10 @@ import com.noleme.flow.io.output.Output;
 import com.noleme.flow.node.Node;
 import com.noleme.flow.stream.StreamAccumulator;
 import com.noleme.flow.stream.StreamGenerator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.time.Instant;
 import java.util.*;
 
 /**
@@ -24,6 +27,8 @@ public class PipelineRuntime implements FlowRuntime
 {
     protected final Execution execution;
     private final List<Node> compiledNodes;
+
+    private static final Logger logger = LoggerFactory.getLogger(PipelineRuntime.class);
 
     /**
      *
@@ -40,28 +45,36 @@ public class PipelineRuntime implements FlowRuntime
     {
         LinkedList<Node> runQueue = new LinkedList<>(this.compiledNodes);
         Set<Node> blocked = new HashSet<>();
-        Heap heap = new HashHeap(input);
+        var heap = new HashHeap(input);
 
-        /*
-         * Fires the whole running queue and discards dead branches resulting from failed executions.
-         * Upon a successful run, the outbounds that haven't been added yet are pushed to the waiting queue.
-         */
-        while (!runQueue.isEmpty())
-        {
-            Node n = runQueue.poll();
+        try {
+            heap.getOutput().setStartTime(Instant.now());
 
-            if (blocked.contains(n))
-                continue;
+            /*
+             * Fires the whole running queue and discards dead branches resulting from failed executions.
+             * Upon a successful run, the outbounds that haven't been added yet are pushed to the waiting queue.
+             */
+            while (!runQueue.isEmpty())
+            {
+                Node n = runQueue.poll();
 
-            /* If the node is a StreamPipelineNode we need to register a stream round */
-            if (n instanceof StreamPipeline)
-                registerStream((StreamPipeline) n, runQueue, heap);
-            /* Otherwise we handle it as a standard node */
-            else if (!this.execution.launch(n, heap))
-                blockBranch(n, blocked);
+                if (blocked.contains(n))
+                    continue;
+
+                /* If the node is a StreamPipelineNode we need to register a stream round */
+                if (n instanceof StreamPipeline)
+                    registerStream((StreamPipeline) n, runQueue, heap);
+                /* Otherwise we handle it as a standard node */
+                else if (!this.execution.launch(n, heap))
+                    blockBranch(n, blocked);
+            }
+
+            return heap.getOutput();
         }
-
-        return heap.getOutput();
+        finally {
+            heap.getOutput().setEndTime(Instant.now());
+            logger.info("Ran pipeline in {}", heap.getOutput().elapsedTimeString());
+        }
     }
 
     /**
