@@ -19,7 +19,7 @@ import java.util.function.Predicate;
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
  * Created on 2020/03/01
  */
-public class Join<I1, I2, O> extends BiNode implements FlowOut<O>
+public class Join<I1, I2, O> extends BiNode implements LeadOut<O>
 {
     private final BiTransformer<I1, I2, O> actor;
 
@@ -29,7 +29,7 @@ public class Join<I1, I2, O> extends BiNode implements FlowOut<O>
      * @param input2
      * @param actor
      */
-    public Join(FlowOut<I1> input1, FlowOut<I2> input2, BiTransformer<I1, I2, O> actor)
+    public Join(FlowOut<I1> input1, LeadOut<I2> input2, BiTransformer<I1, I2, O> actor)
     {
         super(input1, input2);
         this.actor = actor;
@@ -61,7 +61,7 @@ public class Join<I1, I2, O> extends BiNode implements FlowOut<O>
     }
 
     @Override
-    public <JI, JO> Join<O, JI, JO> join(FlowOut<JI> input, BiTransformer<O, JI, JO> transformer)
+    public <JI, JO> Join<O, JI, JO> join(LeadOut<JI> input, BiTransformer<O, JI, JO> transformer)
     {
         return new Join<>(this, input, transformer);
     }

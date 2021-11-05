@@ -1,60 +1,99 @@
 package com.noleme.flow;
 
-import com.noleme.flow.actor.generator.Generator;
 import com.noleme.flow.actor.loader.Loader;
 import com.noleme.flow.actor.transformer.BiTransformer;
 import com.noleme.flow.actor.transformer.Transformer;
-import com.noleme.flow.io.output.Recipient;
+import com.noleme.flow.annotation.Experimental;
 import com.noleme.flow.node.Node;
-import com.noleme.flow.stream.StreamGenerator;
-
-import java.util.UUID;
-import java.util.function.Function;
+import com.noleme.flow.slice.SinkSlice;
+import com.noleme.flow.slice.PipeSlice;
+import com.noleme.flow.stream.StreamOut;
 
 /**
  * Concept representing a {@link Node} with a potential downstream.
- * It features an "output" of type O which can be processed by a {@link Pipe}, {@link Join} or {@link Sink}.
- *
- * FlowOut nodes include {@link Source}, {@link Pipe}, {@link Join} and {@link com.noleme.flow.stream.StreamAccumulator}.
+ * FlowOut nodes include {@link LeadOut} and {@link com.noleme.flow.stream.StreamOut} subtypes.
  *
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
  * Created on 2020/03/01
  */
-public interface FlowOut <O> extends Node
+public interface FlowOut<O> extends Node
 {
     /**
-     * Binds the current node into a Transformer, resulting in a new Pipe node.
+     * Binds the current node into a {@link Transformer}, resulting in a new {@link FlowOut} node.
      *
      * @param transformer a Transformer actor
      * @param <NO> Output type of the pipe node
      * @return the resulting Pipe node
      */
-    <NO> Pipe<O, NO> into(Transformer<O, NO> transformer);
+    <NO> FlowOut<NO> into(Transformer<O, NO> transformer);
 
     /**
-     * Binds the current node into a Loader, resulting in a new Sink node.
+     * Binds the current node into a {@link Loader}, resulting in a new {@link FlowOut} node.
      *
      * @param loader a Loader actor
      * @return the resulting Sink node
      */
-    Sink<O> into(Loader<O> loader);
+    FlowIn<O> into(Loader<O> loader);
 
     /**
      * Synonymous with into(Transformer), has the advantage of not allowing ambiguous lambdas.
      * @see #into(Transformer)
      */
-    default <NO> Pipe<O, NO> pipe(Transformer<O, NO> transformer)
+    default <NO> FlowOut<NO> pipe(Transformer<O, NO> transformer)
     {
         return this.into(transformer);
+    }
+
+    /**
+     * Returns a nondescript {@link FlowOut} out of the provided {@link PipeSlice}.
+     *
+     * @param slice
+     * @param <NO>
+     * @return
+     */
+    @Experimental
+    default <NO> FlowOut<NO> pipe(PipeSlice<O, NO> slice)
+    {
+        return slice.out(this);
+    }
+
+    @Experimental
+    default StreamOut<O> asStream()
+    {
+        if (!(this instanceof StreamOut))
+            throw new RuntimeException("Current non-specific flow is not of StreamOut type, observed type is "+this.getClass().getName());
+
+        return (StreamOut<O>) this;
+    }
+
+    @Experimental
+    default LeadOut<O> asLead()
+    {
+        if (!(this instanceof LeadOut))
+            throw new RuntimeException("Current non-specific flow is not of LeadOut type, observed type is "+this.getClass().getName());
+
+        return (LeadOut<O>) this;
     }
 
     /**
      * Synonymous with into(Loader), has the advantage of not allowing ambiguous lambdas.
      * @see #into(Loader)
      */
-    default Sink<O> sink(Loader<O> loader)
+    default FlowIn<O> sink(Loader<O> loader)
     {
         return this.into(loader);
+    }
+
+    /**
+     * Binds to the provided {@link SinkSlice}.
+     *
+     * @param slice
+     * @return
+     */
+    @Experimental
+    default FlowIn<?> sink(SinkSlice<O> slice)
+    {
+        return slice.out(this);
     }
 
     /**
@@ -66,30 +105,5 @@ public interface FlowOut <O> extends Node
      * @param <JO> Output type of the joined flow
      * @return the resulting Join node
      */
-    <JI, JO> Join<O, JI, JO> join(FlowOut<JI> input, BiTransformer<O, JI, JO> transformer);
-
-    /**
-     * Initiates a stream from the current node, results in a new StreamGenerator node.
-     *
-     * @param generatorSupplier a Generator creation function
-     * @param <NO> Output type of the stream generator node
-     * @return the resulting StreamGenerator node
-     */
-    <NO> StreamGenerator<O, NO> stream(Function<O, Generator<NO>> generatorSupplier);
-
-    /**
-     *
-     * @param name
-     * @return
-     */
-    Recipient<O> collect(String name);
-
-    /**
-     *
-     * @return
-     */
-    default Recipient<O> collect()
-    {
-        return this.collect(UUID.randomUUID().toString());
-    }
+    <JI, JO> FlowOut<JO> join(LeadOut<JI> input, BiTransformer<O, JI, JO> transformer);
 }

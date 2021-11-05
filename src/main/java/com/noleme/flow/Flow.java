@@ -7,6 +7,7 @@ import com.noleme.flow.actor.loader.Loader;
 import com.noleme.flow.actor.transformer.BiTransformer;
 import com.noleme.flow.actor.transformer.TransformationException;
 import com.noleme.flow.actor.transformer.Transformer;
+import com.noleme.flow.annotation.Experimental;
 import com.noleme.flow.compiler.CompilationException;
 import com.noleme.flow.compiler.FlowCompiler;
 import com.noleme.flow.compiler.FlowRuntime;
@@ -19,6 +20,7 @@ import com.noleme.flow.io.input.Input;
 import com.noleme.flow.io.input.InputExtractor;
 import com.noleme.flow.io.output.Output;
 import com.noleme.flow.node.Node;
+import com.noleme.flow.slice.SourceSlice;
 import com.noleme.flow.stream.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -203,6 +205,19 @@ public final class Flow
     }
 
     /**
+     * Returns a nondescript {@link FlowOut} out of the provided {@link SourceSlice}.
+     *
+     * @param slice
+     * @param <O>
+     * @return
+     */
+    @Experimental
+    public static <O> FlowOut<O> from(SourceSlice<O> slice)
+    {
+        return slice.out();
+    }
+
+    /**
      * Returns a {@link StreamGenerator} node from a {@link Generator} provider function.
      * If the node is activated during a flow run, the supplier will be called once to initiate a {@link Generator}, and the generator will be responsible for providing stream inputs.
      *
@@ -215,20 +230,20 @@ public final class Flow
         return new StreamGenerator<>(i -> generatorSupplier.get());
     }
 
-    /** @see #pipe(FlowOut, Transformer) */
-    public static <I, O> Pipe<I, O> into(FlowOut<I> flow, Transformer<I, O> transformer)
+    /** @see #pipe(LeadOut, Transformer) */
+    public static <I, O> Pipe<I, O> into(LeadOut<I> flow, Transformer<I, O> transformer)
     {
         return flow.into(transformer);
     }
 
-    /** @see #sink(FlowOut, Loader) */
-    public static <I> Sink<I> into(FlowOut<I> flow, Loader<I> loader)
+    /** @see #sink(LeadOut, Loader) */
+    public static <I> Sink<I> into(LeadOut<I> flow, Loader<I> loader)
     {
         return flow.into(loader);
     }
 
-    /** @see #stream(FlowOut, Function) */
-    public static <I, O> StreamGenerator<I, O> into(FlowOut<I> flow, Function<I, Generator<O>> generatorSupplier)
+    /** @see #stream(LeadOut, Function) */
+    public static <I, O> StreamGenerator<I, O> into(LeadOut<I> flow, Function<I, Generator<O>> generatorSupplier)
     {
         return flow.stream(generatorSupplier);
     }
@@ -254,7 +269,7 @@ public final class Flow
      * @param <O> the type of the downstream flow
      * @return the resulting Pipe node
      */
-    public static <I, O> Pipe<I, O> pipe(FlowOut<I> flow, Transformer<I, O> transformer)
+    public static <I, O> Pipe<I, O> pipe(LeadOut<I> flow, Transformer<I, O> transformer)
     {
         return flow.into(transformer);
     }
@@ -267,7 +282,7 @@ public final class Flow
      * @param <I> the type of the upstream flow
      * @return the resulting Sink node
      */
-    public static <I> Sink<I> sink(FlowOut<I> flow, Loader<I> loader)
+    public static <I> Sink<I> sink(LeadOut<I> flow, Loader<I> loader)
     {
         return flow.into(loader);
     }
@@ -310,7 +325,7 @@ public final class Flow
      * @param <O> the type resulting from the merging of flow A and B
      * @return the resulting Join node
      */
-    public static <I1, I2, O> Join<I1, I2, O> join(FlowOut<I1> input1, FlowOut<I2> input2, BiTransformer<I1, I2, O> transformer)
+    public static <I1, I2, O> Join<I1, I2, O> join(LeadOut<I1> input1, LeadOut<I2> input2, BiTransformer<I1, I2, O> transformer)
     {
         return input1.join(input2, transformer);
     }
@@ -325,7 +340,7 @@ public final class Flow
      * @param <O> the type of downstream stream flow
      * @return the resulting StreamGenerator node
      */
-    public static <I, O> StreamGenerator<I, O> stream(FlowOut<I> flow, Function<I, Generator<O>> generatorSupplier)
+    public static <I, O> StreamGenerator<I, O> stream(LeadOut<I> flow, Function<I, Generator<O>> generatorSupplier)
     {
         return flow.stream(generatorSupplier);
     }
@@ -341,7 +356,7 @@ public final class Flow
      * @param <O> the type resulting from the merging of flow A and B
      * @return the resulting StreamJoin node
      */
-    public static <I1, I2, O> StreamJoin<I1, I2, O> join(StreamOut<I1> input1, FlowOut<I2> input2, BiTransformer<I1, I2, O> transformer)
+    public static <I1, I2, O> StreamJoin<I1, I2, O> join(StreamOut<I1> input1, LeadOut<I2> input2, BiTransformer<I1, I2, O> transformer)
     {
         return input1.join(input2, transformer);
     }

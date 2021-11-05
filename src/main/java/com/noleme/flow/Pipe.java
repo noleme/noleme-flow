@@ -19,7 +19,7 @@ import java.util.function.Predicate;
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
  * Created on 2020/02/28
  */
-public class Pipe<I, O> extends SimpleNode<Transformer<I, O>> implements FlowIn<I>, FlowOut<O>
+public class Pipe<I, O> extends SimpleNode<Transformer<I, O>> implements FlowIn<I>, LeadOut<O>
 {
     /**
      *
@@ -47,7 +47,7 @@ public class Pipe<I, O> extends SimpleNode<Transformer<I, O>> implements FlowIn<
     }
 
     @Override
-    public <JI, JO> Join<O, JI, JO> join(FlowOut<JI> input, BiTransformer<O, JI, JO> transformer)
+    public <JI, JO> Join<O, JI, JO> join(LeadOut<JI> input, BiTransformer<O, JI, JO> transformer)
     {
         return new Join<>(this, input, transformer);
     }

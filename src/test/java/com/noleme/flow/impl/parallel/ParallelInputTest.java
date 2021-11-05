@@ -1,11 +1,10 @@
-package com.noleme.flow.impl.pipeline.parallel;
+package com.noleme.flow.impl.parallel;
 
 import com.noleme.flow.Flow;
 import com.noleme.flow.FlowAssertion;
 import com.noleme.flow.actor.accumulator.AccumulationException;
 import com.noleme.flow.compiler.CompilationException;
 import com.noleme.flow.compiler.RunException;
-import com.noleme.flow.impl.parallel.ParallelCompiler;
 import com.noleme.flow.impl.pipeline.stream.IterableGenerator;
 import com.noleme.flow.io.input.Input;
 import org.junit.jupiter.api.Assertions;
