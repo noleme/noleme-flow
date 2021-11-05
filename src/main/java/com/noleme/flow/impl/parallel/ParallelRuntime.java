@@ -19,6 +19,7 @@ import com.noleme.flow.stream.StreamNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Instant;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.*;
@@ -82,7 +83,7 @@ public class ParallelRuntime implements FlowRuntime
     @Override
     synchronized public Output run(Input input) throws RunException
     {
-        Heap heap = new ConcurrentHashHeap(input);
+        var heap = new ConcurrentHashHeap(input);
         RuntimeState state = new RuntimeState(this.indexes);
 
         if (this.pool == null)
@@ -92,6 +93,8 @@ public class ParallelRuntime implements FlowRuntime
         state.queueAll(this.startNodes);
 
         try {
+            heap.getOutput().setStartTime(Instant.now());
+
             /* We loop as long as we have nodes to process (submitted to the pool or awaiting submission) */
             while (state.hasSubmitted() || state.hasWaiting())
             {
@@ -178,6 +181,9 @@ public class ParallelRuntime implements FlowRuntime
             throw new ParallelRunException(e.getMessage(), e, heap);
         }
         finally {
+            heap.getOutput().setEndTime(Instant.now());
+            logger.info("Ran pipeline in {}", heap.getOutput().elapsedTimeString());
+
             if (this.autoRefresh)
                 this.shutdownThreadPool();
         }

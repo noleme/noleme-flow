@@ -1,5 +1,6 @@
 package com.noleme.flow.io.output;
 
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -10,6 +11,8 @@ import java.util.Map;
 public class OutputMap implements WriteableOutput
 {
     private final Map<String, Object> values;
+    private Instant start;
+    private Instant end;
 
     public OutputMap()
     {
@@ -67,9 +70,35 @@ public class OutputMap implements WriteableOutput
     }
 
     @Override
+    public Instant startTime()
+    {
+        return this.start;
+    }
+
+    @Override
+    public Instant endTime()
+    {
+        return this.end;
+    }
+
+    @Override
     public WriteableOutput set(String identifier, Object value)
     {
         this.values.put(identifier, value);
+        return this;
+    }
+
+    @Override
+    public WriteableOutput setStartTime(Instant start)
+    {
+        this.start = start;
+        return this;
+    }
+
+    @Override
+    public WriteableOutput setEndTime(Instant end)
+    {
+        this.end = end;
         return this;
     }
 }

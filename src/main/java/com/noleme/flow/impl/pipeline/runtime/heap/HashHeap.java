@@ -2,7 +2,6 @@ package com.noleme.flow.impl.pipeline.runtime.heap;
 
 import com.noleme.flow.actor.generator.Generator;
 import com.noleme.flow.io.input.Input;
-import com.noleme.flow.io.output.Output;
 import com.noleme.flow.io.output.OutputMap;
 import com.noleme.flow.io.output.WriteableOutput;
 import com.noleme.flow.stream.StreamGenerator;
@@ -173,7 +172,7 @@ public class HashHeap implements Heap
     }
 
     @Override
-    public Output getOutput()
+    public WriteableOutput getOutput()
     {
         return this.output;
     }
