@@ -15,7 +15,7 @@ import java.util.function.Function;
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
  * Created on 2020/12/03
  */
-public class StreamAccumulator<I, O> extends SimpleNode<Accumulator<I, O>> implements StreamIn<I>, LeadOut<O>
+public class StreamAccumulator<I, O> extends SimpleNode<Accumulator<I, O>> implements StreamIn<I>, FlowOut<O>
 {
     /**
      * @param actor
@@ -42,7 +42,7 @@ public class StreamAccumulator<I, O> extends SimpleNode<Accumulator<I, O>> imple
     }
 
     @Override
-    public <JI, JO> Join<O, JI, JO> join(LeadOut<JI> input, BiTransformer<O, JI, JO> transformer)
+    public <JI, JO> Join<O, JI, JO> join(FlowOut<JI> input, BiTransformer<O, JI, JO> transformer)
     {
         return new Join<>(this, input, transformer);
     }

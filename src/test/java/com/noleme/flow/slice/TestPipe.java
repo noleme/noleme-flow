@@ -1,6 +1,6 @@
 package com.noleme.flow.slice;
 
-import com.noleme.flow.FlowOut;
+import com.noleme.flow.CurrentOut;
 
 /**
  * @author Pierre Lecerf (pierre.lecerf@illuin.tech)
@@ -8,7 +8,7 @@ import com.noleme.flow.FlowOut;
 public class TestPipe extends PipeSlice<String, String>
 {
     @Override
-    public FlowOut<String> out(FlowOut<String> upstream)
+    public CurrentOut<String> out(CurrentOut<String> upstream)
     {
         return upstream
             .pipe(v -> v + "_ghi")

@@ -33,32 +33,32 @@ public final class FlowDealer
         ;
     }
 
-    public static Pipe<Integer, Integer> transformerAdds(LeadOut<Integer> input, int add)
+    public static Pipe<Integer, Integer> transformerAdds(FlowOut<Integer> input, int add)
     {
         return input.into((i) -> i + add);
     }
 
-    public static Pipe<Integer, Integer> transformerSubstracts4(LeadOut<Integer> input, int sub)
+    public static Pipe<Integer, Integer> transformerSubstracts4(FlowOut<Integer> input, int sub)
     {
         return input.into((i) -> i - sub);
     }
 
-    public static Pipe<Integer, Integer> transformerMultipliesBy5(LeadOut<Integer> input, int mult)
+    public static Pipe<Integer, Integer> transformerMultipliesBy5(FlowOut<Integer> input, int mult)
     {
         return input.into((i) -> i * mult);
     }
 
-    public static Join<Integer, Integer, Integer> joinSub(LeadOut<Integer> a, LeadOut<Integer> b)
+    public static Join<Integer, Integer, Integer> joinSub(FlowOut<Integer> a, FlowOut<Integer> b)
     {
         return Flow.join(a, b, (i1, i2) -> i1 - i2);
     }
 
-    public static Join<Integer, Integer, Integer> joinMult(LeadOut<Integer> a, LeadOut<Integer> b)
+    public static Join<Integer, Integer, Integer> joinMult(FlowOut<Integer> a, FlowOut<Integer> b)
     {
         return Flow.join(a, b, (i1, i2) -> i1 * i2);
     }
 
-    public static Join<Integer, Integer, Integer> joinPow(LeadOut<Integer> a, LeadOut<Integer> b)
+    public static Join<Integer, Integer, Integer> joinPow(FlowOut<Integer> a, FlowOut<Integer> b)
     {
         return Flow.join(a, b, (i1, i2) -> i1 ^ i2);
     }

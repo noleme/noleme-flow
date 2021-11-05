@@ -23,7 +23,7 @@ import java.util.function.Predicate;
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
  * Created on 2020/02/28
  */
-public class Source<O> extends SimpleNode<Extractor<O>> implements LeadOut<O>
+public class Source<O> extends SimpleNode<Extractor<O>> implements FlowOut<O>
 {
     /**
      *
@@ -51,7 +51,7 @@ public class Source<O> extends SimpleNode<Extractor<O>> implements LeadOut<O>
     }
 
     @Override
-    public <JI, JO> Join<O, JI, JO> join(LeadOut<JI> input, BiTransformer<O, JI, JO> transformer)
+    public <JI, JO> Join<O, JI, JO> join(FlowOut<JI> input, BiTransformer<O, JI, JO> transformer)
     {
         return new Join<>(this, input, transformer);
     }

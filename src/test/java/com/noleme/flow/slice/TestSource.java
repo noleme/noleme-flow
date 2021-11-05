@@ -1,7 +1,7 @@
 package com.noleme.flow.slice;
 
 import com.noleme.flow.Flow;
-import com.noleme.flow.FlowOut;
+import com.noleme.flow.CurrentOut;
 
 /**
  * @author Pierre Lecerf (pierre.lecerf@illuin.tech)
@@ -9,7 +9,7 @@ import com.noleme.flow.FlowOut;
 public class TestSource extends SourceSlice<String>
 {
     @Override
-    public FlowOut<String> out()
+    public CurrentOut<String> out()
     {
         return Flow
             .from(() -> "abc")

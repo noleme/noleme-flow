@@ -10,7 +10,7 @@ import com.noleme.flow.node.SimpleNode;
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
  * Created on 2020/03/01
  */
-public class Sink<I> extends SimpleNode<Loader<I>> implements FlowIn<I>
+public class Sink<I> extends SimpleNode<Loader<I>> implements CurrentIn<I>
 {
     /**
      *

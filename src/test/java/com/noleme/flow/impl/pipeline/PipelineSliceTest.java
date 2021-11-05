@@ -85,7 +85,7 @@ public class PipelineSliceTest
     {
         Recipient<String> f0 = Flow
             .from(new TestSource())
-            .pipe(new TestPipe()).asLead()
+            .pipe(new TestPipe()).asFlow()
             .collect()
         ;
 

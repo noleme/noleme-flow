@@ -1,6 +1,6 @@
 package com.noleme.flow.stream;
 
-import com.noleme.flow.LeadOut;
+import com.noleme.flow.FlowOut;
 import com.noleme.flow.actor.accumulator.Accumulator;
 import com.noleme.flow.actor.loader.Loader;
 import com.noleme.flow.actor.transformer.BiTransformer;
@@ -24,7 +24,7 @@ public class StreamJoin<I1, I2, O> extends BiNode implements StreamOut<O>, Strea
      * @param input2
      * @param actor
      */
-    public StreamJoin(StreamOut<I1> input1, LeadOut<I2> input2, BiTransformer<I1, I2, O> actor)
+    public StreamJoin(StreamOut<I1> input1, FlowOut<I2> input2, BiTransformer<I1, I2, O> actor)
     {
         super(input1, input2);
         this.actor = actor;
@@ -57,7 +57,7 @@ public class StreamJoin<I1, I2, O> extends BiNode implements StreamOut<O>, Strea
     }
 
     @Override
-    public <JI, JO> StreamJoin<O, JI, JO> join(LeadOut<JI> input, BiTransformer<O, JI, JO> transformer)
+    public <JI, JO> StreamJoin<O, JI, JO> join(FlowOut<JI> input, BiTransformer<O, JI, JO> transformer)
     {
         return new StreamJoin<>(this, input, transformer);
     }

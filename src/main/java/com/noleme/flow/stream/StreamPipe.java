@@ -1,6 +1,6 @@
 package com.noleme.flow.stream;
 
-import com.noleme.flow.LeadOut;
+import com.noleme.flow.FlowOut;
 import com.noleme.flow.actor.accumulator.Accumulator;
 import com.noleme.flow.actor.loader.Loader;
 import com.noleme.flow.actor.transformer.BiTransformer;
@@ -41,7 +41,7 @@ public class StreamPipe<I, O> extends SimpleNode<Transformer<I, O>> implements S
     }
 
     @Override
-    public <JI, JO> StreamJoin<O, JI, JO> join(LeadOut<JI> input, BiTransformer<O, JI, JO> transformer)
+    public <JI, JO> StreamJoin<O, JI, JO> join(FlowOut<JI> input, BiTransformer<O, JI, JO> transformer)
     {
         return new StreamJoin<>(this, input, transformer);
     }

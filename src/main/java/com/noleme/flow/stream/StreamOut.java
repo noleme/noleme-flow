@@ -1,7 +1,7 @@
 package com.noleme.flow.stream;
 
+import com.noleme.flow.CurrentOut;
 import com.noleme.flow.FlowOut;
-import com.noleme.flow.LeadOut;
 import com.noleme.flow.actor.accumulator.Accumulator;
 import com.noleme.flow.actor.loader.Loader;
 import com.noleme.flow.actor.transformer.BiTransformer;
@@ -13,7 +13,7 @@ import java.util.Collection;
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
  * Created on 2020/12/01
  */
-public interface StreamOut<O> extends FlowOut<O>
+public interface StreamOut<O> extends CurrentOut<O>
 {
     /**
      * Binds the current node into a Transformer, resulting in a new StreamPipe node.
@@ -59,7 +59,7 @@ public interface StreamOut<O> extends FlowOut<O>
      * @param <JO> Output type of the joined flow
      * @return
      */
-    <JI, JO> StreamJoin<O, JI, JO> join(LeadOut<JI> input, BiTransformer<O, JI, JO> transformer);
+    <JI, JO> StreamJoin<O, JI, JO> join(FlowOut<JI> input, BiTransformer<O, JI, JO> transformer);
 
     /**
      *

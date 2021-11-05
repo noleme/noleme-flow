@@ -1,7 +1,7 @@
 package com.noleme.flow.slice;
 
-import com.noleme.flow.FlowIn;
-import com.noleme.flow.FlowOut;
+import com.noleme.flow.CurrentIn;
+import com.noleme.flow.CurrentOut;
 import com.noleme.flow.annotation.Experimental;
 
 /**
@@ -10,5 +10,5 @@ import com.noleme.flow.annotation.Experimental;
 @Experimental
 public abstract class SinkSlice<I>
 {
-    public abstract FlowIn<?> out(FlowOut<I> upstream);
+    public abstract CurrentIn<?> out(CurrentOut<I> upstream);
 }

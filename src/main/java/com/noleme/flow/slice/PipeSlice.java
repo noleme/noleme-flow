@@ -1,6 +1,6 @@
 package com.noleme.flow.slice;
 
-import com.noleme.flow.FlowOut;
+import com.noleme.flow.CurrentOut;
 import com.noleme.flow.annotation.Experimental;
 
 /**
@@ -9,5 +9,5 @@ import com.noleme.flow.annotation.Experimental;
 @Experimental
 public abstract class PipeSlice<I, O>
 {
-    public abstract FlowOut<O> out(FlowOut<I> upstream);
+    public abstract CurrentOut<O> out(CurrentOut<I> upstream);
 }

@@ -1,7 +1,7 @@
 package com.noleme.flow.slice;
 
-import com.noleme.flow.FlowIn;
-import com.noleme.flow.FlowOut;
+import com.noleme.flow.CurrentIn;
+import com.noleme.flow.CurrentOut;
 
 /**
  * @author Pierre Lecerf (pierre.lecerf@illuin.tech)
@@ -9,7 +9,7 @@ import com.noleme.flow.FlowOut;
 public class TestSink extends SinkSlice<String>
 {
     @Override
-    public FlowIn<?> out(FlowOut<String> upstream)
+    public CurrentIn<?> out(CurrentOut<String> upstream)
     {
         return upstream
             .pipe(v -> v + "_nop")

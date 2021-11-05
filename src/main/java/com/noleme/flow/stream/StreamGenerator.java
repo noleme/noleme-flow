@@ -1,7 +1,7 @@
 package com.noleme.flow.stream;
 
 import com.noleme.flow.FlowIn;
-import com.noleme.flow.LeadOut;
+import com.noleme.flow.FlowOut;
 import com.noleme.flow.actor.accumulator.Accumulator;
 import com.noleme.flow.actor.generator.Generator;
 import com.noleme.flow.actor.loader.Loader;
@@ -56,7 +56,7 @@ public class StreamGenerator<I, O> extends SimpleNode<Function<I, Generator<O>>>
     }
 
     @Override
-    public <JI, JO> StreamJoin<O, JI, JO> join(LeadOut<JI> input, BiTransformer<O, JI, JO> transformer)
+    public <JI, JO> StreamJoin<O, JI, JO> join(FlowOut<JI> input, BiTransformer<O, JI, JO> transformer)
     {
         return new StreamJoin<>(this, input, transformer);
     }

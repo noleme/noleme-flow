@@ -17,7 +17,7 @@ public class TypeEnforcingTest
         Assertions.assertDoesNotThrow(() -> {
             Flow.from(() -> 123)
                 .pipe(i -> i + 2)
-                .asLead()
+                .asFlow()
             ;
         });
     }
@@ -29,7 +29,7 @@ public class TypeEnforcingTest
             Flow.from(() -> List.of(1, 2, 3))
                 .stream(IterableGenerator::new)
                 .pipe(i -> i + 2)
-                .asLead()
+                .asFlow()
             ;
         });
     }
