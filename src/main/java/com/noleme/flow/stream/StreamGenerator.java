@@ -17,7 +17,7 @@ import java.util.function.Predicate;
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
  * Created on 2020/12/03
  */
-public class StreamGenerator <I, O> extends SimpleNode<Function<I, Generator<O>>> implements FlowIn<I>, StreamOut<O>
+public class StreamGenerator<I, O> extends SimpleNode<Function<I, Generator<O>>> implements FlowIn<I>, StreamOut<O>
 {
     private int maxParallelism = 1;
 

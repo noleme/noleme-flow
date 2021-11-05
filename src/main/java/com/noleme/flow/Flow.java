@@ -7,6 +7,7 @@ import com.noleme.flow.actor.loader.Loader;
 import com.noleme.flow.actor.transformer.BiTransformer;
 import com.noleme.flow.actor.transformer.TransformationException;
 import com.noleme.flow.actor.transformer.Transformer;
+import com.noleme.flow.annotation.Experimental;
 import com.noleme.flow.compiler.CompilationException;
 import com.noleme.flow.compiler.FlowCompiler;
 import com.noleme.flow.compiler.FlowRuntime;
@@ -19,6 +20,7 @@ import com.noleme.flow.io.input.Input;
 import com.noleme.flow.io.input.InputExtractor;
 import com.noleme.flow.io.output.Output;
 import com.noleme.flow.node.Node;
+import com.noleme.flow.slice.SourceSlice;
 import com.noleme.flow.stream.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -200,6 +202,19 @@ public final class Flow
     public static <O> Source<O> from(String inputIdentifier)
     {
         return new Source<>(new InputExtractor<>(inputIdentifier));
+    }
+
+    /**
+     * Returns a nondescript {@link CurrentOut} out of the provided {@link SourceSlice}.
+     *
+     * @param slice
+     * @param <O>
+     * @return
+     */
+    @Experimental
+    public static <O> CurrentOut<O> from(SourceSlice<O> slice)
+    {
+        return slice.out();
     }
 
     /**

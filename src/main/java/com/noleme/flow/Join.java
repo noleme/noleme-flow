@@ -29,7 +29,7 @@ public class Join<I1, I2, O> extends BiNode implements FlowOut<O>
      * @param input2
      * @param actor
      */
-    public Join(FlowOut<I1> input1, FlowOut<I2> input2, BiTransformer<I1, I2, O> actor)
+    public Join(CurrentOut<I1> input1, FlowOut<I2> input2, BiTransformer<I1, I2, O> actor)
     {
         super(input1, input2);
         this.actor = actor;

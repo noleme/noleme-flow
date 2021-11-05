@@ -12,15 +12,15 @@ import java.util.UUID;
 import java.util.function.Function;
 
 /**
- * Concept representing a {@link Node} with a potential downstream.
+ * Concept representing a lead {@link Node} with a potential downstream.
  * It features an "output" of type O which can be processed by a {@link Pipe}, {@link Join} or {@link Sink}.
  *
  * FlowOut nodes include {@link Source}, {@link Pipe}, {@link Join} and {@link com.noleme.flow.stream.StreamAccumulator}.
  *
- * @author Pierre Lecerf (plecerf@lumiomedical.com)
- * Created on 2020/03/01
+ * @author Pierre Lecerf (pierre@illuin.tech)
+ * Created on 2021/11/05
  */
-public interface FlowOut <O> extends Node
+public interface FlowOut<O> extends CurrentOut<O>
 {
     /**
      * Binds the current node into a Transformer, resulting in a new Pipe node.

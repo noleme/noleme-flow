@@ -22,13 +22,15 @@ public final class FlowDealer
     {
         return Flow.from(() -> 2)
             .into((i) -> i + 1)
-            .into((i) -> i * 3);
+            .into((i) -> i * 3)
+        ;
     }
 
     public static Pipe<Integer, Integer> sourceReturns6()
     {
         return Flow.from(() -> 4)
-            .into((i) -> i + 2);
+            .into((i) -> i + 2)
+        ;
     }
 
     public static Pipe<Integer, Integer> transformerAdds(FlowOut<Integer> input, int add)
