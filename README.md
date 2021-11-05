@@ -20,7 +20,7 @@ Add the following in your `pom.xml`:
 <dependency>
     <groupId>com.noleme</groupId>
     <artifactId>noleme-flow</artifactId>
-    <version>0.14.2</version>
+    <version>0.15</version>
 </dependency>
 ```
 
@@ -164,6 +164,7 @@ Other features that will need to be documented include:
 * runtime input management (dynamic `from` and the `Input` component) 
 * runtime output management, sampling/collection features (`collect`, `sample` and the `Output` component)
 * stream flows and parallelization (`setMaxParallelism` and implementation-specific considerations)
+* flow slices (`SourceSlice`, `PipeSlice` and `SinkSlice`) for flow DAG fragments code reuse
 * `ParallelRuntime` service executor lifecycle and other considerations
 * DAG node naming for debugging purposes (appears in traces, logs)
 
