@@ -240,7 +240,7 @@ public final class Flow
      */
     public static <O> StreamGenerator<Void, O> stream(Supplier<Generator<O>> generatorSupplier)
     {
-        return new StreamGenerator<>(i -> generatorSupplier.get());
+        return new StreamGenerator<>(i -> generatorSupplier.get(), 1);
     }
 
     /** @see #pipe(FlowOut, Transformer) */

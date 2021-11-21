@@ -19,10 +19,8 @@ import java.util.function.Predicate;
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
  * Created on 2020/03/01
  */
-public class Join<I1, I2, O> extends BiNode implements FlowOut<O>
+public class Join<I1, I2, O> extends BiNode<BiTransformer<I1, I2, O>> implements FlowOut<O>
 {
-    private final BiTransformer<I1, I2, O> actor;
-
     /**
      *
      * @param input1
@@ -31,17 +29,7 @@ public class Join<I1, I2, O> extends BiNode implements FlowOut<O>
      */
     public Join(CurrentOut<I1> input1, FlowOut<I2> input2, BiTransformer<I1, I2, O> actor)
     {
-        super(input1, input2);
-        this.actor = actor;
-    }
-
-    /**
-     *
-     * @return
-     */
-    public BiTransformer<I1, I2, O> getActor()
-    {
-        return this.actor;
+        super(input1, input2, actor);
     }
 
     @Override
@@ -69,7 +57,7 @@ public class Join<I1, I2, O> extends BiNode implements FlowOut<O>
     @Override
     public <N> StreamGenerator<O, N> stream(Function<O, Generator<N>> generatorSupplier)
     {
-        var pipe = new StreamGenerator<>(generatorSupplier);
+        var pipe = new StreamGenerator<>(generatorSupplier, this.depth + 1);
         this.bind(pipe);
         return pipe;
     }

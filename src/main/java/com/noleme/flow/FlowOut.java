@@ -1,6 +1,5 @@
 package com.noleme.flow;
 
-import com.noleme.flow.actor.generator.Generator;
 import com.noleme.flow.actor.loader.Loader;
 import com.noleme.flow.actor.transformer.BiTransformer;
 import com.noleme.flow.actor.transformer.Transformer;
@@ -20,7 +19,7 @@ import java.util.function.Function;
  * @author Pierre Lecerf (pierre@illuin.tech)
  * Created on 2021/11/05
  */
-public interface FlowOut<O> extends CurrentOut<O>
+public interface FlowOut<O> extends CurrentOut<O>, Node
 {
     /**
      * Binds the current node into a Transformer, resulting in a new Pipe node.
@@ -58,6 +57,17 @@ public interface FlowOut<O> extends CurrentOut<O>
     }
 
     /**
+     *
+     * @param loader
+     * @return
+     */
+    default FlowOut<O> driftSink(Loader<O> loader)
+    {
+        this.into(loader);
+        return this;
+    }
+
+    /**
      * Joins the current node with another flow using a bi-transformer join function.
      *
      * @param input Flow with which to join the current flow.
@@ -75,7 +85,7 @@ public interface FlowOut<O> extends CurrentOut<O>
      * @param <NO> Output type of the stream generator node
      * @return the resulting StreamGenerator node
      */
-    <NO> StreamGenerator<O, NO> stream(Function<O, Generator<NO>> generatorSupplier);
+    <NO> StreamGenerator<O, NO> stream(Function<O, com.noleme.flow.actor.generator.Generator<NO>> generatorSupplier);
 
     /**
      *

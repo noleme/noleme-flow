@@ -3,8 +3,9 @@ package com.noleme.flow.impl.parallel.runtime.heap;
 import com.noleme.flow.actor.generator.Generator;
 import com.noleme.flow.impl.parallel.runtime.state.RRWLock;
 import com.noleme.flow.impl.pipeline.runtime.heap.Counter;
-import com.noleme.flow.impl.pipeline.runtime.heap.CounterContainer;
 import com.noleme.flow.impl.pipeline.runtime.heap.Heap;
+import com.noleme.flow.impl.pipeline.runtime.node.WorkingKey;
+import com.noleme.flow.impl.pipeline.runtime.node.WorkingNode;
 import com.noleme.flow.io.input.Input;
 import com.noleme.flow.io.input.Key;
 import com.noleme.flow.io.output.OutputMap;
@@ -15,16 +16,18 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import static com.noleme.flow.impl.pipeline.runtime.node.WorkingNode.upstreamOf;
+
 /**
  * @author Pierre Lecerf (pierre.lecerf@gmail.com) on 23/07/15.
  */
 @SuppressWarnings("rawtypes")
 public class ConcurrentHashHeap implements Heap
 {
-    private final Map<String, Counter> contents;
-    private final Map<String, Generator> generators;
-    private final Map<String, CounterContainer> streamContents;
-    private final Map<String, Long> offsets;
+    private final Map<WorkingKey, Counter> contents;
+    private final Map<WorkingKey, Generator> generators;
+    private final Map<WorkingKey, ConcurrentCounterContainer> streamContents;
+    private final Map<WorkingKey, Long> offsets;
     private final Input input;
     private final WriteableOutput output;
     private final RRWLock contentLock = new RRWLock();
@@ -42,18 +45,18 @@ public class ConcurrentHashHeap implements Heap
     }
 
     @Override
-    public Heap push(String id, Object returnValue, int counter)
+    public Heap push(WorkingKey key, Object returnValue, int counter)
     {
-        this.contents.put(id, new Counter(returnValue, counter));
+        this.contents.put(key, new Counter(returnValue, counter));
         return this;
     }
 
     @Override
-    public boolean has(String id)
+    public boolean has(WorkingKey key)
     {
         try {
             this.contentLock.read.lock();
-            return this.contents.containsKey(id);
+            return this.contents.containsKey(key);
         }
         finally {
             this.contentLock.read.unlock();
@@ -61,13 +64,13 @@ public class ConcurrentHashHeap implements Heap
     }
 
     @Override
-    public Object peek(String id)
+    public Object peek(WorkingKey key)
     {
         try {
             this.contentLock.read.lock();
 
-            if (this.contents.containsKey(id))
-                return this.contents.get(id).getValue();
+            if (this.contents.containsKey(key))
+                return this.contents.get(key).getValue();
             return null;
         }
         finally {
@@ -76,16 +79,16 @@ public class ConcurrentHashHeap implements Heap
     }
 
     @Override
-    public Object consume(String id)
+    public Object consume(WorkingKey key)
     {
         try {
             this.contentLock.write.lock();
 
-            if (this.contents.containsKey(id))
+            if (this.contents.containsKey(key))
             {
-                Counter counter = this.contents.get(id).decrement();
+                Counter counter = this.contents.get(key).decrement();
                 if (counter.getCount() == 0)
-                    this.contents.remove(id);
+                    this.contents.remove(key);
                 return counter.getValue();
             }
             return null;
@@ -97,129 +100,63 @@ public class ConcurrentHashHeap implements Heap
 
     @Override
     @SuppressWarnings("unchecked")
-    synchronized public Generator getStreamGenerator(StreamGenerator node)
+    synchronized public Generator getStreamGenerator(WorkingNode<StreamGenerator> node)
     {
-        if (!this.generators.containsKey(node.getUid()))
+        if (!this.generators.containsKey(node.getKey()))
         {
             /* If the node has an upstream node, we recover its output, otherwise the generator has a null input */
-            var argument = node.getSimpleUpstream() != null
-                ? this.consume(node.getSimpleUpstream().getUid())
+            var argument = !node.getUpstream().isEmpty()
+                ? this.consume(upstreamOf(node).getKey()) //TODO: account for offsets
                 : null
             ;
 
-            this.generators.put(node.getUid(), node.produceGenerator(argument));
+            this.generators.put(node.getKey(), node.getNode().produceGenerator(argument));
         }
-        return this.generators.get(node.getUid());
+        return this.generators.get(node.getKey());
     }
 
     @Override
-    synchronized public long getNextStreamOffset(StreamGenerator node)
+    synchronized public long getNextStreamOffset(WorkingNode<StreamGenerator> node)
     {
-        this.offsets.put(node.getUid(), this.offsets.getOrDefault(node.getUid(), -1L) + 1);
-        return this.offsets.get(node.getUid());
+        this.offsets.put(node.getKey(), this.offsets.getOrDefault(node.getKey(), -1L) + 1);
+        return this.offsets.get(node.getKey());
     }
 
     @Override
-    public Heap push(String id, long offset, Object returnValue, int counter)
-    {
-        try {
-            this.streamLock.write.lock();
-
-            if (!this.streamContents.containsKey(id))
-                this.streamContents.put(id, new CounterContainer());
-
-            this.streamContents.get(id).set(offset, new Counter(returnValue, counter));
-
-            return this;
-        }
-        finally {
-            this.streamLock.write.unlock();
-        }
-    }
-
-    @Override
-    public boolean has(String id, long offset)
-    {
-        try {
-            this.streamLock.read.lock();
-            this.contentLock.read.lock();
-
-            if (this.hasStreamContent(id, offset))
-                return true;
-            return this.has(id);
-        }
-        finally {
-            this.streamLock.read.unlock();
-            this.contentLock.read.unlock();
-        }
-    }
-
-    @Override
-    public Object peek(String id, long offset)
-    {
-        try {
-            this.streamLock.read.lock();
-            this.contentLock.read.lock();
-
-            if (this.hasStreamContent(id, offset))
-                return this.streamContents.get(id).get(offset).getValue();
-            else if (this.contents.containsKey(id))
-                return this.contents.get(id).getValue();
-            return null;
-        }
-        finally {
-            this.streamLock.read.unlock();
-            this.contentLock.read.unlock();
-        }
-    }
-
-    @Override
-    public Object consume(String id, long offset)
-    {
-        try {
-            this.streamLock.write.lock();
-            this.contentLock.write.lock();
-
-            if (this.hasStreamContent(id, offset))
-            {
-                CounterContainer container = this.streamContents.get(id);
-                Counter counter = container.get(offset).decrement();
-
-                if (counter.getCount() == 0)
-                    container.remove(offset);
-
-                return counter.getValue();
-            }
-            else if (this.contents.containsKey(id))
-            {
-                Counter counter = this.contents.get(id).decrement();
-
-                return counter.getValue();
-            }
-            return null;
-        }
-        finally {
-            this.streamLock.write.unlock();
-            this.contentLock.write.unlock();
-        }
-    }
-
-    @Override
-    public Collection<Object> consumeAll(String id)
+    public Collection<Object> peekAll(WorkingKey key)
     {
         try {
             this.streamLock.write.lock();
 
-            if (!this.streamContents.containsKey(id))
+            if (!this.streamContents.containsKey(key))
                 return Collections.emptyList();
 
-            List<Object> values = this.streamContents.get(id).stream()
+            return this.streamContents.get(key).stream()
+                .map(Counter::getValue)
+                .collect(Collectors.toList())
+            ;
+        }
+        finally {
+            this.streamLock.write.unlock();
+        }
+    }
+
+    @Override
+    public Collection<Object> consumeAll(WorkingKey key)
+    {
+        try {
+            this.streamLock.write.lock();
+
+            if (!this.streamContents.containsKey(key))
+                return Collections.emptyList();
+
+            List<Object> values = this.streamContents.get(key).stream()
                 .map(c -> c.decrement().getValue())
                 .collect(Collectors.toList())
             ;
 
-            if (this.streamContents.get(id).removeConsumed() == 0)
-                this.streamContents.remove(id);
+            if (this.streamContents.get(key).removeConsumed() == 0)
+                this.streamContents.remove(key);
 
             return values;
         }
@@ -255,16 +192,15 @@ public class ConcurrentHashHeap implements Heap
 
     /**
      *
-     * @param id
-     * @param offset
+     * @param key
      * @return
      */
-    private boolean hasStreamContent(String id, long offset)
+    private boolean hasStreamContent(WorkingKey key)
     {
-        var container = this.streamContents.get(id);
+        var container = this.streamContents.get(key);
 
         return container != null
-            && container.get(offset) != null
+            && container.get(key.offset()) != null
         ;
     }
 }

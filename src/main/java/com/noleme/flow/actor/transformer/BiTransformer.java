@@ -4,6 +4,7 @@ package com.noleme.flow.actor.transformer;
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
  * Created on 2020/03/03
  */
+@FunctionalInterface
 public interface BiTransformer<I1, I2, O>
 {
     /**

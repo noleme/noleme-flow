@@ -70,7 +70,7 @@ public class PipelineStreamTest
             .accumulate(ls -> ls.stream()
                 .reduce(Integer::sum)
                 .orElseThrow(() -> new AccumulationException("Could not sum stream data."))
-            )
+            ).asFlow()
             .driftSink(i -> assertion.activate())
             .collect()
         ;
@@ -98,7 +98,7 @@ public class PipelineStreamTest
             .accumulate(ls -> ls.stream()
                 .reduce(Integer::sum)
                 .orElseThrow(() -> new AccumulationException("Could not sum stream data."))
-            )
+            ).asFlow()
             .collect()
         ;
 
@@ -130,7 +130,7 @@ public class PipelineStreamTest
                 .reduce(Integer::sum)
                 .orElseThrow(() -> new AccumulationException("Could not sum stream data."))
             )
-            .join(flowB, (current, b) -> current * b)
+            .join(flowB, (current, b) -> current * b).asFlow()
             .collect()
         ;
 
@@ -146,7 +146,7 @@ public class PipelineStreamTest
         var flow = Flow
             .stream(() -> new IntegerGenerator(1, 100_000_000, i -> i * 3))
             .into(i -> i + 1)
-            .accumulate(Collection::size)
+            .accumulate(Collection::size).asFlow()
             .collect()
         ;
 
@@ -167,10 +167,10 @@ public class PipelineStreamTest
         var flowB = Flow
             .stream(() -> new IntegerGenerator(1, 500_000_000, i -> i * 2))
             .into(i -> i + 2)
-            .accumulate(Collection::size)
+            .accumulate(Collection::size).asFlow()
         ;
 
-        var flow = flowA.join(flowB, Integer::sum)
+        var flow = flowA.join(flowB, Integer::sum).asFlow()
             .collect()
         ;
 
@@ -195,7 +195,7 @@ public class PipelineStreamTest
             .stream(IterableGenerator::new)
             .into(i -> i + 2)
             .driftSink(i -> assertion.activate())
-            .accumulate(Collection::size)
+            .accumulate(Collection::size).asFlow()
             .collect()
         ;
 
@@ -232,11 +232,11 @@ public class PipelineStreamTest
             .accumulate(ls -> ls.stream()
                 .reduce(Integer::sum)
                 .orElseThrow(() -> new AccumulationException("Could not sum stream data."))
-            )
+            ).asFlow()
         ;
 
         var flow = flowA
-            .join(flowB, Integer::sum)
+            .join(flowB, Integer::sum).asFlow()
             .collect()
         ;
 

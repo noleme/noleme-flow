@@ -59,7 +59,7 @@ public class Source<O> extends SimpleNode<Extractor<O>> implements FlowOut<O>
     @Override
     public <N> StreamGenerator<O, N> stream(Function<O, Generator<N>> generatorSupplier)
     {
-        var pipe = new StreamGenerator<>(generatorSupplier);
+        var pipe = new StreamGenerator<>(generatorSupplier, this.depth + 1);
         this.bind(pipe);
         return pipe;
     }

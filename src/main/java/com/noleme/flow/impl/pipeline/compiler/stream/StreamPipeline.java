@@ -14,19 +14,28 @@ import java.util.*;
 public class StreamPipeline extends AbstractNode
 {
     private final StreamGenerator<?, ?> generatorNode;
-    private final LinkedList<Node> nodes;
-    private String pivot;
-    private Set<String> potentialPivots;
+    private final List<Node> nodes;
+    private final StreamPipeline parent;
+    private StreamPipeline topParent;
 
     /**
      *
      * @param generatorNode
      */
-    public StreamPipeline(StreamGenerator generatorNode)
+    public StreamPipeline(StreamGenerator<?, ?> generatorNode, StreamPipeline parent)
     {
         super();
         this.generatorNode = generatorNode;
-        this.nodes = new LinkedList<>();
+        this.nodes = new ArrayList<>();
+        this.setDepth(generatorNode.getDepth());
+        this.parent = parent;
+        this.topParent = parent != null ? parent.getTopParent() : null;
+    }
+
+    public StreamPipeline(StreamGenerator<?, ?> generatorNode)
+    {
+        this(generatorNode, null);
+        this.topParent = this;
     }
 
     @Override
@@ -58,9 +67,9 @@ public class StreamPipeline extends AbstractNode
         return this.generatorNode;
     }
 
-    public StreamPipeline push(Node node)
+    public StreamPipeline add(Node node)
     {
-        this.nodes.push(node);
+        this.nodes.add(node);
         return this;
     }
 
@@ -69,25 +78,13 @@ public class StreamPipeline extends AbstractNode
         return this.nodes;
     }
 
-    public StreamPipeline setPotentialPivots(Set<String> pivots)
+    public StreamPipeline getParent()
     {
-        this.potentialPivots = pivots;
-        return this;
+        return this.parent;
     }
 
-    public Set<String> getPotentialPivots()
+    public StreamPipeline getTopParent()
     {
-        return this.potentialPivots;
-    }
-
-    public StreamPipeline setPivot(String pivot)
-    {
-        this.pivot = pivot;
-        return this;
-    }
-
-    public String getPivot()
-    {
-        return this.pivot;
+        return this.topParent;
     }
 }

@@ -1,5 +1,6 @@
 package com.noleme.flow.impl.parallel.runtime.state;
 
+import com.noleme.flow.impl.pipeline.runtime.node.WorkingNode;
 import com.noleme.flow.stream.StreamGenerator;
 
 import java.util.Map;
@@ -13,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ParallelismState
 {
     /* Parallelism is evaluated with regards to the generators themselves */
-    private final Map<StreamGenerator, ParallelismCounter> counters = new ConcurrentHashMap<>();
+    private final Map<WorkingNode<StreamGenerator>, ParallelismCounter> counters = new ConcurrentHashMap<>();
     private final RRWLock lock = new RRWLock();
 
     /**
@@ -21,7 +22,7 @@ public class ParallelismState
      * @param generator
      * @return
      */
-    public boolean has(StreamGenerator generator)
+    public boolean has(WorkingNode<StreamGenerator> generator)
     {
         try {
             this.lock.read.lock();
@@ -56,7 +57,7 @@ public class ParallelismState
      * @param generator
      * @return
      */
-    public boolean isIdle(StreamGenerator generator)
+    public boolean isIdle(WorkingNode<StreamGenerator> generator)
     {
         try {
             this.lock.read.lock();
@@ -75,7 +76,7 @@ public class ParallelismState
      * @param generator
      * @return
      */
-    public int increase(StreamGenerator generator)
+    public int increase(WorkingNode<StreamGenerator> generator)
     {
         try {
             this.lock.write.lock();
@@ -91,7 +92,7 @@ public class ParallelismState
      * @param generator
      * @return
      */
-    public int decrease(StreamGenerator generator)
+    public int decrease(WorkingNode<StreamGenerator> generator)
     {
         try {
             this.lock.write.lock();
@@ -107,7 +108,7 @@ public class ParallelismState
      * @param generator
      * @return
      */
-    private ParallelismCounter getOrCreateParallelism(StreamGenerator generator)
+    private ParallelismCounter getOrCreateParallelism(WorkingNode<StreamGenerator> generator)
     {
         if (!this.counters.containsKey(generator))
             this.counters.put(generator, new ParallelismCounter());

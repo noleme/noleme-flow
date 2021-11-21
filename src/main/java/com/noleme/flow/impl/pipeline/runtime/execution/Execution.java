@@ -4,6 +4,7 @@ import com.noleme.flow.Join;
 import com.noleme.flow.Pipe;
 import com.noleme.flow.Sink;
 import com.noleme.flow.Source;
+import com.noleme.flow.actor.Silent;
 import com.noleme.flow.actor.accumulator.Accumulator;
 import com.noleme.flow.actor.extractor.ExtractionException;
 import com.noleme.flow.actor.extractor.Extractor;
@@ -13,17 +14,22 @@ import com.noleme.flow.actor.transformer.BiTransformer;
 import com.noleme.flow.actor.transformer.Transformer;
 import com.noleme.flow.impl.pipeline.PipelineRunException;
 import com.noleme.flow.impl.pipeline.runtime.heap.Heap;
-import com.noleme.flow.impl.pipeline.runtime.node.OffsetNode;
+import com.noleme.flow.impl.pipeline.runtime.node.WorkingKey;
+import com.noleme.flow.impl.pipeline.runtime.node.WorkingNode;
 import com.noleme.flow.interruption.InterruptionException;
 import com.noleme.flow.io.input.InputExtractor;
 import com.noleme.flow.io.input.Key;
 import com.noleme.flow.io.output.Recipient;
+import com.noleme.flow.node.BiNode;
 import com.noleme.flow.node.Node;
+import com.noleme.flow.node.SimpleNode;
 import com.noleme.flow.stream.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
+
+import static com.noleme.flow.impl.pipeline.runtime.node.WorkingNode.upstreamOf;
 
 /**
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
@@ -44,30 +50,33 @@ public class Execution
      *
      * Returning false is designed as a mean for a "soft exit" which results in blocking downstream paths while continuing on running paths that are still valid.
      *
-     * @param node Target node
+     * @param workingNode Target node
      * @param heap Heap object used for retrieving module parameters
      * @return true upon a successful execution, false otherwise
      * @throws PipelineRunException
      */
-    public boolean launch(Node node, Heap heap) throws PipelineRunException
+    @SuppressWarnings("unchecked")
+    public boolean launch(WorkingNode<?> workingNode, Heap heap) throws PipelineRunException
     {
+        Node node = workingNode.getNode();
+
         try {
             /*
              * The reason why we don't just implement a "launch" or "run" method in each Node subtype is so that we can have runtime-agnostic node definitions.
              * TODO: Maybe we can still preserve that prerequisite and have subtypes implement their run routine ; the tricky part is finding an agnostic way (eg. no knowledge of Heap or other runtime-specific construct) of doing input provisioning.
              */
             if (node instanceof Source)
-                return this.launchSource((Source<?>) node, heap);
-            else if (node instanceof Pipe)
-                return this.launchPipe((Pipe<?, ?>) node, heap);
-            else if (node instanceof Join)
-                return this.launchJoin((Join<?, ?, ?>) node, heap);
-            else if (node instanceof Sink)
-                return this.launchSink((Sink<?>) node, heap);
-            else if (node instanceof OffsetNode)
-                return this.launchOffset((OffsetNode) node, heap);
+                return this.launchSource((WorkingNode<Source<?>>) workingNode, heap);
+            else if (node instanceof Pipe || node instanceof StreamPipe)
+                return this.launchPipe((WorkingNode<SimpleNode<Transformer<?, ?>>>) workingNode, heap);
+            else if (node instanceof Join || node instanceof StreamJoin)
+                return this.launchJoin((WorkingNode<BiNode<BiTransformer<?, ?, ?>>>) workingNode, heap);
+            else if (node instanceof Sink || node instanceof StreamSink)
+                return this.launchSink((WorkingNode<SimpleNode<Loader<?>>>) workingNode, heap);
+            else if (node instanceof StreamGenerator)
+                return this.launchStreamGenerator((WorkingNode<StreamGenerator>) workingNode, heap);
             else if (node instanceof StreamAccumulator)
-                return this.launchStreamAccumulator((StreamAccumulator<?, ?>) node, heap);
+                return this.launchStreamAccumulator((WorkingNode<StreamAccumulator<?, ?>>) workingNode, heap);
 
             logger.error("Flow node #{} is of an unknown {} type", node.getUid(), node.getClass().getName());
 
@@ -96,9 +105,9 @@ public class Execution
      * @return
      * @throws Exception
      */
-    private boolean launchSource(Source<?> source, Heap heap) throws Exception
+    private boolean launchSource(WorkingNode<Source<?>> source, Heap heap) throws Exception
     {
-        Extractor extractor = source.getActor();
+        Extractor extractor = source.getNode().getActor();
 
         logger.debug("Launching flow source {}#{} of extractor {}", getName(source), source.getUid(), extractor.getClass().getName());
 
@@ -109,11 +118,11 @@ public class Execution
             if (!heap.hasInput(key))
                 throw new ExtractionException("The InputExtractor in node #" + source.getUid() + " couldn't find its expected input");
 
-            heap.push(source.getUid(), heap.getInput(key), source.getDownstream().size());
+            heap.push(source.getKey(), heap.getInput(key), source.getDownstream().size());
         }
         /* Otherwise normal rules apply */
         else
-            heap.push(source.getUid(), extractor.extract(), source.getDownstream().size());
+            heap.push(source.getKey(), extractor.extract(), source.getDownstream().size());
 
         return true;
     }
@@ -126,14 +135,15 @@ public class Execution
      * @throws Exception
      */
     @SuppressWarnings("unchecked")
-    private boolean launchPipe(Pipe<?, ?> pipe, Heap heap) throws Exception
+    private boolean launchPipe(WorkingNode<SimpleNode<Transformer<?, ?>>> pipe, Heap heap) throws Exception
     {
-        Transformer transformer = pipe.getActor();
+        Transformer transformer = pipe.getNode().getActor();
 
-        logger.debug("Launching flow pipe {}#{} of transformer {}", getName(pipe), pipe.getUid(), transformer.getClass().getName());
+        if (transformer.getClass().getAnnotation(Silent.class) == null)
+            logger.debug("Launching flow pipe {}#{} of transformer {}", getName(pipe), pipe.getUid(), transformer.getClass().getName());
 
-        Object input = heap.consume(pipe.getSimpleUpstream().getUid());
-        heap.push(pipe.getUid(), transformer.transform(input), pipe.getDownstream().size());
+        Object input = heap.consume(heapKeyOf(pipe));
+        heap.push(pipe.getKey(), transformer.transform(input), pipe.getDownstream().size());
         return true;
     }
 
@@ -145,23 +155,26 @@ public class Execution
      * @throws Exception
      */
     @SuppressWarnings("unchecked")
-    private boolean launchJoin(Join<?, ?, ?> join, Heap heap) throws Exception
+    private boolean launchJoin(WorkingNode<BiNode<BiTransformer<?, ?, ?>>> join, Heap heap) throws Exception
     {
-        BiTransformer transformer = join.getActor();
+        BiTransformer transformer = join.getNode().getActor();
+
+        WorkingNode<?> upstream1 = upstreamOf(join, 0);
+        WorkingNode<?> upstream2 = upstreamOf(join, 1);
 
         logger.debug(
             "Launching flow join {}#{} of upstream flows {}#{} and {}#{}",
             getName(join),
             join.getUid(),
-            getName(join.getUpstream1()),
-            join.getUpstream1().getUid(),
-            getName(join.getUpstream2()),
-            join.getUpstream2().getUid()
+            getName(upstream1),
+            upstream1.getUid(),
+            getName(upstream2),
+            upstream2.getUid()
         );
 
-        Object input1 = heap.consume(join.getUpstream1().getUid());
-        Object input2 = heap.consume(join.getUpstream2().getUid());
-        heap.push(join.getUid(), transformer.transform(input1, input2), join.getDownstream().size());
+        Object input1 = heap.consume(upstream1.getKey());
+        Object input2 = heap.peek(upstream2.getKey()); //FIXME: this currently results in nodes not being GCed in a stream context (counter is sized as if streams counted for 1, so we peek, so we neve reach 0)
+        heap.push(join.getKey(), transformer.transform(input1, input2), join.getDownstream().size());
         return true;
     }
 
@@ -173,18 +186,19 @@ public class Execution
      * @throws Exception
      */
     @SuppressWarnings("unchecked")
-    private boolean launchSink(Sink<?> sink, Heap heap) throws Exception
+    private boolean launchSink(WorkingNode<SimpleNode<Loader<?>>> sink, Heap heap) throws Exception
     {
-        Loader loader = sink.getActor();
+        Loader loader = sink.getNode().getActor();
 
-        logger.debug("Launching flow sink {}#{} of loader {}", getName(sink), sink.getUid(), loader.getClass().getName());
+        if (loader.getClass().getAnnotation(Silent.class) == null)
+            logger.debug("Launching flow sink {}#{} of loader {}", getName(sink), sink.getUid(), loader.getClass().getName());
 
-        Object input = heap.consume(sink.getSimpleUpstream().getUid());
+        Object input = heap.consume(heapKeyOf(sink));
 
         /* If the sink is a Recipient, the output value comes from the provided input instead of the extractor itself ; the extractor only holds a reference to the expected input */
-        if (sink instanceof Recipient)
+        if (sink.getNode() instanceof Recipient)
         {
-            var identifier = ((Recipient) sink).getIdentifier();
+            var identifier = ((Recipient) sink.getNode()).getIdentifier();
             heap.setOutput(identifier, input);
         }
         else
@@ -195,116 +209,18 @@ public class Execution
 
     /**
      *
-     * @param offsetNode
-     * @param heap
-     * @return
-     * @throws Exception
-     * @throws PipelineRunException
-     */
-    private boolean launchOffset(OffsetNode offsetNode, Heap heap) throws Exception, PipelineRunException
-    {
-        Node node = offsetNode.getNode();
-        long offset = offsetNode.getOffset();
-
-        if (node instanceof StreamGenerator)
-            return this.launchStreamGenerator((StreamGenerator<?, ?>) node, offset, heap);
-        else if (node instanceof StreamPipe)
-            return this.launchStreamPipe((StreamPipe<?, ?>) node, offset, heap);
-        else if (node instanceof StreamJoin)
-            return this.launchStreamJoin((StreamJoin<?, ?, ?>) node, offset, heap);
-        else if (node instanceof StreamSink)
-            return this.launchStreamSink((StreamSink<?>) node, offset, heap);
-
-        logger.error("Flow node #{} is of an unknown {} type", node.getUid(), node.getClass().getName());
-
-        throw new PipelineRunException("Unknown node type " + node.getClass().getName(), heap);
-    }
-
-    /**
-     *
      * @param generatorNode
-     * @param offset
      * @param heap
      * @return
      * @throws Exception
      */
-    private boolean launchStreamGenerator(StreamGenerator<?, ?> generatorNode, long offset, Heap heap) throws Exception
+    private boolean launchStreamGenerator(WorkingNode<StreamGenerator> generatorNode, Heap heap) throws Exception
     {
         Generator generator = heap.getStreamGenerator(generatorNode);
 
-        logger.debug("Launching flow stream generator {}#{} at offset {} with generator {}", getName(generatorNode), generatorNode.getUid(), offset, generator.getClass().getName());
+        logger.debug("Launching flow stream generator {}#{} at offset {} with generator {}", getName(generatorNode), generatorNode.getUid(), generatorNode.getKey().offset(), generator.getClass().getName());
 
-        heap.push(generatorNode.getUid(), offset, generator.generate(), generatorNode.getDownstream().size());
-        return true;
-    }
-
-    /**
-     *
-     * @param pipe
-     * @param offset
-     * @param heap
-     * @return
-     * @throws Exception
-     */
-    @SuppressWarnings("unchecked")
-    private boolean launchStreamPipe(StreamPipe<?, ?> pipe, long offset, Heap heap) throws Exception
-    {
-        Transformer transformer = pipe.getActor();
-
-        logger.debug("Launching flow stream pipe {}#{} at offset {} of transformer {}", getName(pipe), pipe.getUid(), offset, transformer.getClass().getName());
-
-        Object input = heap.consume(pipe.getSimpleUpstream().getUid(), offset);
-        heap.push(pipe.getUid(), offset, transformer.transform(input), pipe.getDownstream().size());
-        return true;
-    }
-
-    /**
-     *
-     * @param join
-     * @param offset
-     * @param heap
-     * @return
-     * @throws Exception
-     */
-    @SuppressWarnings("unchecked")
-    private boolean launchStreamJoin(StreamJoin<?, ?, ?> join, long offset, Heap heap) throws Exception
-    {
-        BiTransformer transformer = join.getActor();
-
-        logger.debug(
-            "Launching flow stream join {}#{} at offset {} of upstream flows {}#{} and {}#{}",
-            getName(join),
-            join.getUid(),
-            offset,
-            getName(join.getUpstream1()),
-            join.getUpstream1().getUid(),
-            getName(join.getUpstream2()),
-            join.getUpstream2().getUid()
-        );
-
-        Object input1 = heap.consume(join.getUpstream1().getUid(), offset);
-        Object input2 = heap.consume(join.getUpstream2().getUid(), offset);
-        heap.push(join.getUid(), offset, transformer.transform(input1, input2), join.getDownstream().size());
-        return true;
-    }
-
-    /**
-     *
-     * @param sink
-     * @param offset
-     * @param heap
-     * @return
-     * @throws Exception
-     */
-    @SuppressWarnings("unchecked")
-    private boolean launchStreamSink(StreamSink<?> sink, long offset, Heap heap) throws Exception
-    {
-        Loader loader = sink.getActor();
-
-        logger.debug("Launching flow stream sink {}#{} at offset {} of loader {}", getName(sink), sink.getUid(), offset, loader.getClass().getName());
-
-        Object input = heap.consume(sink.getSimpleUpstream().getUid(), offset);
-        loader.load(input);
+        heap.push(generatorNode.getKey(), generator.generate(), generatorNode.getDownstream().size());
         return true;
     }
 
@@ -316,14 +232,17 @@ public class Execution
      * @throws Exception
      */
     @SuppressWarnings("unchecked")
-    private boolean launchStreamAccumulator(StreamAccumulator<?, ?> node, Heap heap) throws Exception
+    private boolean launchStreamAccumulator(WorkingNode<StreamAccumulator<?, ?>> node, Heap heap) throws Exception
     {
-        Accumulator accumulator = node.getActor();
+        Accumulator accumulator = node.getNode().getActor();
 
         logger.debug("Launching flow stream accumulator {}#{} of accumulator {}", getName(node), node.getUid(), node.getClass().getName());
 
-        Collection<Object> input = heap.consumeAll(node.getSimpleUpstream().getUid());
-        heap.push(node.getUid(), accumulator.accumulate(input), node.getDownstream().size());
+        Collection<Object> input = heap.consumeAll(upstreamOf(node).getKey().withoutOffset());
+
+        WorkingKey accumulationKey = WorkingKey.of(node, node.getKey().offset(), node.getKey().parent() != null ? node.getKey().parent().parent() : null);
+
+        heap.push(accumulationKey, accumulator.accumulate(input), node.getDownstream().size());
         return true;
     }
 
@@ -335,5 +254,33 @@ public class Execution
     private static String getName(Node node)
     {
         return node.getName() != null ? node.getName() : "";
+    }
+
+    /**
+     *
+     * @param node
+     * @return
+     */
+    private static WorkingKey heapKeyOf(WorkingNode<?> node)
+    {
+        return heapKeyOf(node, 0);
+    }
+
+    /**
+     *
+     * @param node
+     * @param index
+     * @return
+     */
+    private static WorkingKey heapKeyOf(WorkingNode<?> node, int index)
+    {
+        /*
+        var upstreamNode = upstreamOf(node, index);
+        return upstreamNode.getNode() instanceof StreamOut
+            ? upstreamNode.getKey().atOffset(node.getKey().offset(), node.getKey().parent())
+            : upstreamNode.getKey()
+        ;
+         */
+        return upstreamOf(node, index).getKey();
     }
 }

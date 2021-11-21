@@ -1,7 +1,7 @@
 package com.noleme.flow.io.output;
 
 import com.noleme.flow.Sink;
-import com.noleme.flow.actor.loader.BlackHole;
+import com.noleme.flow.actor.loader.End;
 import com.noleme.flow.actor.loader.Loader;
 
 /**
@@ -10,7 +10,7 @@ import com.noleme.flow.actor.loader.Loader;
  */
 public final class Recipient <I> extends Sink<I>
 {
-    private static final Loader<?> blackHole = new BlackHole<>();
+    private static final Loader<?> blackHole = new End<>();
     private final String identifier;
 
     public Recipient(String identifier)
