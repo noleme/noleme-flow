@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -362,13 +363,21 @@ public final class Flow
     }
 
     /**
+     * @see #nonFatal(Extractor, Consumer)
+     */
+    public static <O> Extractor<O> nonFatal(Extractor<O> extractor)
+    {
+        return nonFatal(extractor, e -> {});
+    }
+
+    /**
      * An adapter function for absorbing {@link ExtractionException} and replace them with a log line and the control {@link InterruptionException}.
      *
      * @param extractor An extractor instance to be wrapped
      * @param <O> the type of the downstream flow
      * @return the resulting wrapper Extractor node
      */
-    public static <O> Extractor<O> nonFatal(Extractor<O> extractor)
+    public static <O> Extractor<O> nonFatal(Extractor<O> extractor, Consumer<ExtractionException> handler)
     {
         return () -> {
             try {
@@ -376,9 +385,18 @@ public final class Flow
             }
             catch (ExtractionException e) {
                 logger.error(e.getMessage(), e);
+                handler.accept(e);
                 throw InterruptionException.interrupt();
             }
         };
+    }
+
+    /**
+     * @see #nonFatal(Transformer, Consumer)
+     */
+    public static <I, O> Transformer<I, O> nonFatal(Transformer<I, O> transformer)
+    {
+        return nonFatal(transformer, e -> {});
     }
 
     /**
@@ -389,7 +407,7 @@ public final class Flow
      * @param <O> the type of the downstream flow
      * @return the resulting wrapper Transformer node
      */
-    public static <I, O> Transformer<I, O> nonFatal(Transformer<I, O> transformer)
+    public static <I, O> Transformer<I, O> nonFatal(Transformer<I, O> transformer, Consumer<TransformationException> handler)
     {
         return input -> {
             try {
@@ -397,9 +415,18 @@ public final class Flow
             }
             catch (TransformationException e) {
                 logger.error(e.getMessage(), e);
+                handler.accept(e);
                 throw InterruptionException.interrupt();
             }
         };
+    }
+
+    /**
+     * @see #nonFatal(BiTransformer, Consumer)
+     */
+    public static <I1, I2, O> BiTransformer<I1, I2, O> nonFatal(BiTransformer<I1, I2, O> transformer)
+    {
+        return nonFatal(transformer, e -> {});
     }
 
     /**
@@ -411,7 +438,7 @@ public final class Flow
      * @param <O> the type of the downstream flow
      * @return the resulting wrapper BiTransformer node
      */
-    public static <I1, I2, O> BiTransformer<I1, I2, O> nonFatal(BiTransformer<I1, I2, O> transformer)
+    public static <I1, I2, O> BiTransformer<I1, I2, O> nonFatal(BiTransformer<I1, I2, O> transformer, Consumer<TransformationException> handler)
     {
         return (a, b) -> {
             try {
@@ -419,6 +446,7 @@ public final class Flow
             }
             catch (TransformationException e) {
                 logger.error(e.getMessage(), e);
+                handler.accept(e);
                 throw InterruptionException.interrupt();
             }
         };
