@@ -40,16 +40,6 @@ public final class WorkingKey
         return new WorkingKey(node.getUid(), offset, parent);
     }
 
-    public WorkingKey atOffset(long offset, WorkingKey parent)
-    {
-        return new WorkingKey(this.identifier, offset, parent);
-    }
-
-    public WorkingKey atOffset(long offset)
-    {
-        return new WorkingKey(this.identifier, offset, null);
-    }
-
     public WorkingKey withoutOffset()
     {
         return new WorkingKey(this.identifier, -1, this.parent);

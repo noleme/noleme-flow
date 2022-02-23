@@ -5,6 +5,7 @@ import com.noleme.flow.FlowAssertion;
 import com.noleme.flow.compiler.CompilationException;
 import com.noleme.flow.compiler.RunException;
 import com.noleme.flow.impl.pipeline.stream.IterableGenerator;
+import com.noleme.flow.io.output.Output;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -43,17 +44,19 @@ public class PipelineStreamCascadeTest
         var flow = Flow
             .from(() -> List.of(List.of(1, 2, 3), List.of(4, 5, 6)))
             .stream(IterableGenerator::new)
+            .driftSink(i -> assertion.activate()) // 2
             .stream(IterableGenerator::new)
             .into(i -> i + 1)
             .driftSink(System.out::println)
+            .driftSink(i -> assertion.activate()) // 3 + 3
             .accumulate()
-            .sink(i -> assertion.activate())
+            .driftSink(i -> assertion.activate()) // 2
         ;
 
         Flow.runAsPipeline(flow);
 
         Assertions.assertTrue(assertion.isActivated());
-        Assertions.assertEquals(2, assertion.getActivationCount());
+        Assertions.assertEquals(10, assertion.getActivationCount());
     }
 
     @Test
@@ -64,18 +67,25 @@ public class PipelineStreamCascadeTest
         var flow = Flow
             .from(() -> List.of(List.of(1, 2, 3), List.of(4, 5, 6)))
             .stream(IterableGenerator::new)
+            .driftSink(System.out::println)
+            .driftSink(i -> assertion.activate()) // 2
             .stream(IterableGenerator::new)
             .into(i -> i + 1)
             .driftSink(System.out::println)
+            .driftSink(i -> assertion.activate()) // 3 + 3
             .accumulate().asStream()
             .driftSink(System.out::println)
-            .accumulate()
-            .sink(i -> assertion.activate())
+            .driftSink(i -> assertion.activate()) // 2
+            .accumulate().asFlow()
+            .driftSink(System.out::println)
+            .driftSink(i -> assertion.activate()) // 1
+            .collect()
         ;
 
-        Flow.runAsPipeline(flow);
+        Output output = Flow.runAsPipeline(flow);
 
         Assertions.assertTrue(assertion.isActivated());
-        Assertions.assertEquals(5, assertion.getActivationCount());
+        Assertions.assertEquals(11, assertion.getActivationCount());
+        Assertions.assertEquals(List.of(List.of(2, 3, 4), List.of(5, 6, 7)), output.get(flow));
     }
 }
