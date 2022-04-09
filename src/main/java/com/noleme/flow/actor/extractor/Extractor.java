@@ -4,12 +4,13 @@ package com.noleme.flow.actor.extractor;
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
  * Created on 2020/02/26
  */
+@FunctionalInterface
 public interface Extractor<T>
 {
     /**
      *
      * @return
-     * @throws ExtractionException
+     * @throws Exception
      */
-    T extract() throws ExtractionException;
+    T extract() throws Exception;
 }

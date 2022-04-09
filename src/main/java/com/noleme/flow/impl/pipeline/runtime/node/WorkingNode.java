@@ -134,7 +134,8 @@ public class WorkingNode<N extends Node> extends NodeDecorator
                         return new WorkingNode<>(
                             n,
                             this.key.hasParent() ? this.key.parent().offset() : -1,
-                            this.key.parent().parent()
+                            //this.key.parent().parent()
+                            this.key.parent()
                         );
                     }
                     else if (isKeyTransitive(n))

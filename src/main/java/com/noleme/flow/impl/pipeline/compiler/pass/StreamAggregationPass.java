@@ -79,10 +79,14 @@ public class StreamAggregationPass implements PipelineCompilerPass
                 registry.registerPipelinePart(pipeline, dsn);
                 this.compileStream(dsn, pipeline, registry);
             }
-            else if (dsn instanceof StreamAccumulator && pipeline.getParent() != null)
+            //else if (dsn instanceof StreamAccumulator && pipeline.getParent() != null)
+            else if (dsn instanceof StreamAccumulator)
             {
-                pipeline.getParent().add(dsn);
-                registry.registerPipelinePart(pipeline.getParent(), dsn);
+                //pipeline.getParent().add(dsn);
+                pipeline.add(dsn);
+                //registry.registerPipelinePart(pipeline.getParent(), dsn);
+                registry.registerPipelinePart(pipeline, dsn);
+                //this.compileStream(dsn, pipeline.getParent(), registry);
                 this.compileStream(dsn, pipeline.getParent(), registry);
             }
         }

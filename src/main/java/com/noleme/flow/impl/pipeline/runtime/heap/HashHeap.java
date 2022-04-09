@@ -109,6 +109,19 @@ public class HashHeap implements Heap
     }
 
     @Override
+    public Collection<Object> peekAll(WorkingKey key)
+    {
+        if (!this.offsetKeys.containsKey(key))
+            return Collections.emptyList();
+
+        return this.offsetKeys.get(key).stream()
+            .sorted((k1, k2) -> (int) (k1.offset() - k2.offset()))
+            .map(this::peek)
+            .collect(Collectors.toList())
+        ;
+    }
+
+    @Override
     public Collection<Object> consumeAll(WorkingKey key)
     {
         if (!this.offsetKeys.containsKey(key))

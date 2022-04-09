@@ -19,7 +19,6 @@ public class PipelineCompiler implements FlowCompiler<PipelineRuntime>
 {
     private final List<PipelineCompilerPass> passes = List.of(
         new TopologicalSortPass(),
-        //new StreamAggregationPass()
         new StreamAggregationPass()
     );
 

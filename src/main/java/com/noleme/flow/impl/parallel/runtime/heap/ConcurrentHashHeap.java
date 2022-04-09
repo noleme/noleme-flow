@@ -122,6 +122,25 @@ public class ConcurrentHashHeap implements Heap
     }
 
     @Override
+    public Collection<Object> peekAll(WorkingKey key)
+    {
+        try {
+            this.streamLock.write.lock();
+
+            if (!this.streamContents.containsKey(key))
+                return Collections.emptyList();
+
+            return this.streamContents.get(key).stream()
+                .map(Counter::getValue)
+                .collect(Collectors.toList())
+            ;
+        }
+        finally {
+            this.streamLock.write.unlock();
+        }
+    }
+
+    @Override
     public Collection<Object> consumeAll(WorkingKey key)
     {
         try {

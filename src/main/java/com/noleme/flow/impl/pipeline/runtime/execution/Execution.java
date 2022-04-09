@@ -12,7 +12,6 @@ import com.noleme.flow.actor.extractor.Extractor;
 import com.noleme.flow.actor.generator.GenerationException;
 import com.noleme.flow.actor.generator.Generator;
 import com.noleme.flow.actor.loader.Loader;
-import com.noleme.flow.actor.loader.LoadingException;
 import com.noleme.flow.actor.transformer.BiTransformer;
 import com.noleme.flow.actor.transformer.TransformationException;
 import com.noleme.flow.actor.transformer.Transformer;
@@ -94,7 +93,7 @@ public class Execution
 
             return false;
         }
-        catch (ExtractionException | TransformationException | LoadingException | GenerationException | AccumulationException e) {
+        catch (Exception e) {
             logger.error("Flow node {}#{} has thrown an error: {}", getName(node), node.getUid(), e.getMessage());
 
             throw new PipelineRunException("Node " + node.getClass().getName() + " " + getName(node) + "#" + node.getUid() + " has thrown an exception. (" + e.getClass() + ")", e, heap);
@@ -108,7 +107,7 @@ public class Execution
      * @return
      * @throws ExtractionException
      */
-    private boolean launchSource(WorkingNode<Source<?>> source, Heap heap) throws ExtractionException
+    private boolean launchSource(WorkingNode<Source<?>> source, Heap heap) throws Exception
     {
         Extractor extractor = source.getNode().getActor();
 
@@ -138,7 +137,7 @@ public class Execution
      * @throws TransformationException
      */
     @SuppressWarnings("unchecked")
-    private boolean launchPipe(WorkingNode<SimpleNode<Transformer<?, ?>>> pipe, Heap heap) throws TransformationException
+    private boolean launchPipe(WorkingNode<SimpleNode<Transformer<?, ?>>> pipe, Heap heap) throws Exception
     {
         Transformer transformer = pipe.getNode().getActor();
 
@@ -158,7 +157,7 @@ public class Execution
      * @throws TransformationException
      */
     @SuppressWarnings("unchecked")
-    private boolean launchJoin(WorkingNode<BiNode<BiTransformer<?, ?, ?>>> join, Heap heap) throws TransformationException
+    private boolean launchJoin(WorkingNode<BiNode<BiTransformer<?, ?, ?>>> join, Heap heap) throws Exception
     {
         BiTransformer transformer = join.getNode().getActor();
 
@@ -188,7 +187,7 @@ public class Execution
      * @return
      */
     @SuppressWarnings("unchecked")
-    private boolean launchSink(WorkingNode<SimpleNode<Loader<?>>> sink, Heap heap) throws LoadingException
+    private boolean launchSink(WorkingNode<SimpleNode<Loader<?>>> sink, Heap heap) throws Exception
     {
         Loader loader = sink.getNode().getActor();
 
@@ -216,7 +215,7 @@ public class Execution
      * @return
      * @throws GenerationException
      */
-    private boolean launchStreamGenerator(WorkingNode<StreamGenerator> generatorNode, Heap heap) throws GenerationException
+    private boolean launchStreamGenerator(WorkingNode<StreamGenerator> generatorNode, Heap heap) throws Exception
     {
         Generator generator = heap.getStreamGenerator(generatorNode);
 
@@ -234,14 +233,17 @@ public class Execution
      * @throws AccumulationException
      */
     @SuppressWarnings("unchecked")
-    private boolean launchStreamAccumulator(WorkingNode<StreamAccumulator<?, ?>> node, Heap heap) throws AccumulationException
+    private boolean launchStreamAccumulator(WorkingNode<StreamAccumulator<?, ?>> node, Heap heap) throws Exception
     {
         Accumulator accumulator = node.getNode().getActor();
 
         logger.debug("Launching flow stream accumulator {}#{} of accumulator {}", getName(node), node.getUid(), node.getClass().getName());
 
-        Collection<Object> input = heap.consumeAll(upstreamOf(node).getKey());
-        heap.push(node.getKey(), accumulator.accumulate(input), node.getDownstream().size());
+        Collection<Object> input = heap.consumeAll(upstreamOf(node).getKey().withoutOffset());
+
+        WorkingKey accumulationKey = WorkingKey.of(node, node.getKey().offset(), node.getKey().parent() != null ? node.getKey().parent().parent() : null);
+
+        heap.push(accumulationKey, accumulator.accumulate(input), node.getDownstream().size());
         return true;
     }
 

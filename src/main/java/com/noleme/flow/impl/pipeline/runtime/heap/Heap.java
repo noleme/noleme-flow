@@ -65,6 +65,13 @@ public interface Heap
      * @param key
      * @return
      */
+    Collection<Object> peekAll(WorkingKey key);
+
+    /**
+     *
+     * @param key
+     * @return
+     */
     Collection<Object> consumeAll(WorkingKey key);
 
     /**

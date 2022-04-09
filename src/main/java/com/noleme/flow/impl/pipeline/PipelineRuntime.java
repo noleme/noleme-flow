@@ -118,6 +118,7 @@ public class PipelineRuntime implements FlowRuntime
         StreamPipeline pipeline = pipelineNode.getNode();
         StreamGenerator generatorNode = pipeline.getGeneratorNode();
 
+        //FIXME: likely shenanigans going on here
         WorkingKey parentKey = pipelineNode.getKey().hasOffset() ? pipelineNode.getKey() : null;
 
         WorkingNode<StreamGenerator> workingGeneratorNode = new WorkingNode<>(generatorNode, pipelineNode.getKey().offset(), parentKey);
@@ -135,11 +136,21 @@ public class PipelineRuntime implements FlowRuntime
             while (reverseIterator.hasPrevious())
             {
                 Node streamNode = reverseIterator.previous();
+                if (streamNode instanceof StreamAccumulator)
+                    continue;
+
                 runQueue.push(new WorkingNode<>(streamNode, offset, parentKey));
             }
 
             /* We add the generator to the top of the queue so it can generate the input required by previously added stream nodes */
             runQueue.push(new WorkingNode<>(generatorNode, offset, parentKey));
+        }
+        else {
+            pipeline.getNodes().stream()
+                .filter(n -> n instanceof StreamAccumulator)
+                .map(n -> (StreamAccumulator) n)
+                .forEach(a -> runQueue.push(new WorkingNode<>(a, parentKey)))
+            ;
         }
     }
 }

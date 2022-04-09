@@ -73,10 +73,10 @@ public class PipelineStreamCascadeTest
             .into(i -> i + 1)
             .driftSink(System.out::println)
             .driftSink(i -> assertion.activate()) // 3 + 3
-            .accumulate().asStream()
+            .accumulate().name("inner-accumulator").asStream()
             .driftSink(System.out::println)
             .driftSink(i -> assertion.activate()) // 2
-            .accumulate().asFlow()
+            .accumulate().name("outer-accumulator").asFlow()
             .driftSink(System.out::println)
             .driftSink(i -> assertion.activate()) // 1
             .collect()
