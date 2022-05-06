@@ -4,6 +4,7 @@ package com.noleme.flow.actor.loader;
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
  * Created on 2020/03/01
  */
+@Deprecated
 public class LoadingException extends Exception
 {
     /**

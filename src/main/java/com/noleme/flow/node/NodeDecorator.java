@@ -35,6 +35,12 @@ public abstract class NodeDecorator implements Node
     }
 
     @Override
+    public String getName()
+    {
+        return this.node.getName();
+    }
+
+    @Override
     public List<Node> getDownstream()
     {
         return this.node.getDownstream();

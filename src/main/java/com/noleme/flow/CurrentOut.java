@@ -1,5 +1,6 @@
 package com.noleme.flow;
 
+import com.noleme.flow.actor.generator.Generator;
 import com.noleme.flow.actor.loader.Loader;
 import com.noleme.flow.actor.transformer.BiTransformer;
 import com.noleme.flow.actor.transformer.Transformer;
@@ -7,7 +8,10 @@ import com.noleme.flow.annotation.Experimental;
 import com.noleme.flow.node.Node;
 import com.noleme.flow.slice.SinkSlice;
 import com.noleme.flow.slice.PipeSlice;
+import com.noleme.flow.stream.StreamGenerator;
 import com.noleme.flow.stream.StreamOut;
+
+import java.util.function.Function;
 
 /**
  * Concept representing a {@link Node} with a potential downstream.
@@ -18,6 +22,8 @@ import com.noleme.flow.stream.StreamOut;
  */
 public interface CurrentOut<O> extends Node
 {
+
+
     /**
      * Binds the current node into a {@link Transformer}, resulting in a new {@link CurrentOut} node.
      *
@@ -85,6 +91,17 @@ public interface CurrentOut<O> extends Node
     }
 
     /**
+     *
+     * @param loader
+     * @return
+     */
+    default CurrentOut<O> driftSink(Loader<O> loader)
+    {
+        this.into(loader);
+        return this;
+    }
+
+    /**
      * Binds to the provided {@link SinkSlice}.
      *
      * @param slice
@@ -106,4 +123,12 @@ public interface CurrentOut<O> extends Node
      * @return the resulting Join node
      */
     <JI, JO> CurrentOut<JO> join(FlowOut<JI> input, BiTransformer<O, JI, JO> transformer);
+
+    /**
+     *
+     * @param generatorSupplier
+     * @param <N>
+     * @return
+     */
+    <N> StreamGenerator<O, N> stream(Function<O, Generator<N>> generatorSupplier);
 }

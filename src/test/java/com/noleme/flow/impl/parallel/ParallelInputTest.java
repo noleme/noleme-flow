@@ -91,7 +91,7 @@ public class ParallelInputTest
             .<List<Integer>>from("my_input")
             .stream(IterableGenerator::new)
             .pipe(i -> i + 2)
-            .accumulate(vals -> vals.stream().reduce(Integer::sum).orElseThrow(() -> new AccumulationException("Could not sum values.")))
+            .accumulate(vals -> vals.stream().reduce(Integer::sum).orElseThrow(() -> new AccumulationException("Could not sum values."))).asFlow()
             .collect()
         ;
 

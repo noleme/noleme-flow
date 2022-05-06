@@ -4,6 +4,7 @@ package com.noleme.flow.actor.transformer;
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
  * Created on 2020/02/26
  */
+@Deprecated
 public class TransformationException extends Exception
 {
     /**

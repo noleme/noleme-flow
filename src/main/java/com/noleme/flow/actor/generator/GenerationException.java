@@ -4,6 +4,7 @@ package com.noleme.flow.actor.generator;
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
  * Created on 2020/12/03
  */
+@Deprecated
 public class GenerationException extends Exception
 {
     /**

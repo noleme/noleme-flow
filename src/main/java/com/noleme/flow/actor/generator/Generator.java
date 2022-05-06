@@ -17,7 +17,7 @@ public interface Generator <O>
     /**
      * This method should return the next element of the stream each time it is called or null if it has reached the end.
      *
-     * @throws GenerationException
+     * @throws Exception
      */
-    O generate() throws GenerationException;
+    O generate() throws Exception;
 }
