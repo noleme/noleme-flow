@@ -375,7 +375,7 @@ public final class Flow
      * @param <O> the type of the downstream flow
      * @return the resulting wrapper Extractor node
      */
-    public static <O> Extractor<O> nonFatal(Extractor<O> extractor, Consumer<ExtractionException> handler)
+    public static <O> Extractor<O> nonFatal(Extractor<O> extractor, Consumer<Exception> handler)
     {
         return () -> {
             try {
@@ -405,7 +405,7 @@ public final class Flow
      * @param <O> the type of the downstream flow
      * @return the resulting wrapper Transformer node
      */
-    public static <I, O> Transformer<I, O> nonFatal(Transformer<I, O> transformer, Consumer<TransformationException> handler)
+    public static <I, O> Transformer<I, O> nonFatal(Transformer<I, O> transformer, Consumer<Exception> handler)
     {
         return input -> {
             try {
@@ -436,7 +436,7 @@ public final class Flow
      * @param <O> the type of the downstream flow
      * @return the resulting wrapper BiTransformer node
      */
-    public static <I1, I2, O> BiTransformer<I1, I2, O> nonFatal(BiTransformer<I1, I2, O> transformer, Consumer<TransformationException> handler)
+    public static <I1, I2, O> BiTransformer<I1, I2, O> nonFatal(BiTransformer<I1, I2, O> transformer, Consumer<Exception> handler)
     {
         return (a, b) -> {
             try {
