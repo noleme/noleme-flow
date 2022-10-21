@@ -20,7 +20,7 @@ Add the following in your `pom.xml`:
 <dependency>
     <groupId>com.noleme</groupId>
     <artifactId>noleme-flow</artifactId>
-    <version>0.15</version>
+    <version>0.16</version>
 </dependency>
 ```
 
