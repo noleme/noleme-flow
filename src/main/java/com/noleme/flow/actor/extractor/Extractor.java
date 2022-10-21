@@ -9,7 +9,7 @@ public interface Extractor<T>
     /**
      *
      * @return
-     * @throws ExtractionException
+     * @throws Exception
      */
-    T extract() throws ExtractionException;
+    T extract() throws Exception;
 }

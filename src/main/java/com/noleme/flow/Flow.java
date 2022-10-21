@@ -1,11 +1,9 @@
 package com.noleme.flow;
 
-import com.noleme.flow.actor.extractor.ExtractionException;
 import com.noleme.flow.actor.extractor.Extractor;
 import com.noleme.flow.actor.generator.Generator;
 import com.noleme.flow.actor.loader.Loader;
 import com.noleme.flow.actor.transformer.BiTransformer;
-import com.noleme.flow.actor.transformer.TransformationException;
 import com.noleme.flow.actor.transformer.Transformer;
 import com.noleme.flow.annotation.Experimental;
 import com.noleme.flow.compiler.CompilationException;
@@ -362,7 +360,7 @@ public final class Flow
     }
 
     /**
-     * An adapter function for absorbing {@link ExtractionException} and replace them with a log line and the control {@link InterruptionException}.
+     * An adapter function for absorbing {@link Exception} and replace them with a log line and the control {@link InterruptionException}.
      *
      * @param extractor An extractor instance to be wrapped
      * @param <O> the type of the downstream flow
@@ -374,7 +372,7 @@ public final class Flow
             try {
                 return extractor.extract();
             }
-            catch (ExtractionException e) {
+            catch (Exception e) {
                 logger.error(e.getMessage(), e);
                 throw InterruptionException.interrupt();
             }
@@ -382,7 +380,7 @@ public final class Flow
     }
 
     /**
-     * An adapter function for absorbing {@link TransformationException} and replace them with a log line and the control {@link InterruptionException}.
+     * An adapter function for absorbing {@link Exception} and replace them with a log line and the control {@link InterruptionException}.
      *
      * @param transformer A transformer instance to be wrapped
      * @param <I> the type of the upstream flow
@@ -395,7 +393,7 @@ public final class Flow
             try {
                 return transformer.transform(input);
             }
-            catch (TransformationException e) {
+            catch (Exception e) {
                 logger.error(e.getMessage(), e);
                 throw InterruptionException.interrupt();
             }
@@ -403,7 +401,7 @@ public final class Flow
     }
 
     /**
-     * An adapter function for absorbing {@link TransformationException} and replace them with a log line and the control {@link InterruptionException}.
+     * An adapter function for absorbing {@link Exception} and replace them with a log line and the control {@link InterruptionException}.
      *
      * @param transformer A bi-transformer instance to be wrapped
      * @param <I1> the type of incoming flow A
@@ -417,7 +415,7 @@ public final class Flow
             try {
                 return transformer.transform(a, b);
             }
-            catch (TransformationException e) {
+            catch (Exception e) {
                 logger.error(e.getMessage(), e);
                 throw InterruptionException.interrupt();
             }
