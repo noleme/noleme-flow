@@ -4,16 +4,12 @@ import com.noleme.flow.Join;
 import com.noleme.flow.Pipe;
 import com.noleme.flow.Sink;
 import com.noleme.flow.Source;
-import com.noleme.flow.actor.accumulator.AccumulationException;
 import com.noleme.flow.actor.accumulator.Accumulator;
 import com.noleme.flow.actor.extractor.ExtractionException;
 import com.noleme.flow.actor.extractor.Extractor;
-import com.noleme.flow.actor.generator.GenerationException;
 import com.noleme.flow.actor.generator.Generator;
 import com.noleme.flow.actor.loader.Loader;
-import com.noleme.flow.actor.loader.LoadingException;
 import com.noleme.flow.actor.transformer.BiTransformer;
-import com.noleme.flow.actor.transformer.TransformationException;
 import com.noleme.flow.actor.transformer.Transformer;
 import com.noleme.flow.impl.pipeline.PipelineRunException;
 import com.noleme.flow.impl.pipeline.runtime.heap.Heap;
@@ -85,7 +81,7 @@ public class Execution
 
             return false;
         }
-        catch (ExtractionException | TransformationException | LoadingException | GenerationException | AccumulationException e) {
+        catch (Exception e) {
             logger.error("Flow node {}#{} has thrown an error: {}", getName(node), node.getUid(), e.getMessage());
 
             throw new PipelineRunException("Node " + node.getClass().getName() + " " + getName(node) + "#" + node.getUid() + " has thrown an exception. (" + e.getClass() + ")", e, heap);
@@ -97,9 +93,9 @@ public class Execution
      * @param source
      * @param heap
      * @return
-     * @throws ExtractionException
+     * @throws Exception
      */
-    private boolean launchSource(Source<?> source, Heap heap) throws ExtractionException
+    private boolean launchSource(Source<?> source, Heap heap) throws Exception
     {
         Extractor extractor = source.getActor();
 
@@ -126,10 +122,10 @@ public class Execution
      * @param pipe
      * @param heap
      * @return
-     * @throws TransformationException
+     * @throws Exception
      */
     @SuppressWarnings("unchecked")
-    private boolean launchPipe(Pipe<?, ?> pipe, Heap heap) throws TransformationException
+    private boolean launchPipe(Pipe<?, ?> pipe, Heap heap) throws Exception
     {
         Transformer transformer = pipe.getActor();
 
@@ -145,10 +141,10 @@ public class Execution
      * @param join
      * @param heap
      * @return
-     * @throws TransformationException
+     * @throws Exception
      */
     @SuppressWarnings("unchecked")
-    private boolean launchJoin(Join<?, ?, ?> join, Heap heap) throws TransformationException
+    private boolean launchJoin(Join<?, ?, ?> join, Heap heap) throws Exception
     {
         BiTransformer transformer = join.getActor();
 
@@ -173,9 +169,10 @@ public class Execution
      * @param sink
      * @param heap
      * @return
+     * @throws Exception
      */
     @SuppressWarnings("unchecked")
-    private boolean launchSink(Sink<?> sink, Heap heap) throws LoadingException
+    private boolean launchSink(Sink<?> sink, Heap heap) throws Exception
     {
         Loader loader = sink.getActor();
 
@@ -200,12 +197,10 @@ public class Execution
      * @param offsetNode
      * @param heap
      * @return
-     * @throws GenerationException
-     * @throws TransformationException
-     * @throws LoadingException
+     * @throws Exception
      * @throws PipelineRunException
      */
-    private boolean launchOffset(OffsetNode offsetNode, Heap heap) throws GenerationException, TransformationException, LoadingException, PipelineRunException
+    private boolean launchOffset(OffsetNode offsetNode, Heap heap) throws Exception, PipelineRunException
     {
         Node node = offsetNode.getNode();
         long offset = offsetNode.getOffset();
@@ -230,9 +225,9 @@ public class Execution
      * @param offset
      * @param heap
      * @return
-     * @throws GenerationException
+     * @throws Exception
      */
-    private boolean launchStreamGenerator(StreamGenerator<?, ?> generatorNode, long offset, Heap heap) throws GenerationException
+    private boolean launchStreamGenerator(StreamGenerator<?, ?> generatorNode, long offset, Heap heap) throws Exception
     {
         Generator generator = heap.getStreamGenerator(generatorNode);
 
@@ -248,10 +243,10 @@ public class Execution
      * @param offset
      * @param heap
      * @return
-     * @throws TransformationException
+     * @throws Exception
      */
     @SuppressWarnings("unchecked")
-    private boolean launchStreamPipe(StreamPipe<?, ?> pipe, long offset, Heap heap) throws TransformationException
+    private boolean launchStreamPipe(StreamPipe<?, ?> pipe, long offset, Heap heap) throws Exception
     {
         Transformer transformer = pipe.getActor();
 
@@ -268,10 +263,10 @@ public class Execution
      * @param offset
      * @param heap
      * @return
-     * @throws TransformationException
+     * @throws Exception
      */
     @SuppressWarnings("unchecked")
-    private boolean launchStreamJoin(StreamJoin<?, ?, ?> join, long offset, Heap heap) throws TransformationException
+    private boolean launchStreamJoin(StreamJoin<?, ?, ?> join, long offset, Heap heap) throws Exception
     {
         BiTransformer transformer = join.getActor();
 
@@ -298,10 +293,10 @@ public class Execution
      * @param offset
      * @param heap
      * @return
-     * @throws LoadingException
+     * @throws Exception
      */
     @SuppressWarnings("unchecked")
-    private boolean launchStreamSink(StreamSink<?> sink, long offset, Heap heap) throws LoadingException
+    private boolean launchStreamSink(StreamSink<?> sink, long offset, Heap heap) throws Exception
     {
         Loader loader = sink.getActor();
 
@@ -317,10 +312,10 @@ public class Execution
      * @param node
      * @param heap
      * @return
-     * @throws AccumulationException
+     * @throws Exception
      */
     @SuppressWarnings("unchecked")
-    private boolean launchStreamAccumulator(StreamAccumulator<?, ?> node, Heap heap) throws AccumulationException
+    private boolean launchStreamAccumulator(StreamAccumulator<?, ?> node, Heap heap) throws Exception
     {
         Accumulator accumulator = node.getActor();
 

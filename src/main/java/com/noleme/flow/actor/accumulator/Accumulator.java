@@ -13,7 +13,7 @@ public interface Accumulator<I, O>
      *
      * @param input
      * @return
-     * @throws AccumulationException
+     * @throws Exception
      */
-    O accumulate(Collection<I> input) throws AccumulationException;
+    O accumulate(Collection<I> input) throws Exception;
 }
