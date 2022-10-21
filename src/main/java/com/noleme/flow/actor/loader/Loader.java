@@ -9,7 +9,7 @@ public interface Loader<T>
     /**
      *
      * @param input
-     * @throws LoadingException
+     * @throws Exception
      */
-    void load(T input) throws LoadingException;
+    void load(T input) throws Exception;
 }

@@ -1,6 +1,5 @@
 package com.noleme.flow.actor.transformer;
 
-import com.noleme.flow.actor.extractor.ExtractionException;
 import com.noleme.flow.actor.extractor.Extractor;
 
 /**
@@ -13,9 +12,9 @@ public interface Transformer<I, O>
      *
      * @param input
      * @return
-     * @throws TransformationException
+     * @throws Exception
      */
-    O transform(I input) throws TransformationException;
+    O transform(I input) throws Exception;
 
     /**
      * Allows the use of a Transformer contract as an Extractor provided a given input.
@@ -25,13 +24,6 @@ public interface Transformer<I, O>
      */
     default Extractor<O> asExtractor(I input)
     {
-        return () -> {
-            try {
-                return this.transform(input);
-            }
-            catch (TransformationException e) {
-                throw new ExtractionException(e.getMessage(), e);
-            }
-        };
+        return () -> this.transform(input);
     }
 }
