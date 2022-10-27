@@ -451,6 +451,35 @@ public final class Flow
     }
 
     /**
+     * @see #nonFatal(Loader, Consumer)
+     */
+    public static <I> Loader<I> nonFatal(Loader<I> extractor)
+    {
+        return nonFatal(extractor, e -> {});
+    }
+
+    /**
+     * An adapter function for absorbing {@link Exception} and replace them with a log line and the control {@link InterruptionException}.
+     *
+     * @param loader A loader instance to be wrapped
+     * @param <I> the type of the upstream flow
+     * @return the resulting wrapper Extractor node
+     */
+    public static <I> Loader<I> nonFatal(Loader<I> loader, Consumer<Exception> handler)
+    {
+        return input -> {
+            try {
+                loader.load(input);
+            }
+            catch (Exception e) {
+                logger.error(e.getMessage(), e);
+                handler.accept(e);
+                throw InterruptionException.interrupt();
+            }
+        };
+    }
+
+    /**
      * An adapter function for leveraging a given {@link Transformer} over a collection of its inputs.
      * It essentially produces a {@link Transformer} that will iterate over the input collection and delegate each item to the provided {@link Transformer} implementation.
      *

@@ -94,20 +94,13 @@ public class Source<O> extends SimpleNode<Extractor<O>> implements FlowOut<O>
         return this;
     }
 
-    /**
-     *
-     * @return
-     */
+    @Override
     public Pipe<O, O> interrupt()
     {
         return this.into(new Interruption<>());
     }
 
-    /**
-     *
-     * @param predicate
-     * @return
-     */
+    @Override
     public Pipe<O, O> interruptIf(Predicate<O> predicate)
     {
         return this.into(new Interruption<>(predicate));
