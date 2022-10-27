@@ -68,20 +68,13 @@ public class StreamSource<O> extends SimpleNode<Supplier<Generator<O>>> implemen
     }
 
 
-    /**
-     *
-     * @return
-     */
+    @Override
     public StreamPipe<O, O> interrupt()
     {
         return this.into(new Interruption<>());
     }
 
-    /**
-     *
-     * @param predicate
-     * @return
-     */
+    @Override
     public StreamPipe<O, O> interruptIf(Predicate<O> predicate)
     {
         return this.into(new Interruption<>(predicate));

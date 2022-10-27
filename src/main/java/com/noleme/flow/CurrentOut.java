@@ -4,10 +4,13 @@ import com.noleme.flow.actor.loader.Loader;
 import com.noleme.flow.actor.transformer.BiTransformer;
 import com.noleme.flow.actor.transformer.Transformer;
 import com.noleme.flow.annotation.Experimental;
+import com.noleme.flow.interruption.Interruption;
 import com.noleme.flow.node.Node;
 import com.noleme.flow.slice.SinkSlice;
 import com.noleme.flow.slice.PipeSlice;
 import com.noleme.flow.stream.StreamOut;
+
+import java.util.function.Predicate;
 
 /**
  * Concept representing a {@link Node} with a potential downstream.
@@ -34,6 +37,29 @@ public interface CurrentOut<O> extends Node
      * @return the resulting Sink node
      */
     CurrentIn<O> into(Loader<O> loader);
+
+    /**
+     * Binds the current node into an {@link Interruption}.
+     * It will trigger a local interruption and allow the rest of the flow to continue.
+     *
+     * @return
+     */
+    default CurrentOut<O> interrupt()
+    {
+        return this.into(new Interruption<>());
+    }
+
+    /**
+     * Binds the current node into an {@link Interruption}.
+     * It will trigger a local interruption if the provided predicate is satisfied, and allow the rest of the flow to continue.
+     *
+     * @param predicate
+     * @return
+     */
+    default CurrentOut<O> interruptIf(Predicate<O> predicate)
+    {
+        return this.into(new Interruption<>());
+    }
 
     /**
      * Synonymous with into(Transformer), has the advantage of not allowing ambiguous lambdas.

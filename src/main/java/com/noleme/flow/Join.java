@@ -105,20 +105,13 @@ public class Join<I1, I2, O> extends BiNode implements FlowOut<O>
     }
 
 
-    /**
-     *
-     * @return
-     */
+    @Override
     public Pipe<O, O> interrupt()
     {
         return this.into(new Interruption<>());
     }
 
-    /**
-     *
-     * @param predicate
-     * @return
-     */
+    @Override
     public Pipe<O, O> interruptIf(Predicate<O> predicate)
     {
         return this.into(new Interruption<>(predicate));

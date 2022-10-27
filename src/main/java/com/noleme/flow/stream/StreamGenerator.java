@@ -80,20 +80,13 @@ public class StreamGenerator<I, O> extends SimpleNode<Function<I, Generator<O>>>
         return this;
     }
 
-    /**
-     *
-     * @return
-     */
+    @Override
     public StreamPipe<O, O> interrupt()
     {
         return this.into(new Interruption<>());
     }
 
-    /**
-     *
-     * @param predicate
-     * @return
-     */
+    @Override
     public StreamPipe<O, O> interruptIf(Predicate<O> predicate)
     {
         return this.into(new Interruption<>(predicate));

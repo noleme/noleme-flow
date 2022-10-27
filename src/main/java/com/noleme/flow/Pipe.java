@@ -90,20 +90,13 @@ public class Pipe<I, O> extends SimpleNode<Transformer<I, O>> implements FlowIn<
         return this;
     }
 
-    /**
-     *
-     * @return
-     */
+    @Override
     public Pipe<O, O> interrupt()
     {
         return this.into(new Interruption<>());
     }
 
-    /**
-     *
-     * @param predicate
-     * @return
-     */
+    @Override
     public Pipe<O, O> interruptIf(Predicate<O> predicate)
     {
         return this.into(new Interruption<>(predicate));
