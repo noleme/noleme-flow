@@ -3,6 +3,7 @@
 [![Maven Build](https://github.com/noleme/noleme-flow/actions/workflows/maven.yml/badge.svg?branch=master)](https://github.com/noleme/noleme-flow/actions/workflows/maven.yml)
 [![Maven Central Repository](https://maven-badges.herokuapp.com/maven-central/com.noleme/noleme-flow/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.noleme/noleme-flow)
 [![javadoc](https://javadoc.io/badge2/com.noleme/noleme-flow/javadoc.svg)](https://javadoc.io/doc/com.noleme/noleme-flow)
+[![coverage](https://codecov.io/gh/noleme/noleme-flow/branch/master/graph/badge.svg?token=Y9FD38RLDE)](https://codecov.io/gh/noleme/noleme-flow)
 ![GitHub](https://img.shields.io/github/license/noleme/noleme-flow)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fnoleme%2Fnoleme-flow.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fnoleme%2Fnoleme-flow?ref=badge_shield)
 
