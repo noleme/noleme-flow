@@ -266,39 +266,4 @@ public class ConcurrentHashHeap implements Heap
             && container.get(offset) != null
         ;
     }
-
-    @Override
-    public String dump() {
-        var sb = new StringBuilder();
-
-        sb.append(this).append("\n");
-        sb.append("  contentlock:\n");
-        sb.append("    read: ").append(this.contentLock.read).append("\n");
-        sb.append("    write: ").append(this.contentLock.write).append("\n");
-        sb.append("  streamlock:\n");
-        sb.append("    read: ").append(this.streamLock.read).append("\n");
-        sb.append("    write: ").append(this.streamLock.write).append("\n");
-        sb.append("  contents:\n");
-        this.contents.forEach((uid, counter) -> {
-            sb.append("    ").append(uid).append(": ").append(counter.getValue()).append(" (count=").append(counter.getCount()).append(")\n");
-        });
-        sb.append("  streams:\n");
-        sb.append("    generators:\n");
-        this.generators.forEach((uid, gen) -> {
-            sb.append("      ").append(uid).append(": ").append(gen).append(" (hasNext=").append(gen.hasNext()).append(")\n");
-        });
-        sb.append("    offsets:\n");
-        this.offsets.forEach((uid, offset) -> {
-            sb.append("      ").append(uid).append(": ").append(offset).append("\n");
-        });
-        sb.append("    contents:\n");
-        this.streamContents.forEach((uid, container) -> {
-            sb.append("      ").append(uid).append(":\n");
-            container.stream().forEach(counter -> {
-                sb.append("        ").append(counter.getValue()).append(" (count=").append(counter.getCount()).append(")\n");
-            });
-        });
-
-        return sb.toString();
-    }
 }

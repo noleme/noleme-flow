@@ -6,6 +6,8 @@ import com.noleme.flow.FlowDealer;
 import com.noleme.flow.FlowState;
 import com.noleme.flow.compiler.CompilationException;
 import com.noleme.flow.compiler.RunException;
+import com.noleme.flow.impl.parallel.runtime.executor.Executors;
+import com.noleme.flow.io.input.Input;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -30,6 +32,32 @@ public class ParallelRuntimeTest
             });
 
         Flow.runAsParallel(pipe);
+        Assertions.assertTrue(pipeAssertion.isActivated());
+    }
+
+    @Test
+    void test_parallelArg() throws RunException, CompilationException
+    {
+        var pipeAssertion = new FlowAssertion();
+        var flow = Flow
+            .from(() -> "This is my string.")
+            .sink(str -> pipeAssertion.activate())
+        ;
+
+        Flow.runAsParallel(2, flow);
+        Assertions.assertTrue(pipeAssertion.isActivated());
+    }
+
+    @Test
+    void test_executorArg() throws RunException, CompilationException
+    {
+        var pipeAssertion = new FlowAssertion();
+        var flow = Flow
+            .from(() -> "This is my string.")
+            .sink(str -> pipeAssertion.activate())
+        ;
+
+        Flow.runAsParallel(() -> Executors.newFixedThreadPool(2), Input.emptyInput, flow);
         Assertions.assertTrue(pipeAssertion.isActivated());
     }
 

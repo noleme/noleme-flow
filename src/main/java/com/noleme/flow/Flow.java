@@ -382,7 +382,7 @@ public final class Flow
                 return extractor.extract();
             }
             catch (Exception e) {
-                logger.error(e.getMessage(), e);
+                logger.debug(e.getMessage(), e);
                 handler.accept(e);
                 throw InterruptionException.interrupt();
             }
@@ -412,7 +412,7 @@ public final class Flow
                 return transformer.transform(input);
             }
             catch (Exception e) {
-                logger.error(e.getMessage(), e);
+                logger.debug(e.getMessage(), e);
                 handler.accept(e);
                 throw InterruptionException.interrupt();
             }
@@ -443,7 +443,7 @@ public final class Flow
                 return transformer.transform(a, b);
             }
             catch (Exception e) {
-                logger.error(e.getMessage(), e);
+                logger.debug(e.getMessage(), e);
                 handler.accept(e);
                 throw InterruptionException.interrupt();
             }
@@ -472,7 +472,7 @@ public final class Flow
                 loader.load(input);
             }
             catch (Exception e) {
-                logger.error(e.getMessage(), e);
+                logger.debug(e.getMessage(), e);
                 handler.accept(e);
                 throw InterruptionException.interrupt();
             }

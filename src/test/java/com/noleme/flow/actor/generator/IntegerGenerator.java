@@ -12,6 +12,11 @@ public class IntegerGenerator implements Generator<Integer>
     private final Function<Integer, Integer> func;
     private int i;
 
+    public IntegerGenerator(int start, int max)
+    {
+        this(start, max, i -> ++i);
+    }
+
     public IntegerGenerator(int start, int max, Function<Integer, Integer> func)
     {
         this.i = start;

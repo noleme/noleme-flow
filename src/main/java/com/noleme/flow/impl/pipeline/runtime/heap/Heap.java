@@ -125,8 +125,4 @@ public interface Heap
      * @return
      */
     Output getOutput();
-
-    default String dump() {
-        return this.toString();
-    }
 }
