@@ -7,19 +7,19 @@ package com.noleme.flow.io.input;
 class InputEmpty implements Input
 {
     @Override
-    public <T> InputMap and(String identifier, T value)
+    public <T> InputMap and(Key<T> key, T value)
     {
         throw new RuntimeException("The 'and' method cannot be called on an empty input.");
     }
 
     @Override
-    public boolean has(String identifier)
+    public boolean has(Key<?> key)
     {
         return false;
     }
 
     @Override
-    public Object get(String identifier)
+    public <T> T get(Key<T> key)
     {
         return null;
     }

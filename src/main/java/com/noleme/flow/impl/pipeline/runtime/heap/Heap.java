@@ -1,6 +1,7 @@
 package com.noleme.flow.impl.pipeline.runtime.heap;
 
 import com.noleme.flow.actor.generator.Generator;
+import com.noleme.flow.io.input.Key;
 import com.noleme.flow.io.output.Output;
 import com.noleme.flow.stream.StreamGenerator;
 
@@ -100,17 +101,17 @@ public interface Heap
 
     /**
      *
-     * @param identifier
+     * @param key
      * @return
      */
-    boolean hasInput(String identifier);
+    boolean hasInput(Key<?> key);
 
     /**
      *
-     * @param identifier
+     * @param key
      * @return
      */
-    Object getInput(String identifier);
+    <T> T getInput(Key<T> key);
 
     /**
      *

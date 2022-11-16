@@ -6,6 +6,7 @@ import com.noleme.flow.impl.pipeline.runtime.heap.Counter;
 import com.noleme.flow.impl.pipeline.runtime.heap.CounterContainer;
 import com.noleme.flow.impl.pipeline.runtime.heap.Heap;
 import com.noleme.flow.io.input.Input;
+import com.noleme.flow.io.input.Key;
 import com.noleme.flow.io.output.OutputMap;
 import com.noleme.flow.io.output.WriteableOutput;
 import com.noleme.flow.stream.StreamGenerator;
@@ -228,15 +229,15 @@ public class ConcurrentHashHeap implements Heap
     }
 
     @Override
-    public boolean hasInput(String identifier)
+    public boolean hasInput(Key<?> key)
     {
-        return this.input.has(identifier);
+        return this.input.has(key);
     }
 
     @Override
-    public Object getInput(String identifier)
+    public <T> T getInput(Key<T> key)
     {
-        return this.input.get(identifier);
+        return this.input.get(key);
     }
 
     @Override

@@ -16,6 +16,7 @@ import com.noleme.flow.impl.pipeline.runtime.heap.Heap;
 import com.noleme.flow.impl.pipeline.runtime.node.OffsetNode;
 import com.noleme.flow.interruption.InterruptionException;
 import com.noleme.flow.io.input.InputExtractor;
+import com.noleme.flow.io.input.Key;
 import com.noleme.flow.io.output.Recipient;
 import com.noleme.flow.node.Node;
 import com.noleme.flow.stream.*;
@@ -104,11 +105,11 @@ public class Execution
         /* If the extractor is an InputExtractor, the output value comes from the provided input instead of the extractor itself ; the extractor only holds a reference to the expected input */
         if (extractor instanceof InputExtractor)
         {
-            var identifier = ((InputExtractor<?>) extractor).getIdentifier();
-            if (!heap.hasInput(identifier))
-                throw new ExtractionException("The InputExtractor in node #"+source.getUid()+" couldn't find its expected input "+identifier);
+            Key<?> key = ((InputExtractor<?>) extractor).getKey();
+            if (!heap.hasInput(key))
+                throw new ExtractionException("The InputExtractor in node #" + source.getUid() + " couldn't find its expected input");
 
-            heap.push(source.getUid(), heap.getInput(identifier), source.getDownstream().size());
+            heap.push(source.getUid(), heap.getInput(key), source.getDownstream().size());
         }
         /* Otherwise normal rules apply */
         else
