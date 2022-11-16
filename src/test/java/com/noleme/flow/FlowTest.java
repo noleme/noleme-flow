@@ -83,6 +83,18 @@ public class FlowTest
     }
 
     @Test
+    public void testNonFatal_extractor_nonTriggered()
+    {
+        var probeSink = new AtomicInteger(0);
+        var nfSource = Flow
+            .from(nonFatal(() -> 1))
+            .sink(probeSink::addAndGet)
+        ;
+        Assertions.assertDoesNotThrow(() -> Flow.runAsPipeline(nfSource));
+        Assertions.assertEquals(1, probeSink.get());
+    }
+
+    @Test
     public void testNonFatal_extractorWithConsumer()
     {
         var probeSink = new AtomicInteger(0);
@@ -113,6 +125,20 @@ public class FlowTest
 
         Assertions.assertDoesNotThrow(() -> Flow.runAsPipeline(nfPipe));
         Assertions.assertEquals(0, probeSink.get());
+    }
+
+    @Test
+    public void testNonFatal_transformer_nonTriggered()
+    {
+        var probeSink = new AtomicInteger(0);
+        var nfPipe = Flow
+            .from(() -> 1)
+            .pipe(nonFatal((Transformer<Integer, Integer>) i -> i))
+            .sink(probeSink::addAndGet)
+        ;
+
+        Assertions.assertDoesNotThrow(() -> Flow.runAsPipeline(nfPipe));
+        Assertions.assertEquals(1, probeSink.get());
     }
 
     @Test
@@ -151,6 +177,21 @@ public class FlowTest
     }
 
     @Test
+    public void testNonFatal_bitransformer_nonTriggered()
+    {
+        var probeSink = new AtomicInteger(0);
+        var nfPipe0 = Flow.from(() -> 1);
+        var nfPipe1 = Flow
+            .from(() -> 1)
+            .join(nfPipe0, nonFatal(Integer::sum))
+            .sink(probeSink::addAndGet)
+        ;
+
+        Assertions.assertDoesNotThrow(() -> Flow.runAsPipeline(nfPipe1));
+        Assertions.assertEquals(2, probeSink.get());
+    }
+
+    @Test
     public void testNonFatal_bitransformerWithConsumer()
     {
         var probeSink = new AtomicInteger(0);
@@ -176,6 +217,16 @@ public class FlowTest
             .sink(nonFatal((Loader<Integer>) i -> {
                 throw new Exception();
             }))
+        ;
+
+        Assertions.assertDoesNotThrow(() -> Flow.runAsPipeline(nfSink));
+    }
+
+    @Test
+    public void testNonFatal_loader_nonTriggered()
+    {
+        var nfSink = Flow.from(() -> 1)
+            .sink(nonFatal(i -> {}))
         ;
 
         Assertions.assertDoesNotThrow(() -> Flow.runAsPipeline(nfSink));
