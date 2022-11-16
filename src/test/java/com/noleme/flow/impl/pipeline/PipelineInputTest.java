@@ -38,6 +38,26 @@ public class PipelineInputTest
     }
 
     @Test
+    void testInputIntegerTyped() throws RunException, CompilationException
+    {
+        var assertion = new FlowAssertion();
+
+        var input = Input.key(Integer.class);
+        var flow = Flow
+            .from(input)
+            .pipe(i -> i + 2)
+            .sink(i -> {
+                assertion.activate();
+                Assertions.assertEquals(5, i);
+            })
+        ;
+
+        Flow.runAsPipeline(Input.of(input, 3), flow);
+
+        Assertions.assertTrue(assertion.isActivated());
+    }
+
+    @Test
     void testInputArray() throws RunException, CompilationException
     {
         var flow = Flow
@@ -106,4 +126,8 @@ public class PipelineInputTest
         var output3 = runtime.run(Input.of("my_input", List.of(234, 244, 2)));
         Assertions.assertEquals(486, output3.get(flow));
     }
+
+    private interface A {}
+    private static class B implements A {}
+    private static class C implements A {}
 }

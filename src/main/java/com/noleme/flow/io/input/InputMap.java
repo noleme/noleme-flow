@@ -9,7 +9,7 @@ import java.util.Map;
  */
 public class InputMap implements Input
 {
-    private final Map<String, Object> values;
+    private final Map<Key<?>, Object> values;
 
     InputMap()
     {
@@ -17,21 +17,23 @@ public class InputMap implements Input
     }
 
     @Override
-    public <T> InputMap and(String identifier, T value)
+    public <T> InputMap and(Key<T> key, T value)
     {
-        this.values.put(identifier, value);
+        this.values.put(key, key.validate(value));
         return this;
     }
 
     @Override
-    public boolean has(String identifier)
+    public boolean has(Key<?> key)
     {
-        return this.values.containsKey(identifier);
+        return this.values.containsKey(key);
     }
 
     @Override
-    public Object get(String identifier)
+    public <T> T get(Key<T> key)
     {
-        return this.values.get(identifier);
+        /* Type is checked upon insertion */
+        //noinspection unchecked
+        return (T) this.values.get(key);
     }
 }

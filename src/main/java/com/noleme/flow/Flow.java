@@ -16,6 +16,7 @@ import com.noleme.flow.impl.pipeline.PipelineCompiler;
 import com.noleme.flow.interruption.InterruptionException;
 import com.noleme.flow.io.input.Input;
 import com.noleme.flow.io.input.InputExtractor;
+import com.noleme.flow.io.input.Key;
 import com.noleme.flow.io.output.Output;
 import com.noleme.flow.node.Node;
 import com.noleme.flow.slice.SourceSlice;
@@ -192,6 +193,18 @@ public final class Flow
     }
 
     /**
+     * Returns a {@link Source} node from a dynamic input referenced by its input key within the {@link Input} container.
+     *
+     * @param key the key of a value within the Input container
+     * @param <O> the expected type of the value
+     * @return the resulting Source node
+     */
+    public static <O> Source<O> from(Key<O> key)
+    {
+        return new Source<>(new InputExtractor<>(key));
+    }
+
+    /**
      * Returns a {@link Source} node from a dynamic input referenced by its input identifier within the {@link Input} container.
      *
      * @param inputIdentifier the identifier of a value within the Input container
@@ -200,7 +213,8 @@ public final class Flow
      */
     public static <O> Source<O> from(String inputIdentifier)
     {
-        return new Source<>(new InputExtractor<>(inputIdentifier));
+        //noinspection unchecked
+        return (Source<O>) new Source<>(new InputExtractor<>(Input.key(inputIdentifier)));
     }
 
     /**

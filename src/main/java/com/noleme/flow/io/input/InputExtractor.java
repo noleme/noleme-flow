@@ -6,13 +6,13 @@ import com.noleme.flow.actor.extractor.Extractor;
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
  * Created on 2020/12/23
  */
-public final class InputExtractor <T> implements Extractor<T>
+public final class InputExtractor<T> implements Extractor<T>
 {
-    private final String identifier;
+    private final Key<T> key;
 
-    public InputExtractor(String identifier)
+    public InputExtractor(Key<T> key)
     {
-        this.identifier = identifier;
+        this.key = key;
     }
 
     @Override
@@ -21,8 +21,8 @@ public final class InputExtractor <T> implements Extractor<T>
         throw new IllegalStateException("The InputExtractor is a special-case extractor and its extract() method is not expected to be called.");
     }
 
-    public String getIdentifier()
+    public Key<T> getKey()
     {
-        return this.identifier;
+        return this.key;
     }
 }
