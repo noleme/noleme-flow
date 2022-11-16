@@ -68,5 +68,13 @@ public class KeyTest
         Assertions.assertDoesNotThrow(() -> key2.validate(new ArbitraryObject()));
     }
 
+    @Test
+    public void testIllegalCreation()
+    {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> new Key<>(null));
+        Assertions.assertThrows(IllegalArgumentException.class, () -> new Key<>(Object.class, null));
+        Assertions.assertThrows(IllegalArgumentException.class, () -> new Key<>(null, null));
+    }
+
     private static class ArbitraryObject {}
 }

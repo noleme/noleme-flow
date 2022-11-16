@@ -19,7 +19,7 @@ public class Key<T>
 
     Key(Class<T> type, String name)
     {
-        this(type, UUID.nameUUIDFromBytes(name.getBytes(StandardCharsets.UTF_8)));
+        this(type, name != null ? UUID.nameUUIDFromBytes(name.getBytes(StandardCharsets.UTF_8)) : null);
     }
 
     private Key(Class<T> type, UUID uid)
