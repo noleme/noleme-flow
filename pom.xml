@@ -28,7 +28,7 @@
     </developers>
 
     <properties>
-        <slf4j.version>1.7.36</slf4j.version>
+        <slf4j.version>2.0.7</slf4j.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.release>11</maven.compiler.release>
         <jacoco.version>0.8.9</jacoco.version>
