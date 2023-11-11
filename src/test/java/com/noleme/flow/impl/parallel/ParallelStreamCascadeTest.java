@@ -8,67 +8,71 @@ import com.noleme.flow.impl.pipeline.stream.IterableGenerator;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.util.Collection;
 import java.util.List;
 
 /**
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
  * Created on 2020/12/02
  */
-public class ParallelStreamInterruptionTest
+public class ParallelStreamCascadeTest
 {
     @Test
-    void testStreamInterruptAlways() throws RunException, CompilationException
+    void testStream() throws RunException, CompilationException
     {
         var assertion = new FlowAssertion();
 
         var flow = Flow
-            .from(() -> List.of(1, 2, 3, 4, 5))
+            .from(() -> List.of(List.of(1, 2, 3), List.of(4, 5, 6)))
+            .stream(IterableGenerator::new)
             .stream(IterableGenerator::new)
             .into(i -> i + 1)
-            .interrupt()
-            .sink(i -> assertion.activate())
-        ;
-
-        Flow.runAsParallel(flow);
-
-        Assertions.assertFalse(assertion.isActivated());
-        Assertions.assertEquals(0, assertion.getActivationCount());
-    }
-
-    @Test
-    void testStreamInterruptIf() throws RunException, CompilationException
-    {
-        var assertion = new FlowAssertion();
-
-        var flow = Flow
-            .from(() -> List.of(1, 2, 3, 4, 5))
-            .stream(IterableGenerator::new)
-            .into(i -> i + 1)
-            .interruptIf(i -> i <= 3)
             .sink(i -> assertion.activate())
         ;
 
         Flow.runAsParallel(flow);
 
         Assertions.assertTrue(assertion.isActivated());
-        Assertions.assertEquals(3, assertion.getActivationCount());
+        Assertions.assertEquals(6, assertion.getActivationCount());
     }
 
     @Test
-    void testStreamInterruptIfAccumulate() throws RunException, CompilationException
+    void testStreamAggregation() throws RunException, CompilationException
     {
+        var assertion = new FlowAssertion();
+
         var flow = Flow
-            .from(() -> List.of(1, 2, 3, 4, 5))
+            .from(() -> List.of(List.of(1, 2, 3), List.of(4, 5, 6)))
             .stream(IterableGenerator::new)
-            .interruptIf(i -> i < 3)
+            .stream(IterableGenerator::new)
             .into(i -> i + 1)
-            .accumulate(Collection::size).asFlow()
-            .collect()
+            .accumulate()
+            .sink(i -> assertion.activate())
         ;
 
-        var output = Flow.runAsParallel(flow);
+        Flow.runAsParallel(flow);
 
-        Assertions.assertEquals(3, output.get(flow));
+        Assertions.assertTrue(assertion.isActivated());
+        Assertions.assertEquals(2, assertion.getActivationCount());
+    }
+
+    @Test
+    void testStreamDoubleAggregation() throws RunException, CompilationException
+    {
+        var assertion = new FlowAssertion();
+
+        var flow = Flow
+            .from(() -> List.of(List.of(1, 2, 3), List.of(4, 5, 6)))
+            .stream(IterableGenerator::new)
+            .stream(IterableGenerator::new)
+            .into(i -> i + 1)
+            .accumulate()
+            //.accumulate()
+            .sink(i -> assertion.activate())
+        ;
+
+        Flow.runAsParallel(flow);
+
+        Assertions.assertTrue(assertion.isActivated());
+        Assertions.assertEquals(5, assertion.getActivationCount());
     }
 }

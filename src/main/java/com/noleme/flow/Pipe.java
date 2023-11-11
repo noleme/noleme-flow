@@ -55,7 +55,7 @@ public class Pipe<I, O> extends SimpleNode<Transformer<I, O>> implements FlowIn<
     @Override
     public <N> StreamGenerator<O, N> stream(Function<O, Generator<N>> generatorSupplier)
     {
-        var pipe = new StreamGenerator<>(generatorSupplier);
+        var pipe = new StreamGenerator<>(generatorSupplier, this.depth + 1);
         this.bind(pipe);
         return pipe;
     }

@@ -9,9 +9,7 @@
 
 This library provides features enabling DAG structuring of data processing programs such as ETLs.
 
-Implementations found in this package shouldn't be tied to any specific Noleme project.
-
-_Note: This library is considered as "in beta" and as such significant API changes may occur without prior warning._
+_Note: This library is considered as "in beta" and as such API changes may occur without prior warning. The library adheres to semver and flags "possibly unstable" APIs as such with an `@Experimental` documented annotation._
 
 ## I. Installation
 
