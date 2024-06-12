@@ -6,6 +6,7 @@ import java.util.Collection;
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
  * Created on 2020/12/03
  */
+@FunctionalInterface
 public interface Accumulator<I, O>
 {
     /**

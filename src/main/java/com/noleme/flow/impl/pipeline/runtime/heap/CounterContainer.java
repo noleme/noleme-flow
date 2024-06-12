@@ -1,7 +1,5 @@
 package com.noleme.flow.impl.pipeline.runtime.heap;
 
-import com.noleme.flow.impl.parallel.runtime.state.RRWLock;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -12,7 +10,6 @@ import java.util.stream.Stream;
  */
 public class CounterContainer
 {
-    private final RRWLock lock = new RRWLock();
     private final Map<Long, Counter> data;
 
     public CounterContainer()
@@ -27,13 +24,7 @@ public class CounterContainer
      */
     public Counter get(long offset)
     {
-        try {
-            this.lock.read.lock();
-            return this.data.get(offset);
-        }
-        finally {
-            this.lock.read.unlock();
-        }
+        return this.data.get(offset);
     }
 
     /**
@@ -43,13 +34,7 @@ public class CounterContainer
      */
     public Counter remove(long offset)
     {
-        try {
-            this.lock.write.lock();
-            return this.data.remove(offset);
-        }
-        finally {
-            this.lock.write.unlock();
-        }
+        return this.data.remove(offset);
     }
 
     /**
@@ -58,13 +43,7 @@ public class CounterContainer
      */
     public Stream<Counter> stream()
     {
-        try {
-            this.lock.read.lock();
-            return this.data.values().stream();
-        }
-        finally {
-            this.lock.read.unlock();
-        }
+        return this.data.values().stream();
     }
 
     /**
@@ -73,15 +52,9 @@ public class CounterContainer
      */
     public int removeConsumed()
     {
-        try {
-            this.lock.write.lock();
-            this.data.values().removeIf(counter -> counter.getCount() == 0);
+        this.data.values().removeIf(counter -> counter.getCount() == 0);
 
-            return this.data.size();
-        }
-        finally {
-            this.lock.write.unlock();
-        }
+        return this.data.size();
     }
 
     /**
@@ -91,12 +64,6 @@ public class CounterContainer
      */
     public void set(long offset, Counter counter)
     {
-        try {
-            this.lock.write.lock();
-            this.data.put(offset, counter);
-        }
-        finally {
-            this.lock.write.unlock();
-        }
+        this.data.put(offset, counter);
     }
 }

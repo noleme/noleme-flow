@@ -100,7 +100,7 @@ public class PipelineSliceTest
         Recipient<String> f0 = Flow
             .from(new TestStreamSource())
             .pipe(new TestPipe()).asStream()
-            .accumulate(Object::toString)
+            .accumulate(Object::toString).asFlow()
             .collect()
         ;
 

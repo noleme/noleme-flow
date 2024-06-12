@@ -61,7 +61,7 @@ public class PipelineStreamInterruptionTest
             .stream(IterableGenerator::new)
             .into(i -> i + 1)
             .interruptIf(i -> i <= 3)
-            .accumulate(Collection::size)
+            .accumulate(Collection::size).asFlow()
             .collect()
         ;
 

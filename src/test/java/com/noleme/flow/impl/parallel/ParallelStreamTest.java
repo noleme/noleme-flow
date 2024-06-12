@@ -76,7 +76,7 @@ public class ParallelStreamTest
                 .reduce(Integer::sum)
                 .orElseThrow(() -> new AccumulationException("Could not sum stream data."))
             )
-            .driftSink(i -> assertion.activate())
+            .driftSink(i -> assertion.activate()).asFlow()
             .collect()
         ;
 
@@ -96,7 +96,7 @@ public class ParallelStreamTest
             .accumulate(ls -> ls.stream()
                 .reduce(Integer::sum)
                 .orElseThrow(() -> new AccumulationException("Could not sum stream data."))
-            )
+            ).asFlow()
             .collect()
         ;
 
@@ -121,7 +121,7 @@ public class ParallelStreamTest
             .accumulate(ls -> ls.stream()
                 .reduce(Integer::sum)
                 .orElseThrow(() -> new AccumulationException("Could not sum stream data."))
-            )
+            ).asFlow()
             .collect()
         ;
 
@@ -153,7 +153,7 @@ public class ParallelStreamTest
                 .reduce(Integer::sum)
                 .orElseThrow(() -> new AccumulationException("Could not sum stream data."))
             )
-            .join(flowB, (current, b) -> current * b)
+            .join(flowB, (current, b) -> current * b).asFlow()
             .collect()
         ;
 
@@ -169,7 +169,7 @@ public class ParallelStreamTest
         var flow = Flow
             .stream(() -> new IntegerGenerator(1, 100_000_000, i -> i * 3))
             .into(i -> i + 1)
-            .accumulate(Collection::size)
+            .accumulate(Collection::size).asFlow()
             .collect()
         ;
 
@@ -190,10 +190,10 @@ public class ParallelStreamTest
         var flowB = Flow
             .stream(() -> new IntegerGenerator(1, 500_000_000, i -> i * 2)).setMaxParallelism(2)
             .into(i -> i + 2)
-            .accumulate(Collection::size)
+            .accumulate(Collection::size).asFlow()
         ;
 
-        var flow = flowA.join(flowB, Integer::sum)
+        var flow = flowA.join(flowB, Integer::sum).asFlow()
             .collect()
         ;
 
@@ -208,7 +208,7 @@ public class ParallelStreamTest
         var flowA = Flow
             .stream(() -> new IntegerGenerator(1, 500_000_000, i -> i * 3)).setMaxParallelism(2)
             .into(i -> i + 1)
-            .accumulate(Collection::size)
+            .accumulate(Collection::size).asFlow()
         ;
 
         var flowB = Flow
@@ -218,7 +218,7 @@ public class ParallelStreamTest
             .accumulate(ls -> ls.stream()
                 .reduce(Integer::sum)
                 .orElseThrow(() -> new AccumulationException("Could not sum stream data."))
-            )
+            ).asFlow()
             .collect()
         ;
 
@@ -233,7 +233,7 @@ public class ParallelStreamTest
         var flowA = Flow
             .stream(() -> new LongGenerator(1, 500_000_000L, i -> i * 3)).setMaxParallelism(2)
             .into(i -> i + 1)
-            .accumulate(Collection::size)
+            .accumulate(Collection::size).asFlow()
         ;
 
         var flowB = Flow
@@ -243,7 +243,7 @@ public class ParallelStreamTest
             .accumulate(ls -> ls.stream()
                 .reduce(Long::sum)
                 .orElseThrow(() -> new AccumulationException("Could not sum stream data."))
-            )
+            ).asFlow()
         ;
 
         var flow = flowA.join(flowB, Long::sum)
@@ -271,7 +271,7 @@ public class ParallelStreamTest
             .stream(IterableGenerator::new)
             .into(i -> i + 2)
             .driftSink(i -> assertion.activate())
-            .accumulate(Collection::size)
+            .accumulate(Collection::size).asFlow()
             .collect()
         ;
 
@@ -297,7 +297,7 @@ public class ParallelStreamTest
             .accumulate(ls -> ls.stream()
                 .reduce(Integer::sum)
                 .orElseThrow(() -> new AccumulationException("Could not sum stream data."))
-            )
+            ).asFlow()
         ;
 
         var flowB = Flow
@@ -308,7 +308,7 @@ public class ParallelStreamTest
             .accumulate(ls -> ls.stream()
                 .reduce(Integer::sum)
                 .orElseThrow(() -> new AccumulationException("Could not sum stream data."))
-            )
+            ).asFlow()
         ;
 
         var flow = flowA
@@ -354,7 +354,7 @@ public class ParallelStreamTest
             .accumulate(ls -> ls.stream()
                 .reduce(Integer::sum)
                 .orElseThrow(() -> new AccumulationException("Could not sum stream data."))
-            )
+            ).asFlow()
             .collect()
         ;
 

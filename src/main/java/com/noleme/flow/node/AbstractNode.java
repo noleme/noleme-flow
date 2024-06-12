@@ -9,6 +9,7 @@ import java.util.*;
 public abstract class AbstractNode implements Node
 {
     private final String uid;
+    protected int depth;
     protected String name;
     final List<Node> downstream;
     final List<Node> requirements;
@@ -20,6 +21,7 @@ public abstract class AbstractNode implements Node
     public AbstractNode()
     {
         this.uid = UUID.randomUUID().toString();
+        this.depth = 0;
         this.downstream = new ArrayList<>();
         this.requirements = new ArrayList<>();
         this.requiredBy = new ArrayList<>();
@@ -34,6 +36,17 @@ public abstract class AbstractNode implements Node
     public String getName()
     {
         return this.name;
+    }
+
+    protected Node setDepth(int depth)
+    {
+        this.depth = depth;
+        return this;
+    }
+
+    public int getDepth()
+    {
+        return this.depth;
     }
 
     @Override
