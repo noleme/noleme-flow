@@ -22,11 +22,14 @@ public class StreamGenerator<I, O> extends SimpleNode<Function<I, Generator<O>>>
     private int maxParallelism = 1;
 
     /**
+     *
      * @param generatorSupplier
+     * @param depth
      */
-    public StreamGenerator(Function<I, Generator<O>> generatorSupplier)
+    public StreamGenerator(Function<I, Generator<O>> generatorSupplier, int depth)
     {
         super(generatorSupplier);
+        this.setDepth(depth);
     }
 
     /**
@@ -42,7 +45,7 @@ public class StreamGenerator<I, O> extends SimpleNode<Function<I, Generator<O>>>
     @Override
     public <NO> StreamPipe<O, NO> into(Transformer<O, NO> transformer)
     {
-        var pipe = new StreamPipe<>(transformer);
+        var pipe = new StreamPipe<>(transformer, this.depth);
         this.bind(pipe);
         return pipe;
     }
@@ -50,7 +53,7 @@ public class StreamGenerator<I, O> extends SimpleNode<Function<I, Generator<O>>>
     @Override
     public StreamSink<O> into(Loader<O> loader)
     {
-        var sink = new StreamSink<>(loader);
+        var sink = new StreamSink<>(loader, this.depth);
         this.bind(sink);
         return sink;
     }
@@ -58,13 +61,21 @@ public class StreamGenerator<I, O> extends SimpleNode<Function<I, Generator<O>>>
     @Override
     public <JI, JO> StreamJoin<O, JI, JO> join(FlowOut<JI> input, BiTransformer<O, JI, JO> transformer)
     {
-        return new StreamJoin<>(this, input, transformer);
+        return new StreamJoin<>(this, input, transformer, this.depth);
+    }
+
+    @Override
+    public <N> StreamGenerator<O, N> stream(Function<O, Generator<N>> generatorSupplier)
+    {
+        var pipe = new StreamGenerator<>(generatorSupplier, this.depth + 1);
+        this.bind(pipe);
+        return pipe;
     }
 
     @Override
     public <N> StreamAccumulator<O, N> accumulate(Accumulator<O, N> accumulator)
     {
-        var acc = new StreamAccumulator<>(accumulator);
+        var acc = new StreamAccumulator<>(accumulator, this.depth - 1);
         this.bind(acc);
         return acc;
     }

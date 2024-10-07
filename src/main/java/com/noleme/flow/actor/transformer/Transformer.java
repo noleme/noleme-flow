@@ -6,6 +6,7 @@ import com.noleme.flow.actor.extractor.Extractor;
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
  * Created on 2020/02/26
  */
+@FunctionalInterface
 public interface Transformer<I, O>
 {
     /**

@@ -2,6 +2,8 @@ package com.noleme.flow.impl.pipeline.runtime.heap;
 
 import com.noleme.flow.actor.generator.Generator;
 import com.noleme.flow.io.input.Key;
+import com.noleme.flow.impl.pipeline.runtime.node.WorkingKey;
+import com.noleme.flow.impl.pipeline.runtime.node.WorkingNode;
 import com.noleme.flow.io.output.Output;
 import com.noleme.flow.stream.StreamGenerator;
 
@@ -10,37 +12,36 @@ import java.util.Collection;
 /**
  * @author Pierre Lecerf (pierre.lecerf@gmail.com) on 23/07/2015.
  */
-@SuppressWarnings("rawtypes")
 public interface Heap
 {
     /**
      *
-     * @param id String
-     * @param returnValue Object
+     * @param key
+     * @param returnValue
      * @param counter
      */
-    Heap push(String id, Object returnValue, int counter);
+    Heap push(WorkingKey key, Object returnValue, int counter);
 
     /**
      *
-     * @param id String
-     * @return boolean
-     */
-    boolean has(String id);
-
-    /**
-     *
-     * @param id String
-     * @return Object
-     */
-    Object peek(String id);
-
-    /**
-     *
-     * @param id
+     * @param key
      * @return
      */
-    Object consume(String id);
+    boolean has(WorkingKey key);
+
+    /**
+     *
+     * @param key
+     * @return
+     */
+    Object peek(WorkingKey key);
+
+    /**
+     *
+     * @param key
+     * @return
+     */
+    Object consume(WorkingKey key);
 
     /* Stream related methods */
 
@@ -49,55 +50,30 @@ public interface Heap
      * @param node
      * @return
      */
-    Generator getStreamGenerator(StreamGenerator node);
+    @SuppressWarnings("rawtypes")
+    Generator getStreamGenerator(WorkingNode<StreamGenerator> node);
 
     /**
      *
      * @param node
      * @return
      */
-    long getNextStreamOffset(StreamGenerator node);
+    @SuppressWarnings("rawtypes")
+    long getNextStreamOffset(WorkingNode<StreamGenerator> node);
 
     /**
      *
-     * @param id
-     * @param offset
-     * @param returnValue
-     * @param counter
+     * @param key
      * @return
      */
-    Heap push(String id, long offset, Object returnValue, int counter);
+    Collection<Object> peekAll(WorkingKey key);
 
     /**
      *
-     * @param id
-     * @param offset
-     * @return boolean
-     */
-    boolean has(String id, long offset);
-
-    /**
-     *
-     * @param id
-     * @param offset
-     * @return Object
-     */
-    Object peek(String id, long offset);
-
-    /**
-     *
-     * @param id
-     * @param offset
+     * @param key
      * @return
      */
-    Object consume(String id, long offset);
-
-    /**
-     *
-     * @param id
-     * @return
-     */
-    Collection<Object> consumeAll(String id);
+    Collection<Object> consumeAll(WorkingKey key);
 
     /**
      *

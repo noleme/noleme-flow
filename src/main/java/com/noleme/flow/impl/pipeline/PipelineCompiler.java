@@ -2,8 +2,8 @@ package com.noleme.flow.impl.pipeline;
 
 import com.noleme.flow.compiler.CompilationException;
 import com.noleme.flow.compiler.FlowCompiler;
-import com.noleme.flow.impl.pipeline.compiler.pass.PipelineCompilerPass;
 import com.noleme.flow.impl.pipeline.compiler.pass.StreamAggregationPass;
+import com.noleme.flow.impl.pipeline.compiler.pass.PipelineCompilerPass;
 import com.noleme.flow.impl.pipeline.compiler.pass.TopologicalSortPass;
 import com.noleme.flow.node.Node;
 

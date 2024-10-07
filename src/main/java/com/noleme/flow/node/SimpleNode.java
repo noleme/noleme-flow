@@ -38,10 +38,7 @@ public abstract class SimpleNode<T> extends AbstractNode
     protected void bind(SimpleNode other)
     {
         if (other.upstream != null)
-            throw new RuntimeException(
-                "You are attempting an illegal binding: the other node already has an upstream binding towards "
-                    + other.upstream.getClass() + "#" + other.upstream.getUid()
-            );
+            throw new RuntimeException("You are attempting an illegal binding: the other node already has an upstream binding towards " + other.upstream.getClass() + "#" + other.upstream.getUid());
         this.downstream.add(other);
         other.upstream = this;
         other.after(this);

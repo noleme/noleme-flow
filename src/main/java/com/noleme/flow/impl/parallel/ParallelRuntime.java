@@ -9,7 +9,7 @@ import com.noleme.flow.impl.parallel.runtime.heap.ConcurrentHashHeap;
 import com.noleme.flow.impl.parallel.runtime.state.RuntimeState;
 import com.noleme.flow.impl.pipeline.runtime.execution.Execution;
 import com.noleme.flow.impl.pipeline.runtime.heap.Heap;
-import com.noleme.flow.impl.pipeline.runtime.node.OffsetNode;
+import com.noleme.flow.impl.pipeline.runtime.node.WorkingNode;
 import com.noleme.flow.io.input.Input;
 import com.noleme.flow.io.output.Output;
 import com.noleme.flow.node.Node;
@@ -37,7 +37,7 @@ public class ParallelRuntime implements FlowRuntime
     private final ExecutorServiceProvider poolProvider;
     private final boolean autoRefresh;
     private ExecutorService pool;
-    private CompletionService<Node> completionService;
+    private CompletionService<WorkingNode<?>> completionService;
 
     private static final Logger logger = LoggerFactory.getLogger(ParallelRuntime.class);
     
@@ -90,7 +90,10 @@ public class ParallelRuntime implements FlowRuntime
             this.regenerateThreadPool();
 
         /* Add all start nodes to the waiting queue. */
-        state.queueAll(this.startNodes);
+        this.startNodes.stream()
+            .map(WorkingNode::new)
+            .forEach(state::queue)
+        ;
 
         try {
             heap.getOutput().setStartTime(Instant.now());
@@ -99,16 +102,16 @@ public class ParallelRuntime implements FlowRuntime
             while (state.hasSubmitted() || state.hasWaiting())
             {
                 /* First, we go over the whole waiting list */
-                Iterator<Node> waitingIterator = state.waitingIterator();
+                Iterator<WorkingNode<?>> waitingIterator = state.waitingIterator();
                 while (waitingIterator.hasNext())
                 {
-                    Node waitingNode = waitingIterator.next();
+                    WorkingNode<?> waitingNode = waitingIterator.next();
                     boolean removeIfSubmitted = true;
 
                     /* If this is a stream generator, its prolonged presence in the waiting list is conditioned by special clauses */
-                    if (waitingNode instanceof StreamGenerator)
+                    if (waitingNode.getNode() instanceof StreamGenerator)
                     {
-                        StreamGenerator generatorNode = (StreamGenerator) waitingNode;
+                        WorkingNode<StreamGenerator> generatorNode = (WorkingNode<StreamGenerator>) waitingNode;
                         Generator generator = heap.getStreamGenerator(generatorNode);
 
                         /* If the generator is exhausted, we remove it from the waiting pool and skip it */
@@ -121,7 +124,7 @@ public class ParallelRuntime implements FlowRuntime
                         if (state.isSubmitted(waitingNode))
                             continue;
                         /* If the stream has reached the max parallelism factor defined on the generator, we keep the node on the waiting pool */
-                        if (state.hasReachedMaxParallelism(generatorNode))
+                        if (state.hasReachedMaxParallelism(generatorNode.getNode()))
                             continue;
 
                         /* If the generator is to be executed, we do not want to remove it from the waiting pool */
@@ -143,15 +146,15 @@ public class ParallelRuntime implements FlowRuntime
                 /* If we have submitted nodes, we use the blocking completion service in order to wait for the first completed node */
                 if (state.hasSubmitted())
                 {
-                    Future<Node> future = this.completionService.take();
-                    Node completedNode = future.get();
+                    Future<WorkingNode<?>> future = this.completionService.take();
+                    WorkingNode<?> completedNode = future.get();
 
                     /* We update the state collections */
                     state.unsubmit(completedNode);
                     state.complete(completedNode);
 
                     /* For each node downstream from the one that just completed, we push it to the waiting list, if it wasn't already */
-                    for (Node downstream : completedNode.getDownstream())
+                    for (WorkingNode<?> downstream : completedNode.getWorkingDownstream())
                     {
                         /* Non-encapsulated StreamNodes should be ignored (they should already be added as OffsetNodes by the stream trunk */
                         if (downstream instanceof StreamNode)
@@ -162,7 +165,7 @@ public class ParallelRuntime implements FlowRuntime
                          * If an accumulator added by a previous stream node managed to complete in the timespan it takes for the last stream node to return and be considered here, it can create issues.
                          * So we check for completed accumulator nodes too. Note that this should apply to any non-stream node that is designed to be directly downstream of stream nodes.
                          */
-                        if (downstream instanceof StreamAccumulator && state.isCompleted(downstream))
+                        if (downstream.getNode() instanceof StreamAccumulator && state.isCompleted(downstream))
                             continue;
 
                         state.queue(downstream);
@@ -195,15 +198,9 @@ public class ParallelRuntime implements FlowRuntime
      * @param heap
      * @param state
      */
-    private void submitNode(Node node, Heap heap, RuntimeState state)
+    private void submitNode(WorkingNode<?> node, Heap heap, RuntimeState state)
     {
-        if (node instanceof OffsetNode)
-        {
-            Node actualNode = ((OffsetNode) node).getNode();
-            logger.debug("Submitting flow node #{} offset {} ({})", actualNode.getUid(), ((OffsetNode) node).getOffset(), actualNode.getClass().getSimpleName());
-        }
-        else
-            logger.debug("Submitting flow node #{} ({})", node.getUid(), node.getClass().getSimpleName());
+        logger.debug("Submitting flow node #{} ({})", node.getUid(), node.getClass().getSimpleName());
 
         /*
          * Note regarding behaviour, there are two possible paths here:
@@ -216,23 +213,25 @@ public class ParallelRuntime implements FlowRuntime
          * TODO: it would certainly be a better design to have all state updates in the main loop and get rid of the current RRWLock mess ;
          *       for later: consider returning tuples of (node, result) and perform all state operations after the CompletionService returns
          */
-        if (node instanceof StreamGenerator)
+        if (node.getNode() instanceof StreamGenerator)
         {
-            long offset = heap.getNextStreamOffset((StreamGenerator<?, ?>) node);
-            OffsetNode offsetNode = new OffsetNode(node, offset);
+            WorkingNode<StreamGenerator> generatorNode = (WorkingNode<StreamGenerator>) node;
 
-            state.submit(offsetNode);
-            state.initiateStream(offsetNode);
+            long offset = heap.getNextStreamOffset(generatorNode);
+            //OffsetNode offsetNode = new OffsetNode(node, offset);
+
+            state.submit(generatorNode);
+            state.initiateStream(generatorNode);
 
             this.completionService.submit(() -> {
-                boolean isSuccess = this.execution.launch(offsetNode, heap);
+                boolean isSuccess = this.execution.launch(generatorNode, heap);
 
                 if (!isSuccess)
-                    state.blockAll(offsetNode.getDownstream());
+                    state.blockAll(generatorNode.getWorkingDownstream());
 
-                state.completeStreamItem(offsetNode);
+                state.completeStreamItem(generatorNode);
 
-                return offsetNode;
+                return generatorNode;
             });
         }
         else {
@@ -242,14 +241,14 @@ public class ParallelRuntime implements FlowRuntime
                 boolean isSuccess = this.execution.launch(node, heap);
 
                 if (!isSuccess)
-                    state.blockAll(node.getDownstream());
+                    state.blockAll(node.getWorkingDownstream());
 
-                if (node instanceof OffsetNode)
+                if (node.getKey().hasOffset())
                 {
                     if (isSuccess)
-                        state.completeStreamItem((OffsetNode) node);
+                        state.completeStreamItem(node);
                     else
-                        state.terminateStream((OffsetNode) node);
+                        state.terminateStream(node);
                 }
 
                 return node;
@@ -264,34 +263,31 @@ public class ParallelRuntime implements FlowRuntime
      * @param heap
      * @return The current NodeState for the Node
      */
-    private NodeState isReady(Node node, RuntimeState state, Heap heap)
+    private NodeState isReady(WorkingNode<?> node, RuntimeState state, Heap heap)
     {
-        if (node instanceof OffsetNode)
+        if (node.getKey().hasOffset())
         {
-            OffsetNode offsetNode = (OffsetNode) node;
-            Node actualNode = offsetNode.getNode();
-
-            if (state.isBlocked(offsetNode) || state.isBlocked(actualNode))
+            if (state.isBlocked(node))
                 return NodeState.BLOCKED;
-            for (Node usn : actualNode.getUpstream())
+            for (WorkingNode<?> usn : node.getWorkingUpstream())
             {
-                if (!heap.has(usn.getUid(), offsetNode.getOffset()))
+                if (!heap.has(usn.getKey()))
                     return NodeState.NOT_READY;
             }
             return NodeState.READY;
         }
-        else if (node instanceof StreamAccumulator)
+        else if (node.getNode() instanceof StreamAccumulator)
         {
             if (state.isBlocked(node))
                 return NodeState.BLOCKED;
 
-            if (!state.isStreamComplete((StreamAccumulator) node))
+            if (!state.isStreamComplete(node))
                 return NodeState.NOT_READY;
 
-            for (Node nr : node.getRequirements())
+            for (WorkingNode<?> nr : node.getWorkingRequirements())
             {
                 /* We already take care of stream requirements by checking for the stream completion */
-                if (nr instanceof StreamGenerator || nr instanceof StreamNode)
+                if (nr.getNode() instanceof StreamGenerator || nr.getNode() instanceof StreamNode)
                     continue;
 
                 if (!state.isCompleted(nr))
@@ -304,7 +300,7 @@ public class ParallelRuntime implements FlowRuntime
             if (state.isBlocked(node))
                 return NodeState.BLOCKED;
 
-            for (Node nr : node.getRequirements())
+            for (WorkingNode<?> nr : node.getWorkingRequirements())
             {
                 if (!state.isCompleted(nr))
                     return NodeState.NOT_READY;
