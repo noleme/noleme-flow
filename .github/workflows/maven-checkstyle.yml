@@ -1,0 +1,36 @@
+name: Maven Checkstyle
+
+on:
+  push:
+    branches: [ '*' ]
+  pull_request:
+    branches: [ '*' ]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ ubuntu-latest ]
+        java: [ 21 ]
+      fail-fast: false
+
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK ${{ matrix.java }}
+        uses: actions/setup-java@v3
+        with:
+          java-version: ${{ matrix.java }}
+          distribution: 'temurin'
+      - uses: reviewdog/action-setup@v1
+        with:
+          reviewdog_version: v0.17.2
+      - name: Checkstyle with Maven
+        run: mvn clean checkstyle:check --fail-never
+      - name: Run reviewdog
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cat target/checkstyle-result.xml | reviewdog -f=checkstyle -reporter=github-pr-review -runners=golint,govet
