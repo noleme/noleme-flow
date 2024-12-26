@@ -11,20 +11,23 @@ jobs:
     strategy:
       matrix:
         os: [ ubuntu-latest ]
-        java: [ 15 ]
+        java: [ 21 ]
       fail-fast: false
 
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 120
+    timeout-minutes: 30
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Set up JDK ${{ matrix.java }}
-      uses: actions/setup-java@v1
+      uses: actions/setup-java@v3
       with:
         java-version: ${{ matrix.java }}
+        distribution: 'temurin'
     - name: Test with Maven
-      run: mvn clean -B test --file pom.xml
-    - uses: codecov/codecov-action@v2
+      run: mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent test jacoco:report
+    - uses: codecov/codecov-action@v4
       with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        fail_ci_if_error: true
         verbose: true
