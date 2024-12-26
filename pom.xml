@@ -6,7 +6,7 @@
 
     <groupId>com.noleme</groupId>
     <artifactId>noleme-flow</artifactId>
-    <version>0.18</version>
+    <version>0.18.1</version>
     <packaging>jar</packaging>
 
     <name>Noleme Flow</name>
