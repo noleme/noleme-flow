@@ -1,6 +1,8 @@
 package com.noleme.flow.impl.pipeline.runtime.heap;
 
 import com.noleme.flow.actor.generator.Generator;
+import com.noleme.flow.impl.pipeline.runtime.node.WorkingKey;
+import com.noleme.flow.impl.pipeline.runtime.node.WorkingNode;
 import com.noleme.flow.io.input.Input;
 import com.noleme.flow.io.input.Key;
 import com.noleme.flow.io.output.OutputMap;
@@ -10,15 +12,17 @@ import com.noleme.flow.stream.StreamGenerator;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.noleme.flow.impl.pipeline.runtime.node.WorkingNode.upstreamOf;
+
 /**
  * @author Pierre Lecerf (pierre.lecerf@gmail.com) on 23/01/15.
  */
 public class HashHeap implements Heap
 {
-    private final Map<String, Counter> contents;
-    private final Map<String, Generator<?>> generators;
-    private final Map<String, CounterContainer> streamContents;
-    private final Map<String, Long> offsets;
+    private final Map<WorkingKey, Counter> contents;
+    private final Map<WorkingKey, Generator<?>> generators;
+    private final Map<WorkingKey, Set<WorkingKey>> offsetKeys;
+    private final Map<WorkingKey, Long> offsets;
     private final Input input;
     private final WriteableOutput output;
 
@@ -26,7 +30,7 @@ public class HashHeap implements Heap
     {
         super();
         this.contents = new HashMap<>();
-        this.streamContents = new HashMap<>();
+        this.offsetKeys = new HashMap<>();
         this.generators = new HashMap<>();
         this.offsets = new HashMap<>();
         this.input = input;
@@ -34,123 +38,101 @@ public class HashHeap implements Heap
     }
 
     @Override
-    public Heap push(String id, Object returnValue, int counter)
+    public Heap push(WorkingKey key, Object returnValue, int counter)
     {
-        this.contents.put(id, new Counter(returnValue, counter));
+        this.contents.put(key, new Counter(returnValue, counter));
+        if (key.hasOffset())
+        {
+            var keyWithoutOffset = key.withoutOffset();
+
+            if (!this.offsetKeys.containsKey(keyWithoutOffset))
+                this.offsetKeys.put(keyWithoutOffset, new HashSet<>());
+            this.offsetKeys.get(keyWithoutOffset).add(key);
+        }
         return this;
     }
 
     @Override
-    public boolean has(String id)
+    public boolean has(WorkingKey key)
     {
-        return this.contents.containsKey(id);
+        return this.contents.containsKey(key);
     }
 
     @Override
-    public Object peek(String id)
+    public Object peek(WorkingKey key)
     {
-        if (this.contents.containsKey(id))
-            return this.contents.get(id).getValue();
+        if (this.contents.containsKey(key))
+            return this.contents.get(key).getValue();
         return null;
     }
 
     @Override
-    public Object consume(String id)
+    public Object consume(WorkingKey key)
     {
-        if (this.contents.containsKey(id))
+        if (this.contents.containsKey(key))
         {
-            Counter counter = this.contents.get(id).decrement();
+            Counter counter = this.contents.get(key).decrement();
             if (counter.getCount() == 0)
-                this.contents.remove(id);
+                this.contents.remove(key);
             return counter.getValue();
         }
         return null;
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public Generator getStreamGenerator(StreamGenerator node)
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public Generator<?> getStreamGenerator(WorkingNode<StreamGenerator> node)
     {
-        if (!this.generators.containsKey(node.getUid()))
+        WorkingKey key = node.getKey().hasOffset()
+            ? node.getKey().withoutOffset()
+            : node.getKey()
+        ;
+
+        if (!this.generators.containsKey(key))
         {
             /* If the node has an upstream node, we recover its output, otherwise the generator has a null input */
-            var argument = node.getSimpleUpstream() != null
-                ? this.consume(node.getSimpleUpstream().getUid())
+            Object argument = !node.getUpstream().isEmpty()
+                ? this.consume(upstreamOf(node).getKey())
                 : null
             ;
 
-            this.generators.put(node.getUid(), node.produceGenerator(argument));
+            this.generators.put(key, node.getNode().produceGenerator(argument));
         }
-        return this.generators.get(node.getUid());
+        return this.generators.get(key);
     }
 
     @Override
-    public long getNextStreamOffset(StreamGenerator node)
+    @SuppressWarnings("rawtypes")
+    public long getNextStreamOffset(WorkingNode<StreamGenerator> node)
     {
-        this.offsets.put(node.getUid(), this.offsets.getOrDefault(node.getUid(), -1L) + 1);
-        return this.offsets.get(node.getUid());
+        this.offsets.put(node.getKey(), this.offsets.getOrDefault(node.getKey(), -1L) + 1);
+        return this.offsets.get(node.getKey());
     }
 
     @Override
-    public Heap push(String id, long offset, Object returnValue, int counter)
+    public Collection<Object> peekAll(WorkingKey key)
     {
-        if (!this.streamContents.containsKey(id))
-            this.streamContents.put(id, new CounterContainer());
-
-        this.streamContents.get(id).set(offset, new Counter(returnValue, counter));
-
-        return this;
-    }
-
-    @Override
-    public boolean has(String id, long offset)
-    {
-        return this.hasStreamContent(id, offset);
-    }
-
-    @Override
-    public Object peek(String id, long offset)
-    {
-        if (this.hasStreamContent(id, offset))
-            return this.streamContents.get(id).get(offset).getValue();
-        else if (this.has(id))
-            return this.contents.get(id).getValue();
-        return null;
-    }
-
-    @Override
-    public Object consume(String id, long offset)
-    {
-        if (this.hasStreamContent(id, offset))
-        {
-            CounterContainer container = this.streamContents.get(id);
-            Counter counter = container.get(offset).decrement();
-
-            if (counter.getCount() == 0)
-                container.remove(offset);
-
-            return counter.getValue();
-        }
-        else if (this.has(id))
-            return this.contents.get(id).decrement().getValue();
-        return null;
-    }
-
-    @Override
-    public Collection<Object> consumeAll(String id)
-    {
-        if (!this.streamContents.containsKey(id))
+        if (!this.offsetKeys.containsKey(key))
             return Collections.emptyList();
 
-        List<Object> values = this.streamContents.get(id).stream()
-            .map(c -> c.decrement().getValue())
+        return this.offsetKeys.get(key).stream()
+            .sorted((k1, k2) -> (int) (k1.offset() - k2.offset()))
+            .map(this::peek)
             .collect(Collectors.toList())
         ;
+    }
 
-        if (this.streamContents.get(id).removeConsumed() == 0)
-            this.streamContents.remove(id);
+    @Override
+    public Collection<Object> consumeAll(WorkingKey key)
+    {
+        if (!this.offsetKeys.containsKey(key))
+            return Collections.emptyList();
 
-        return values;
+        return this.offsetKeys.get(key).stream()
+            .sorted((k1, k2) -> (int) (k1.offset() - k2.offset()))
+            .map(this::consume)
+            .collect(Collectors.toList())
+        ;
     }
 
     @Override
@@ -176,20 +158,5 @@ public class HashHeap implements Heap
     public WriteableOutput getOutput()
     {
         return this.output;
-    }
-
-    /**
-     *
-     * @param id
-     * @param offset
-     * @return
-     */
-    private boolean hasStreamContent(String id, long offset)
-    {
-        var container = this.streamContents.get(id);
-
-        return container != null
-            && container.get(offset) != null
-        ;
     }
 }

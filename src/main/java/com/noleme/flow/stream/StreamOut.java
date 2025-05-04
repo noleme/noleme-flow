@@ -3,11 +3,13 @@ package com.noleme.flow.stream;
 import com.noleme.flow.CurrentOut;
 import com.noleme.flow.FlowOut;
 import com.noleme.flow.actor.accumulator.Accumulator;
+import com.noleme.flow.actor.generator.Generator;
 import com.noleme.flow.actor.loader.Loader;
 import com.noleme.flow.actor.transformer.BiTransformer;
 import com.noleme.flow.actor.transformer.Transformer;
 
 import java.util.Collection;
+import java.util.function.Function;
 
 /**
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
@@ -50,6 +52,13 @@ public interface StreamOut<O> extends CurrentOut<O>
         return this.into(loader);
     }
 
+    @Override
+    default StreamOut<O> driftSink(Loader<O> loader)
+    {
+        this.into(loader);
+        return this;
+    }
+
     /**
      * Joins the current stream node with another non-stream flow using a bi-transformer join function.
      *
@@ -60,6 +69,15 @@ public interface StreamOut<O> extends CurrentOut<O>
      * @return
      */
     <JI, JO> StreamJoin<O, JI, JO> join(FlowOut<JI> input, BiTransformer<O, JI, JO> transformer);
+
+    /**
+     * Initiates a stream from the current node, results in a new StreamGenerator node.
+     *
+     * @param generatorSupplier a Generator creation function
+     * @param <NO> Output type of the stream generator node
+     * @return the resulting StreamGenerator node
+     */
+    <NO> StreamGenerator<O, NO> stream(Function<O, Generator<NO>> generatorSupplier);
 
     /**
      *

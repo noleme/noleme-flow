@@ -7,7 +7,8 @@ import com.noleme.flow.impl.pipeline.compiler.stream.StreamPipeline;
 import com.noleme.flow.impl.pipeline.runtime.execution.Execution;
 import com.noleme.flow.impl.pipeline.runtime.heap.HashHeap;
 import com.noleme.flow.impl.pipeline.runtime.heap.Heap;
-import com.noleme.flow.impl.pipeline.runtime.node.OffsetNode;
+import com.noleme.flow.impl.pipeline.runtime.node.WorkingKey;
+import com.noleme.flow.impl.pipeline.runtime.node.WorkingNode;
 import com.noleme.flow.io.input.Input;
 import com.noleme.flow.io.output.Output;
 import com.noleme.flow.node.Node;
@@ -18,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Pierre Lecerf (plecerf@lumiomedical.com)
@@ -41,10 +43,14 @@ public class PipelineRuntime implements FlowRuntime
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public Output run(Input input) throws RunException
     {
-        LinkedList<Node> runQueue = new LinkedList<>(this.compiledNodes);
-        Set<Node> blocked = new HashSet<>();
+        LinkedList<WorkingNode<?>> runQueue = this.compiledNodes.stream()
+            .map(WorkingNode::new)
+            .collect(Collectors.toCollection(LinkedList::new))
+        ;
+        Set<WorkingKey> blocked = new HashSet<>();
         var heap = new HashHeap(input);
 
         try {
@@ -56,14 +62,14 @@ public class PipelineRuntime implements FlowRuntime
              */
             while (!runQueue.isEmpty())
             {
-                Node n = runQueue.poll();
+                WorkingNode<?> n = runQueue.poll();
 
-                if (blocked.contains(n))
+                if (blocked.contains(n.getKey()))
                     continue;
 
                 /* If the node is a StreamPipelineNode we need to register a stream round */
-                if (n instanceof StreamPipeline)
-                    registerStream((StreamPipeline) n, runQueue, heap);
+                if (n.getNode() instanceof StreamPipeline)
+                    registerStream((WorkingNode<StreamPipeline>) n, runQueue, heap);
                 /* Otherwise we handle it as a standard node */
                 else if (!this.execution.launch(n, heap))
                     blockBranch(n, blocked);
@@ -82,51 +88,69 @@ public class PipelineRuntime implements FlowRuntime
      * @param n
      * @param blocked
      */
-    public static void blockBranch(Node n, Set<Node> blocked)
+    public static void blockBranch(WorkingNode<?> n, Set<WorkingKey> blocked)
     {
-        Queue<Node> q = new LinkedList<>();
+        Queue<WorkingNode<?>> q = new LinkedList<>();
         q.add(n);
         while (!q.isEmpty())
         {
-            Node node = q.poll();
+            WorkingNode<?> wn = q.poll();
+            Node node = wn.getNode();
 
             /* We don't block stream accumulators as they are expected to accumulate any stream that did complete, and return an empty list if none did */
             if (node instanceof StreamAccumulator)
                 continue;
 
-            blocked.add(node);
-            q.addAll(node.getDownstream());
+            blocked.add(wn.getKey());
+            q.addAll(wn.getWorkingDownstream());
         }
     }
 
     /**
      *
-     * @param node
+     * @param pipelineNode
      * @param runQueue
      * @param heap
      */
-    private static void registerStream(StreamPipeline node, LinkedList<Node> runQueue, Heap heap)
+    @SuppressWarnings("rawtypes")
+    private static void registerStream(WorkingNode<StreamPipeline> pipelineNode, LinkedList<WorkingNode<?>> runQueue, Heap heap)
     {
-        StreamGenerator<?, ?> generatorNode = node.getGeneratorNode();
-        Generator<?> generator = heap.getStreamGenerator(generatorNode);
+        StreamPipeline pipeline = pipelineNode.getNode();
+        StreamGenerator generatorNode = pipeline.getGeneratorNode();
+
+        //FIXME: likely shenanigans going on here
+        WorkingKey parentKey = pipelineNode.getKey().hasOffset() ? pipelineNode.getKey() : null;
+
+        WorkingNode<StreamGenerator> workingGeneratorNode = new WorkingNode<>(generatorNode, pipelineNode.getKey().offset(), parentKey);
+        Generator<?> generator = heap.getStreamGenerator(workingGeneratorNode);
 
         if (generator.hasNext())
         {
-            long offset = heap.getNextStreamOffset(generatorNode);
+            long offset = heap.getNextStreamOffset(workingGeneratorNode);
 
             /* We add the stream pipeline to the top of the queue, in case it will still have to iterate further */
-            runQueue.push(node);
+            runQueue.push(pipelineNode);
 
             /* Add stream nodes to the top of the queue, note that we need to do in reverse order as we push to the top */
-            var reverseIterator = node.getNodes().listIterator(node.getNodes().size());
+            var reverseIterator = pipeline.getNodes().listIterator(pipeline.getNodes().size());
             while (reverseIterator.hasPrevious())
             {
                 Node streamNode = reverseIterator.previous();
-                runQueue.push(new OffsetNode(streamNode, offset));
+                if (streamNode instanceof StreamAccumulator)
+                    continue;
+
+                runQueue.push(new WorkingNode<>(streamNode, offset, parentKey));
             }
 
             /* We add the generator to the top of the queue so it can generate the input required by previously added stream nodes */
-            runQueue.push(new OffsetNode(generatorNode, offset));
+            runQueue.push(new WorkingNode<>(generatorNode, offset, parentKey));
+        }
+        else {
+            pipeline.getNodes().stream()
+                .filter(n -> n instanceof StreamAccumulator)
+                .map(n -> (StreamAccumulator) n)
+                .forEach(a -> runQueue.push(new WorkingNode<>(a, parentKey)))
+            ;
         }
     }
 }
