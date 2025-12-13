@@ -9,9 +9,9 @@
 
 This library provides features enabling DAG structuring of data processing programs such as ETLs.
 
-Implementations found in this package shouldn't be tied to any specific Noleme project.
-
 _Note: This library is considered as "in beta" and as such significant API changes may occur without prior warning._
+
+_Note (2025-12): Looking back on this project, I remain convinced that there are quite a few "nuggets of truth" in this library's design ; I got bogged down when attempting to fix some of its core internals, but its composition model is still something I find myself longing for in most of my projects. I plan to restore it and work on its shortcomings in a hopefully not too far future, possibly by relying on concurrency APIs provided by newer JDKs, and most likely with a more marked focus on observability features_
 
 ## I. Installation
 
