@@ -1,15 +1,13 @@
 # Noleme Flow
 
 [![Maven Build](https://github.com/noleme/noleme-flow/actions/workflows/maven-build.yml/badge.svg?branch=master)](https://github.com/noleme/noleme-flow/actions/workflows/maven-build.yml)
-[![Maven Central Repository](https://maven-badges.herokuapp.com/maven-central/com.noleme/noleme-flow/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.noleme/noleme-flow)
+[![Maven Central Version](https://img.shields.io/maven-central/v/com.noleme/noleme-flow)](https://central.sonatype.com/artifact/com.noleme/noleme-flow)
 [![javadoc](https://javadoc.io/badge2/com.noleme/noleme-flow/javadoc.svg)](https://javadoc.io/doc/com.noleme/noleme-flow)
 [![coverage](https://codecov.io/gh/noleme/noleme-flow/branch/master/graph/badge.svg?token=Y9FD38RLDE)](https://codecov.io/gh/noleme/noleme-flow)
 ![GitHub](https://img.shields.io/github/license/noleme/noleme-flow)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fnoleme%2Fnoleme-flow.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fnoleme%2Fnoleme-flow?ref=badge_shield)
 
 This library provides features enabling DAG structuring of data processing programs such as ETLs.
-
-_Note: This library is considered as "in beta" and as such significant API changes may occur without prior warning._
 
 _Note (2025-12): Looking back on this project, I remain convinced that there are quite a few "nuggets of truth" in this library's design ; I got bogged down when attempting to fix some of its core internals, but its composition model is still something I find myself longing for in most of my projects. I plan to restore it and work on its shortcomings in a hopefully not too far future, possibly by relying on concurrency APIs provided by newer JDKs, and most likely with a more marked focus on observability features_
 
@@ -158,20 +156,20 @@ Upon running this should print `856`.
 
 Note that `noleme-flow` itself doesn't provide any `Generator` implementation, but the `IterableGenerator` class mentioned above is part of the `noleme-flow-connect-commons` library ([over there](https://github.com/noleme/noleme-flow-connectors)).
 
-Other features that will need to be documented include:
+## IV. Documentation
 
-* the complete set of DAG building methods (including alternate flavours of `from`, `stream`, as well as `driftSink`, `after` and the generic `into`)
-* control-flow with partial DAG interruption (`interrupt` and `interruptIf`, `nonFatal` helpers)
-* runtime input management (dynamic `from` and the `Input` component) 
-* runtime output management, sampling/collection features (`collect`, `sample` and the `Output` component)
-* stream flows and parallelization (`setMaxParallelism` and implementation-specific considerations)
-* flow slices (`SourceSlice`, `PipeSlice` and `SinkSlice`) for flow DAG fragments code reuse
-* `ParallelRuntime` service executor lifecycle and other considerations
-* DAG node naming for debugging purposes (appears in traces, logs)
+A detailed multi-chapter documentation is available in the `/doc` directory:
 
-_TODO_
+* [Design & Composition](doc/01-design-and-composition.md)
+* [Building your Flow DAG](doc/02-dag-building.md)
+* [Control-flow & Interruption](doc/03-control-flow-interruption.md)
+* [Runtime Management](doc/04-runtime-management.md)
+* [Streams & Parallelism](doc/05-streams-parallelism.md)
+* [Flow Slices](doc/06-flow-slices.md)
+* [Advanced Features](doc/07-advanced-features.md)
+* [Practical Usage & Connectors](doc/08-practical-usage-and-connectors.md)
 
-## IV. Dev Installation
+## V. Dev Installation
 
 This project will require you to have the following:
 
