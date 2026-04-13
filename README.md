@@ -158,7 +158,7 @@ Note that `noleme-flow` itself doesn't provide any `Generator` implementation, b
 
 ## IV. Documentation
 
-A detailed multi-chapter documentation is available in the `/doc` directory:
+A more thorough look at the library's features can be found in the following documentation sections:
 
 * [Design & Composition](doc/01-design-and-composition.md)
 * [Building your Flow DAG](doc/02-dag-building.md)
