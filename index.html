@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>noleme-flow Documentation</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify-themeable@0/dist/css/theme-simple-dark.css">
+        <style>
+            :root {
+                --sidebar-border-color: #3684ba;
+                --table-cell-border-color: #3684ba;
+                --content-max-width: 1280px;
+            }
+            .markdown-section table {
+                font-size: 0.85em;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="app">Loading documentation...</div>
+
+        <script>
+            window.$docsify = {
+                name: 'Noleme Flow',
+                repo: 'noleme/noleme-flow',
+                logo: '/doc/resources/logo.png',
+                homepage: 'README.md',
+                themeable: {
+                    readyTransition : true,
+                    responsiveTables: true
+                }
+            }
+        </script>
+
+        <script src="//cdn.jsdelivr.net/npm/docsify@4"></script>
+        <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-java.min.js"></script>
+        <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-bash.min.js"></script>
+        <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-yaml.min.js"></script>
+        <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-json.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/docsify-themeable@0/dist/js/docsify-themeable.min.js"></script>
+
+        <script type="module">
+            import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+            mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+            window.mermaid = mermaid;
+        </script>
+        <script src="//unpkg.com/docsify-mermaid@2.0.1/dist/docsify-mermaid.js"></script>
+    </body>
+</html>
